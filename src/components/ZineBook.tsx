@@ -78,7 +78,8 @@ export function ZineBook({
       const vh = window.innerHeight;
       const portrait = vw < 900;
       const availW = Math.min(vw - 24, 1400);
-      const availH = Math.min(vh - 140, 1300);
+      // leave room for the sticky top menu + page counter row
+      const availH = Math.min(vh - (portrait ? 132 : 124), 1300);
       // Real magazine ratio ≈ A4 (1:1.414). Use ~1.4 portrait, ~1.38 spread.
       const ratio = portrait ? 1.414 : 1.38;
       let pageW = portrait ? availW : Math.min(availW / 2, 560);
