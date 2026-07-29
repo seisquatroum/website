@@ -1,0 +1,388 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+ * Associação 641 — brand tokens (scrapbook / zine aesthetic)
+ * ============================================================ */
+@theme {
+  /* Tight zine palette: dark base + magenta family + one cream accent. */
+  /* Anchored on #C31958 (magenta-red) + #CF5D87 (pink) with complementary
+   * scrapbook accents: mustard yellow, teal, orange, cream. */
+  --color-brand-pink: #cf5d87;
+  --color-brand-pink-soft: #f2c4d4;
+  --color-brand-pink-deep: #a4144d;
+  --color-brand-magenta: #c31958;
+  --color-brand-magenta-ink: #6a0a30;
+  --color-brand-plum: #1f0612;
+  --color-brand-black: #0a0507;
+  --color-brand-accent: #f4c14d;   /* mustard yellow */
+  --color-brand-teal: #4fa9b5;     /* muted teal */
+  --color-brand-orange: #e8642a;   /* torn-poster orange */
+  --color-brand-blue: #2f5eaa;     /* dusty blue */
+  --color-brand-paper: #f4ecd6;    /* cream paper */
+  --color-brand-kraft: #d4b48a;    /* kraft */
+  --font-marker: 'Permanent Marker', 'Shadows Into Light', 'Kalam', cursive;
+  --font-hand: 'Kalam', 'Caveat', 'Shadows Into Light', cursive;
+  --font-scribble: 'Shadows Into Light', 'Kalam', 'Caveat', cursive;
+  --font-sans: 'Special Elite', 'Courier Prime', 'Courier New', monospace;
+  --font-typewriter: 'Special Elite', 'Courier Prime', 'Courier New', monospace;
+  --font-serif-display: 'Playfair Display', 'DM Serif Display', Georgia, serif;
+  --font-mono-zine: 'Courier Prime', 'Special Elite', 'Courier New', monospace;
+}
+
+@utility paper-grain {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.08;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+}
+
+@utility sticker-shadow {
+  filter: drop-shadow(4px 4px 0px #1a1a1a);
+}
+
+@utility rough-edge {
+  clip-path: polygon(0% 2%, 100% 0%, 98% 98%, 2% 100%);
+}
+
+@utility torn-edge {
+  clip-path: polygon(0% 3%, 8% 0%, 22% 2%, 38% 0%, 55% 3%, 72% 1%, 88% 3%, 100% 0%, 98% 20%, 100% 42%, 97% 60%, 100% 80%, 98% 100%, 82% 97%, 65% 100%, 45% 98%, 28% 100%, 12% 97%, 0% 100%, 2% 78%, 0% 55%, 3% 32%);
+}
+
+@utility ripped-top {
+  clip-path: polygon(0 12%, 6% 4%, 14% 10%, 22% 2%, 32% 8%, 42% 0%, 52% 6%, 62% 2%, 74% 8%, 84% 0%, 94% 6%, 100% 12%, 100% 100%, 0 100%);
+}
+
+@utility ripped-bottom {
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 94% 96%, 84% 90%, 74% 98%, 62% 92%, 52% 100%, 42% 94%, 32% 100%, 22% 92%, 14% 100%, 6% 94%, 0 88%);
+}
+
+@utility halftone {
+  background-image: radial-gradient(var(--color-brand-black) 1px, transparent 1.4px);
+  background-size: 6px 6px;
+}
+
+@utility tape-strip {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklab, var(--color-brand-accent) 85%, transparent),
+    color-mix(in oklab, var(--color-brand-accent) 85%, transparent) 8px,
+    color-mix(in oklab, var(--color-brand-accent) 60%, transparent) 8px,
+    color-mix(in oklab, var(--color-brand-accent) 60%, transparent) 16px
+  );
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* ---- Washi tape utilities (photographic PNGs with real torn edges) ---- */
+@utility washi-magenta-img {
+  background-image: url("/__l5e/assets-v1/36b922de-5af0-4050-b806-72c76204dd15/washi-magenta.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.35));
+}
+@utility washi-yellow-img {
+  background-image: url("/__l5e/assets-v1/c365f576-dbeb-4ae8-948d-89c728650208/washi-yellow.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.35));
+}
+@utility washi-teal-img {
+  background-image: url("/__l5e/assets-v1/10b99ac4-7747-4cb0-9461-472170185436/washi-teal.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.35));
+}
+
+/* ---- Torn paper scrap textures used as backgrounds ---- */
+@utility scrap-cream-img {
+  background-image: url("/__l5e/assets-v1/eeeb9101-8e27-4ad6-bcf6-96171aeb06a6/scrap-cream.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+@utility scrap-magenta-img {
+  background-image: url("/__l5e/assets-v1/ce2e9432-ecc4-460b-bed8-f92265858b5a/scrap-magenta.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Post-it note: sticky corner + soft shadow */
+@utility postit {
+  position: relative;
+  box-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.1),
+    6px 8px 14px rgba(0, 0, 0, 0.35);
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(0,0,0,0) 25%),
+    linear-gradient(180deg, rgba(0,0,0,0) 80%, rgba(0,0,0,0.08) 100%);
+}
+
+/* Cutout letter — cream paper with fiber grain baked in */
+@utility paper-letter {
+  background-color: var(--color-brand-paper);
+  background-image:
+    radial-gradient(rgba(0,0,0,0.08) 0.5px, transparent 1px),
+    linear-gradient(115deg, rgba(255,255,255,0.6), rgba(0,0,0,0.08));
+  background-size: 3px 3px, 100% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.08),
+    2px 3px 0 rgba(0,0,0,0.85),
+    4px 6px 8px rgba(0,0,0,0.35);
+}
+
+@utility sticker-shadow-magenta {
+  filter: drop-shadow(4px 4px 0px #6b1038);
+}
+
+@utility bg-zine-paper {
+  background-color: #0a0507;
+  background-image:
+    url("/__l5e/assets-v1/f33ba9f1-56be-4193-88e5-8e340f8cf4a8/zine-dark.jpg");
+  background-size: 900px 900px;
+  background-repeat: repeat;
+}
+
+/* Light cream zine paper — used as the main site background so the whole
+ * page reads like a printed/photocopied scrapbook page. */
+/* Watercolor magenta-and-cream background — main site background,
+ * mirrors the pink/cream watercolor reference the user provided. */
+@utility bg-zine-cream {
+  background-color: #1a0812;
+  background-image:
+    linear-gradient(180deg, rgba(20,6,15,0.85), rgba(30,8,20,0.9)),
+    url("/__l5e/assets-v1/f33ba9f1-56be-4193-88e5-8e340f8cf4a8/zine-dark.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: repeat;
+  background-blend-mode: multiply, normal;
+}
+
+/* Paper grain overlay that blends into any coloured element (letters,
+ * buttons, cards). Uses background-blend-mode: multiply so it renders on
+ * top of the existing bg-brand-* background-color without hiding it. */
+@utility paper-tex {
+  background-image:
+    url("/__l5e/assets-v1/85a2c662-90c7-403a-bc23-29458fefcb2d/paper-texture.jpg"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 380px 380px, 160px 160px;
+  background-repeat: repeat;
+  background-blend-mode: multiply, multiply;
+}
+
+/* Real analog paper background — an actual scan of aged cream paper,
+ * used as the base for magazine spread pages. */
+@utility bg-real-paper {
+  background-color: #f4ecd6;
+  background-image:
+    url("/__l5e/assets-v1/85a2c662-90c7-403a-bc23-29458fefcb2d/paper-texture.jpg");
+  background-size: 620px 620px;
+  background-repeat: repeat;
+}
+
+/* Darker/magenta-tinted paper for dark pages — same fiber grain but
+ * multiplied over deep ink, so even dark pages read as printed paper. */
+@utility bg-real-paper-dark {
+  background-color: #1a0510;
+  background-image:
+    linear-gradient(rgba(20,6,14,0.82), rgba(20,6,14,0.82)),
+    url("/__l5e/assets-v1/85a2c662-90c7-403a-bc23-29458fefcb2d/paper-texture.jpg");
+  background-size: cover, 620px 620px;
+  background-repeat: no-repeat, repeat;
+}
+
+@utility bg-real-paper-magenta {
+  background-color: #4a0a26;
+  background-image:
+    linear-gradient(rgba(90,14,50,0.7), rgba(60,10,32,0.8)),
+    url("/__l5e/assets-v1/85a2c662-90c7-403a-bc23-29458fefcb2d/paper-texture.jpg");
+  background-size: cover, 620px 620px;
+  background-repeat: no-repeat, repeat;
+  background-blend-mode: multiply, normal;
+}
+
+/* Spray-star magenta background — mirrors the pink spray-paint stars
+ * reference. Used for darker sections (services, parceiros, footer). */
+@utility bg-zine-magenta {
+  background-color: #4a0a26;
+  background-image:
+    url("/__l5e/assets-v1/d0314507-3b02-4fd3-85ce-29611ab8897a/bg-spray-stars.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@utility bg-zine-dark {
+  background-color: #1a0510;
+  background-image:
+    url("/__l5e/assets-v1/d0314507-3b02-4fd3-85ce-29611ab8897a/bg-spray-stars.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-blend-mode: multiply;
+}
+
+@utility zine-noise {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+  }
+}
+
+@utility ink-stain {
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(200, 34, 107, 0.35), transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(10, 5, 10, 0.65), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(107, 16, 56, 0.45), transparent 60%);
+}
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
