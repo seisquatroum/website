@@ -99,13 +99,80 @@ export function ZineBook({
   const next = () => bookRef.current?.pageFlip()?.flipNext();
   const prev = () => bookRef.current?.pageFlip()?.flipPrev();
 
+  /* Scroll (wheel / trackpad / touch drag) flips pages instead of scrolling. */
+  const lockRef = useRef(false);
+  const accRef = useRef(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const trigger = (dir: 1 | -1) => {
+      if (lockRef.current) return;
+      lockRef.current = true;
+      accRef.current = 0;
+      if (dir > 0) next();
+      else prev();
+      window.setTimeout(() => {
+        lockRef.current = false;
+      }, 900);
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (lockRef.current) return;
+      accRef.current += e.deltaY + e.deltaX;
+      if (Math.abs(accRef.current) > 40) trigger(accRef.current > 0 ? 1 : -1);
+    };
+
+    let startY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const dy = startY - e.touches[0].clientY;
+      if (Math.abs(dy) > 50) trigger(dy > 0 ? 1 : -1);
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  }, []);
+
   return (
     <ZineNavContext.Provider
       value={{ goTo, next, prev, current, total: pages.length }}
     >
-      <div ref={wrapRef} className="relative w-full">
+      <div
+        ref={wrapRef}
+        className="relative flex h-screen w-full flex-col overflow-hidden overscroll-none"
+      >
         {header}
-        <div className="py-6 sm:py-10">
+        {/* Sticky top menu — jump straight to any section */}
+        <nav className="shrink-0 border-b border-brand-pink/25 bg-black/40 backdrop-blur">
+          <div className="flex gap-3 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {pages.map((p, i) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => goTo(i)}
+                className={`shrink-0 whitespace-nowrap px-1 font-mono-zine text-[10px] uppercase tracking-[0.2em] transition-colors ${
+                  current === i
+                    ? "text-brand-accent underline decoration-wavy underline-offset-4"
+                    : "text-brand-pink/70 hover:text-brand-pink"
+                }`}
+                style={{ fontFamily: "'Special Elite','Courier Prime',monospace" }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+        <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
         {!Flip ? (
           <div
             style={{ height: dims.h }}
@@ -153,14 +220,14 @@ export function ZineBook({
         )}
 
         {/* Controls — hand-scribbled arrows */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-6 px-4">
+        <div className="mt-2 flex shrink-0 flex-wrap items-center justify-center gap-6 px-4">
           <button
             type="button"
             onClick={prev}
             aria-label="anterior"
             className="group inline-flex items-center gap-2 text-brand-pink transition-transform hover:-translate-x-1"
           >
-            <ScribbleArrow direction="left" />
+            <ScribbleArrow direction="left" size={56} />
           </button>
           <span
             className="font-typewriter text-[11px] uppercase tracking-[0.25em] text-brand-paper/80"
@@ -174,7 +241,7 @@ export function ZineBook({
             aria-label="seguinte"
             className="group inline-flex items-center gap-2 text-brand-pink transition-transform hover:translate-x-1"
           >
-            <ScribbleArrow direction="right" />
+            <ScribbleArrow direction="right" size={56} />
           </button>
         </div>
         </div>
