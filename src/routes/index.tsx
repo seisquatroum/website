@@ -1133,7 +1133,7 @@ function _Index() {
     { key: "back", label: "fim", node: <BackCover locale={locale} /> },
   ];
   return (
-    <div className="relative min-h-screen bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
+    <div className="relative h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
       <ZineBook pages={pages} />
     </div>
   );
