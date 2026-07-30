@@ -58,17 +58,21 @@ export const site = {
     kicker: { pt: "sobre", en: "about" },
     body: {
       pt: [
-        "A **Associação 641** está a nascer como um espaço colaborativo de salas de ensaio, com a missão de impulsionar a cena musical portuguesa.",
-        "O nosso ponto de partida é **Oeiras**, um dos municípios com mais bandas e projetos musicais a nível nacional.",
+        "Ensaiar na rua é divertido. Excepto claro, quando nos mandam calar.",
+        "Foi assim que começámos. Tínhamos tudo para o sucesso: sonhos, um nome, instrumentos. Só que depois percebemos que nos faltava o mais importante: **um espaço para ensaiar**.",
+        "Não faltam lugares para bandas ensaiarem em **Oeiras**, um dos municípios mais desenvolvidos de Portugal. O problema? Custam dinheiro, e não é propriamente pouco. Para miúdos a experimentar sons pela primeira vez, isso não era viável. E ninguém tinha garagens, um luxo em ambientes urbanos como este. Assim, a rua teve de servir: mixer DIY, um baixo ligado à JBL, vizinhos a espreitar às janelas.",
+        "Agora mais graúdos, com mãos amigas a ajudar, criámos a **641**, para que nunca se chegue a perder música em Oeiras só porque não há um cantinho para a explorar.",
       ],
       en: [
-        "**Associação 641** is being built as a collaborative rehearsal space, with the mission of boosting the Portuguese music scene.",
-        "Our starting point is **Oeiras**, one of the municipalities with the most bands and music projects in Portugal.",
+        "Rehearsing on the street is fun. Except, of course, when people tell you to shut up.",
+        "That's how we started. We had everything we needed for success: dreams, a name, instruments. Then we realised we were missing the most important thing: **a place to rehearse**.",
+        "There is no shortage of rehearsal spaces in **Oeiras**, one of Portugal's most developed municipalities. The problem? They cost money, and not exactly a little. For kids trying out sounds for the first time, that wasn't viable. And nobody had a garage — a luxury in an urban setting like this. So the street had to do: a DIY mixer, a bass plugged into a JBL, neighbours peeking out of windows.",
+        "Now a bit older, and with friendly hands helping out, we created **641**, so that music in Oeiras is never lost just because there's no little corner to explore it in.",
       ],
     },
     highlight: {
-      pt: "Derrubar barreiras económicas que dificultam o acesso de pequenas bandas e artistas emergentes ao meio musical.",
-      en: "Break down economic barriers that prevent small bands and emerging artists from accessing the music scene.",
+      pt: "Queres saber mais? Fala connosco, vem visitar-nos ou torna-te sócio.",
+      en: "Want to know more? Get in touch, come visit us or become a member.",
     },
     est: { pt: "FUNDADA EM 2025", en: "EST. 2025" },
     /**
