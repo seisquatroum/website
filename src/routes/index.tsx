@@ -2,16 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { forwardRef } from "react";
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
-import { ZineBook, type ZinePage, useZineNav } from "@/components/ZineBook";
-import logoAsset from "@/assets/641-logo.png.asset.json";
-import washiMagenta from "@/assets/washi-magenta.png.asset.json";
-import washiYellow from "@/assets/washi-yellow.png.asset.json";
-import washiTeal from "@/assets/washi-teal.png.asset.json";
-import scrapCream from "@/assets/scrap-cream.png.asset.json";
-import scrapMagenta from "@/assets/scrap-magenta.png.asset.json";
-import digitalCamera from "@/assets/digital-camera.png.asset.json";
-import digitalCameraPink from "@/assets/digital-camera-pink.png.asset.json";
-import pinkStarSingle from "@/assets/pink-star-single.png.asset.json";
+import { SiteNav, type NavItem } from "@/components/SiteNav";
+import logoAsset from "@/assets/641-logo.png";
 import {
   Dialog,
   DialogContent,
@@ -217,10 +209,10 @@ function RichText({ children }: { children: string }) {
  * Scrapbook decorative primitives — washi tapes, post-its, torn
  * paper scraps, and a digital-camera photo frame.
  * ------------------------------------------------------------------ */
-const WASHI_SRC = {
-  magenta: washiMagenta.url,
-  yellow: washiYellow.url,
-  teal: washiTeal.url,
+const WASHI_COLORS = {
+  magenta: "bg-brand-magenta/85",
+  yellow: "bg-brand-accent/90",
+  teal: "bg-brand-teal/85",
 } as const;
 
 function WashiTape({
@@ -228,18 +220,15 @@ function WashiTape({
   className = "",
   style,
 }: {
-  variant?: keyof typeof WASHI_SRC;
+  variant?: keyof typeof WASHI_COLORS;
   className?: string;
   style?: React.CSSProperties;
 }) {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute z-20 block ${className}`}
+      className={`pointer-events-none absolute z-20 block opacity-95 ${WASHI_COLORS[variant]} ${className}`}
       style={{
-        backgroundImage: `url(${WASHI_SRC[variant]})`,
-        backgroundSize: "100% 100%",
-        backgroundRepeat: "no-repeat",
         filter: "drop-shadow(2px 3px 3px rgba(0,0,0,0.4))",
         ...style,
       }}
@@ -320,36 +309,25 @@ function CameraFrame({
   rotate?: string;
   variant?: "black" | "pink";
 }) {
-  const src = variant === "pink" ? digitalCameraPink.url : digitalCamera.url;
-  // The pink Sony has a wider LCD relative to the frame than the black
-  // camera; tune viewfinder inset per variant so the content sits flush
-  // over the real screen area.
-  const inset =
+  const body =
     variant === "pink"
-      ? { left: "8%", right: "41%", top: "20%", bottom: "22%" }
-      : { left: "8.5%", right: "32%", top: "17%", bottom: "18%" };
+      ? "bg-gradient-to-br from-brand-pink via-brand-magenta to-brand-magenta-ink"
+      : "bg-gradient-to-br from-neutral-800 via-neutral-900 to-black";
   return (
-    <div className={`relative ${rotate} ${className}`} style={{ aspectRatio: "1280 / 1024" }}>
-      <img
-        src={src}
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full object-contain drop-shadow-[8px_10px_0_rgba(0,0,0,0.55)]"
-      />
+    <div className={`relative ${rotate} ${className}`} style={{ aspectRatio: "5 / 4" }}>
       <div
-        className="absolute overflow-hidden bg-white"
-        style={inset}
+        className={`relative h-full w-full rounded-md border-[3px] border-neutral-900 p-1.5 shadow-[6px_8px_0_rgba(0,0,0,0.55)] ${body}`}
       >
-        {children}
+        <div className="absolute left-1.5 top-1/2 z-10 h-[36%] w-[20%] -translate-y-1/2 rounded-full border-2 border-neutral-600 bg-neutral-950 shadow-inner" />
+        <div className="absolute bottom-[14%] left-2 h-1 w-3 rounded-full bg-neutral-700" />
+        <div className="absolute right-1 top-[16%] bottom-[16%] left-[26%] overflow-hidden rounded-sm border border-neutral-600/80 bg-black">
+          {children}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ *
- * StarSticker — real hot-pink foil-star sticker used as scattered
- * scrapbook decoration on section backgrounds.
- * ------------------------------------------------------------------ */
 function StarSticker({
   className = "",
   size = 56,
@@ -362,19 +340,18 @@ function StarSticker({
   style?: React.CSSProperties;
 }) {
   return (
-    <img
-      src={pinkStarSingle.url}
-      alt=""
+    <span
       aria-hidden
-      className={`pointer-events-none absolute z-10 select-none ${className}`}
+      className={`pointer-events-none absolute z-10 select-none font-bold leading-none text-brand-magenta ${className}`}
       style={{
-        width: size,
-        height: size,
+        fontSize: size * 0.85,
         transform: `rotate(${rotate}deg)`,
         filter: "drop-shadow(2px 3px 3px rgba(0,0,0,0.35))",
         ...style,
       }}
-    />
+    >
+      ✦
+    </span>
   );
 }
 
@@ -416,31 +393,6 @@ function LangToggle({ className = "" }: { className?: string }) {
   );
 }
 
-/* "voltar ao índice" — a hand-scrawled link stuck at the bottom of every
- * inner page. Uses the ZineNav context to jump back to the Índice page. */
-function BackToIndex({
-  locale,
-  className = "",
-}: {
-  locale: Locale;
-  className?: string;
-}) {
-  const nav = useZineNav();
-  if (!nav) return null;
-  return (
-    <button
-      type="button"
-      onClick={() => nav.goTo(1)}
-      className={`group pointer-events-auto absolute bottom-2 left-3 z-30 inline-flex items-center gap-1 font-hand text-sm leading-none text-brand-magenta-ink transition-transform hover:-translate-x-0.5 ${className}`}
-    >
-      <span aria-hidden>←</span>
-      <span className="underline decoration-brand-magenta decoration-2 underline-offset-4 group-hover:text-brand-magenta">
-        {locale === "pt" ? "voltar ao índice" : "back to contents"}
-      </span>
-    </button>
-  );
-}
-
 /* ---- Decorative sticker photo placeholder (paper polaroid look) ---- */
 function Polaroid({
   label,
@@ -476,10 +428,12 @@ function Polaroid({
   );
 }
 function ZPage({
+  sectionId,
   children,
   bg = "paper",
   className = "",
 }: {
+  sectionId?: string;
   children: React.ReactNode;
   bg?: "paper" | "dark" | "magenta" | "cream";
   className?: string;
@@ -492,23 +446,28 @@ function ZPage({
       : bg === "cream"
       ? "bg-real-paper text-brand-black"
       : "bg-real-paper text-brand-black";
+  const Tag = sectionId ? "section" : "div";
   return (
-    <div className={`relative h-full w-full overflow-hidden zine-noise ${bgCls} ${className}`}>
-      {children}
-    </div>
+    <Tag
+      id={sectionId}
+      className={`relative w-full overflow-hidden zine-noise ${sectionId ? "scroll-mt-14" : ""} ${bgCls} ${className}`}
+    >
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col px-5 py-10 sm:px-6 sm:py-12">
+        {children}
+      </div>
+    </Tag>
   );
 }
 
-function Cover({ locale }: { locale: Locale }) {
+function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="dark" className="ink-stain">
-      <LangToggle className="absolute right-3 top-3 z-30" />
+    <ZPage bg="dark" className="ink-stain min-h-svh" sectionId={sectionId}>
       <WashiTape variant="yellow" className="left-4 top-2 h-4 w-32 -rotate-3" />
       <WashiTape variant="teal" className="right-16 top-6 h-4 w-24 rotate-6" />
       <StarSticker className="left-[6%] top-[38%]" size={40} rotate={-18} />
       <StarSticker className="right-[10%] top-[16%]" size={48} rotate={22} />
       <StarSticker className="left-[42%] bottom-[8%]" size={36} rotate={12} />
-      <div className="flex h-full flex-col items-center justify-center px-5 py-8 text-center">
+      <div className="flex min-h-[70vh] flex-col items-center justify-center py-8 text-center">
         <span className="mb-3 inline-block -rotate-2 border border-brand-pink bg-brand-magenta px-2 py-0.5 font-mono-zine text-[9px] uppercase tracking-widest text-brand-pink shadow-[2px_2px_0_#000]">
           {t(site.hero.tagline, locale)}
         </span>
@@ -518,7 +477,7 @@ function Cover({ locale }: { locale: Locale }) {
           </CutoutText>
         </h1>
         <img
-          src={logoAsset.url}
+          src={logoAsset}
           alt="641"
           className="mt-3 h-24 w-auto rotate-1 rounded-sm bg-brand-pink px-2 py-1 drop-shadow-[4px_4px_0_#6b1038] sm:h-28"
         />
@@ -541,12 +500,12 @@ function Cover({ locale }: { locale: Locale }) {
   );
 }
 
-function SobreA({ locale }: { locale: Locale }) {
+function SobreA({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="paper">
+    <ZPage bg="paper" sectionId={sectionId}>
       <WashiTape variant="teal" className="left-6 top-2 h-4 w-28 -rotate-6" />
       <WashiTape variant="yellow" className="right-8 top-4 h-4 w-24 rotate-6" />
-      <div className="flex h-full flex-col p-6">
+      <div className="flex flex-col">
         <h2 className="mb-3 -rotate-1">
           <CutoutText size="text-2xl sm:text-3xl">
             {t(site.sobre.kicker, locale)}
@@ -577,13 +536,13 @@ function SobreB({ locale }: { locale: Locale }) {
   return (
     <ZPage bg="magenta">
       <WashiTape variant="yellow" className="left-8 top-2 h-4 w-24 -rotate-3" />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         <h3 className="mb-4 flex rotate-1 justify-center">
           <CutoutText size="text-xl sm:text-2xl">
             {locale === "pt" ? "porquê a 641?" : "why 641?"}
           </CutoutText>
         </h3>
-        <div className="flex flex-1 flex-col justify-center gap-3">
+        <div className="flex flex-col justify-center gap-3">
           {site.ajudar.reasons.map((r, i) => (
             <div
               key={i}
@@ -607,13 +566,13 @@ function ServicesPage({ locale }: { locale: Locale }) {
   return (
     <ZPage bg="dark">
       <StarSticker className="right-[8%] top-[6%]" size={40} rotate={20} />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         <h2 className="mb-4 flex justify-center -rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
             {locale === "pt" ? "O QUE FAZEMOS" : "WHAT WE DO"}
           </CutoutText>
         </h2>
-        <div className="flex flex-1 flex-col justify-center gap-3">
+        <div className="flex flex-col justify-center gap-3">
           {site.services.map((s, i) => (
             <div
               key={i}
@@ -642,22 +601,24 @@ function NewsPage({
   locale,
   items,
   title,
+  sectionId,
 }: {
   locale: Locale;
   items: readonly (typeof site.news)[number][];
   title?: string;
+  sectionId?: string;
 }) {
   return (
-    <ZPage bg="dark">
+    <ZPage bg="dark" sectionId={sectionId}>
       <WashiTape variant="magenta" className="left-6 top-2 h-4 w-32 -rotate-3" />
       <StarSticker className="right-[8%] top-[6%]" size={36} rotate={16} />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         {title && (
           <h2 className="mb-3 -rotate-1">
             <CutoutText size="text-xl sm:text-2xl">{title}</CutoutText>
           </h2>
         )}
-        <div className="flex flex-1 flex-col justify-center gap-4">
+        <div className="flex flex-col justify-center gap-4">
           {items.map((n, i) => {
             const tagLower = n.tag.pt.toLowerCase();
             const cameraVariant: "black" | "pink" = tagLower.includes("workshop") ? "pink" : "black";
@@ -708,12 +669,12 @@ function NewsPage({
   );
 }
 
-function AjudarPage({ locale }: { locale: Locale }) {
+function AjudarPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="paper">
+    <ZPage bg="paper" sectionId={sectionId}>
       <StarSticker className="right-[6%] top-[8%]" size={40} rotate={16} />
       <WashiTape variant="magenta" className="left-6 top-3 h-4 w-28 -rotate-6" />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         <h2 className="mb-3 -rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
             {locale === "pt" ? "doações" : "donate"}
@@ -745,7 +706,7 @@ function JuntaPage({ locale }: { locale: Locale }) {
   return (
     <ZPage bg="magenta">
       <WashiTape variant="yellow" className="right-6 top-2 h-4 w-24 rotate-6" />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         <h3 className="-rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
             {locale === "pt" ? "junta-te a nós" : "join us"}
@@ -786,12 +747,12 @@ function JuntaPage({ locale }: { locale: Locale }) {
   );
 }
 
-function BandaPage({ locale }: { locale: Locale }) {
+function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="paper">
+    <ZPage bg="paper" sectionId={sectionId}>
       <WashiTape variant="magenta" className="-top-2 left-8 h-5 w-32 -rotate-6" />
       <WashiTape variant="yellow" className="-top-2 right-8 h-5 w-24 rotate-6" />
-      <div className="flex h-full flex-col p-5">
+      <div className="flex flex-col">
         <h2 className="-rotate-1">
           <CutoutText size="text-lg sm:text-xl">{t(site.banda.kicker, locale)}</CutoutText>
         </h2>
@@ -830,14 +791,14 @@ function BandaPage({ locale }: { locale: Locale }) {
   );
 }
 
-function ConcursoPage({ locale }: { locale: Locale }) {
+function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   const c = site.concurso;
   return (
-    <ZPage bg="dark">
+    <ZPage bg="dark" sectionId={sectionId}>
       <div aria-hidden className="absolute inset-0 halftone opacity-20" />
       <div aria-hidden className="absolute -top-2 left-8 h-5 w-24 -rotate-6 tape-strip" />
       <div aria-hidden className="absolute -top-2 right-10 h-5 w-20 rotate-6 tape-strip" />
-      <div className="relative flex h-full flex-col p-5">
+      <div className="relative flex flex-col">
         <span className="inline-block w-fit -rotate-2 border-2 border-brand-pink bg-brand-black px-2 py-0.5 font-mono-zine text-[9px] uppercase tracking-widest text-brand-accent">
           {t(c.kicker, locale)}
         </span>
@@ -909,16 +870,16 @@ function ConcursoPage({ locale }: { locale: Locale }) {
   );
 }
 
-function ParceirosPage({ locale }: { locale: Locale }) {
+function ParceirosPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="magenta">
-      <div className="flex h-full flex-col p-5">
+    <ZPage bg="magenta" sectionId={sectionId}>
+      <div className="flex flex-col">
         <h2 className="mb-4 -rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
             {t(site.parceiros.kicker, locale)}
           </CutoutText>
         </h2>
-        <div className="flex flex-1 flex-col justify-center gap-3">
+        <div className="flex flex-col justify-center gap-3">
           {site.parceiros.list.map((p, i) => (
             <div
               key={i}
@@ -941,18 +902,18 @@ function ParceirosPage({ locale }: { locale: Locale }) {
   );
 }
 
-function ContactosPage({ locale }: { locale: Locale }) {
+function ContactosPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   const c = site.contactos;
   return (
-    <ZPage bg="dark">
-      <div className="flex h-full flex-col p-5 text-center">
+    <ZPage bg="dark" sectionId={sectionId}>
+      <div className="flex flex-col text-center">
         <h2 className="mb-2 flex justify-center -rotate-1">
           <CutoutText size="text-2xl sm:text-3xl">{t(c.kicker, locale)}</CutoutText>
         </h2>
         <p className="font-hand text-lg text-brand-accent">
           {locale === "pt" ? "fala connosco" : "get in touch"}
         </p>
-        <div className="mt-5 flex flex-1 flex-col justify-center gap-3 text-left">
+        <div className="mt-5 flex flex-col justify-center gap-3 text-left">
           <a
             href={`mailto:${c.email}`}
             className="rotate-1 border-2 border-brand-pink bg-brand-black/30 p-3 text-xs transition hover:bg-brand-pink hover:text-brand-black"
@@ -992,149 +953,51 @@ function ContactosPage({ locale }: { locale: Locale }) {
   );
 }
 
-function BackCover({ locale }: { locale: Locale }) {
-  return (
-    <ZPage bg="dark" className="ink-stain">
-      <StarSticker className="left-[15%] top-[20%]" size={44} rotate={-14} />
-      <StarSticker className="right-[18%] bottom-[24%]" size={52} rotate={18} />
-      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-        <img
-          src={logoAsset.url}
-          alt="641"
-          className="h-20 w-auto -rotate-2 rounded-sm bg-brand-pink px-2 py-1 drop-shadow-[4px_4px_0_#6b1038]"
-        />
-        <p className="font-hand text-xl text-brand-accent">
-          {t(site.footer.tagline, locale)}
-        </p>
-        <p className="font-mono-zine text-[10px] uppercase tracking-widest text-brand-pink/80">
-          Associação 641 © {new Date().getFullYear()} · Oeiras, PT
-        </p>
-      </div>
-    </ZPage>
-  );
-}
-
 function Index() {
   // placeholder — real body below
   return _Index();
 }
 
-function IndicePage({
-  locale,
-  entries,
-}: {
-  locale: Locale;
-  entries: { key: string; label: string; page: number }[];
-}) {
-  const nav = useZineNav();
-  return (
-    <ZPage bg="paper">
-      <WashiTape variant="magenta" className="left-6 -top-1 h-5 w-40 -rotate-3" />
-      <WashiTape variant="yellow" className="right-8 -top-1 h-5 w-24 rotate-6" />
-      <StarSticker className="right-[8%] top-[10%]" size={38} rotate={16} />
-      <div className="flex h-full flex-col p-5">
-        <div className="mb-1">
-          <CutoutText size="text-xl sm:text-2xl">
-            {locale === "pt" ? "índice" : "contents"}
-          </CutoutText>
-        </div>
-        <p className="mb-3 font-hand text-sm text-brand-magenta-ink/80">
-          {locale === "pt" ? "escolhe uma secção ↓" : "pick a section ↓"}
-        </p>
-        <ul className="flex flex-1 flex-col gap-1.5 overflow-hidden">
-          {entries.map((e, i) => (
-            <li key={e.key}>
-              <button
-                type="button"
-                onClick={() => nav?.goTo(e.page)}
-                className={`group flex w-full items-baseline gap-2 border-b border-dashed border-brand-magenta-ink/40 py-1 text-left transition-colors hover:text-brand-magenta ${
-                  i % 2 === 0 ? "-rotate-[0.4deg]" : "rotate-[0.4deg]"
-                }`}
-              >
-                <span className="font-mono-zine text-[10px] uppercase tracking-widest text-brand-magenta-ink/70">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="font-serif-display text-base font-black italic uppercase text-brand-magenta-ink group-hover:text-brand-magenta">
-                  {e.label}
-                </span>
-                <span
-                  aria-hidden
-                  className="flex-1 translate-y-[-3px] overflow-hidden text-brand-magenta-ink/30"
-                >
-                  {"·".repeat(60)}
-                </span>
-                <span className="font-mono-zine text-[10px] tracking-widest text-brand-magenta-ink/70">
-                  pág {e.page + 1}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-center font-hand text-xs text-brand-magenta-ink/60">
-          {locale === "pt" ? "ou folheia →" : "or flip →"}
-        </p>
-      </div>
-    </ZPage>
-  );
-}
-
 function _Index() {
   const { locale } = useI18n();
-  // Section entries used both to build the pages array AND to render the
-  // clickable Índice (table of contents). `page` is the 1-based page number
-  // of the section within the zine.
-  const sections: {
-    key: string;
-    label: string;
-    node: React.ReactNode;
-  }[] = [
-    { key: "sobre-a", label: t(site.nav.sobre, locale), node: <SobreA locale={locale} /> },
-    { key: "sobre-b", label: locale === "pt" ? "porquê" : "why", node: <SobreB locale={locale} /> },
-    { key: "services", label: locale === "pt" ? "o que fazemos" : "what we do", node: <ServicesPage locale={locale} /> },
-    {
-      key: "news-a",
-      label: t(site.nav.noticias, locale),
-      node: <NewsPage locale={locale} items={site.news.slice(0, 2)} title={locale === "pt" ? "notícias" : "news"} />,
-    },
-    {
-      key: "news-b",
-      label: locale === "pt" ? "+ notícias" : "+ news",
-      node: <NewsPage locale={locale} items={site.news.slice(2)} title={locale === "pt" ? "agenda" : "agenda"} />,
-    },
-    { key: "ajudar", label: t(site.nav.ajudar, locale), node: <AjudarPage locale={locale} /> },
-    { key: "junta", label: locale === "pt" ? "junta-te" : "join us", node: <JuntaPage locale={locale} /> },
-    { key: "banda", label: t(site.nav.banda, locale), node: <BandaPage locale={locale} /> },
-    { key: "concurso", label: locale === "pt" ? "concurso" : "contest", node: <ConcursoPage locale={locale} /> },
-    { key: "parceiros", label: t(site.nav.parceiros, locale), node: <ParceirosPage locale={locale} /> },
-    { key: "contactos", label: t(site.nav.contactos, locale), node: <ContactosPage locale={locale} /> },
+
+  const navItems: NavItem[] = [
+    { key: "cover", label: locale === "pt" ? "Início" : "Home", sectionId: "inicio" },
+    { key: "porque", label: locale === "pt" ? "Porquê" : "Why", sectionId: "porque" },
+    { key: "noticias", label: t(site.nav.noticias, locale), sectionId: "noticias" },
+    { key: "junta", label: locale === "pt" ? "Junta-te" : "Join us", sectionId: "junta" },
+    { key: "banda", label: t(site.nav.banda, locale), sectionId: "banda" },
+    { key: "concurso", label: locale === "pt" ? "concurso" : "contest", sectionId: "concurso" },
+    { key: "contactos", label: t(site.nav.contactos, locale), sectionId: "contactos" },
+    { key: "parceiros", label: t(site.nav.parceiros, locale), sectionId: "parceiros" },
   ];
-  // Cover = page 0, Índice = page 1, sections start at page 2.
-  const sectionEntries = sections.map((s, i) => ({
-    ...s,
-    page: i + 2,
-  }));
-  const pages: ZinePage[] = [
-    { key: "cover", label: "capa", node: <Cover locale={locale} /> },
-    {
-      key: "indice",
-      label: locale === "pt" ? "índice" : "contents",
-      node: <IndicePage locale={locale} entries={sectionEntries} />,
-    },
-    ...sectionEntries.map((s) => ({
-      key: s.key,
-      label: s.label,
-      node: (
-        <div className="relative h-full w-full">
-          {s.node}
-          <BackToIndex locale={locale} />
-        </div>
-      ),
-    })),
-    { key: "back", label: "fim", node: <BackCover locale={locale} /> },
-  ];
+
   return (
-    <div className="relative h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
-      <ZineBook pages={pages} />
+    <div className="relative min-h-screen bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
+      <SiteNav items={navItems} trailing={<LangToggle className="!px-0 !py-0" />} />
+      <main>
+        <Cover locale={locale} sectionId="inicio" />
+        <SobreA locale={locale} sectionId="porque" />
+        <SobreB locale={locale} />
+        <ServicesPage locale={locale} />
+        <NewsPage
+          locale={locale}
+          items={site.news.slice(0, 2)}
+          title={locale === "pt" ? "notícias" : "news"}
+          sectionId="noticias"
+        />
+        <NewsPage
+          locale={locale}
+          items={site.news.slice(2)}
+          title={locale === "pt" ? "agenda" : "agenda"}
+        />
+        <AjudarPage locale={locale} sectionId="junta" />
+        <JuntaPage locale={locale} />
+        <BandaPage locale={locale} sectionId="banda" />
+        <ConcursoPage locale={locale} sectionId="concurso" />
+        <ContactosPage locale={locale} sectionId="contactos" />
+        <ParceirosPage locale={locale} sectionId="parceiros" />
+      </main>
     </div>
   );
 }
