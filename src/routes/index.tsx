@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
@@ -459,6 +459,93 @@ function ZPage({
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * LogoMarquee — a repeated line of 641 logos that drifts left on its
+ * own and speeds up / shifts further as the user scrolls.
+ * ------------------------------------------------------------------ */
+function LogoMarquee() {
+  const [offset, setOffset] = useState(0);
+  const target = useRef(0);
+  const current = useRef(0);
+  const raf = useRef<number | null>(null);
+  const touchY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      target.current += e.deltaY * 0.9;
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      touchY.current = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY ?? 0;
+      if (touchY.current !== null) target.current += (touchY.current - y) * 1.4;
+      touchY.current = y;
+    };
+    const onScroll = () => {
+      target.current = window.scrollY * 0.9;
+    };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const tick = () => {
+      // constant slow drift + eased catch-up to the scroll-driven target
+      target.current += 0.35;
+      current.current += (target.current - current.current) * 0.09;
+      setOffset(current.current);
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("scroll", onScroll);
+      if (raf.current) cancelAnimationFrame(raf.current);
+    };
+  }, []);
+
+  const UNIT = 160; // px per logo slot (incl. gap) — keeps the loop seamless
+  const shift = -(((offset % UNIT) + UNIT) % UNIT);
+  const logos = Array.from({ length: 14 });
+
+  return (
+    <div
+      className="relative my-4 w-screen max-w-none overflow-hidden border-y-2 border-brand-magenta/40 py-3"
+      style={{
+        marginLeft: "calc(50% - 50vw)",
+        maskImage:
+          "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+      }}
+      aria-hidden="true"
+    >
+      <div
+        className="flex items-center will-change-transform"
+        style={{ gap: 24, transform: `translate3d(${shift}px,0,0)` }}
+      >
+        {logos.map((_, i) => (
+          <img
+            key={i}
+            src={logoAsset}
+            alt=""
+            className="h-16 w-auto shrink-0 rounded-sm bg-brand-pink px-2 py-1 drop-shadow-[3px_3px_0_#6b1038] sm:h-20"
+            style={{
+              width: UNIT - 24,
+              objectFit: "contain",
+              transform: `rotate(${i % 2 === 0 ? -1.5 : 1.5}deg)`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
     <ZPage bg="dark" className="ink-stain min-h-svh" sectionId={sectionId}>
@@ -476,11 +563,8 @@ function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
             {t(site.hero.title, locale)}
           </CutoutText>
         </h1>
-        <img
-          src={logoAsset}
-          alt="641"
-          className="mt-3 h-24 w-auto rotate-1 rounded-sm bg-brand-pink px-2 py-1 drop-shadow-[4px_4px_0_#6b1038] sm:h-28"
-        />
+        <span className="sr-only">641</span>
+        <LogoMarquee />
         <p className="mt-4 max-w-[85%] text-xs leading-snug text-brand-pink-soft/95 sm:text-sm">
           {t(site.hero.subtitle, locale)}
         </p>
