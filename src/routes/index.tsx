@@ -491,8 +491,6 @@ function LogoMarquee() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     const tick = () => {
-      // constant slow drift + eased catch-up to the scroll-driven target
-      target.current += 0.35;
       current.current += (target.current - current.current) * 0.09;
       setOffset(current.current);
       raf.current = requestAnimationFrame(tick);
@@ -533,7 +531,7 @@ function LogoMarquee() {
             key={i}
             src={logoAsset}
             alt=""
-            className="h-16 w-auto shrink-0 rounded-sm bg-brand-pink px-2 py-1 drop-shadow-[3px_3px_0_#6b1038] sm:h-20"
+            className="h-16 w-auto shrink-0 sm:h-20"
             style={{
               width: UNIT - 24,
               objectFit: "contain",
