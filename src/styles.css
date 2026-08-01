@@ -973,21 +973,17 @@
   background: transparent;
   cursor: pointer;
   border-radius: 8px;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .contact-channel-icon:focus-visible {
-  outline: 2px solid var(--color-brand-accent);
+  outline: 2px solid var(--color-brand-magenta);
   outline-offset: 2px;
 }
 
 .contact-channel-icon:hover,
 .contact-channel-icon.is-active {
   transform: scale(1.06);
-}
-
-.contact-channel-icon.is-active {
-  filter: drop-shadow(0 0 6px rgba(196, 25, 88, 0.45));
 }
 
 .contact-channel-icon--instagram {
@@ -1019,13 +1015,7 @@
   fill: none;
   stroke-width: 0.6px;
   vector-effect: non-scaling-stroke;
-  transition: stroke-dashoffset 0.45s ease, stroke 0.2s ease;
-  stroke-dashoffset: 0;
-}
-
-.contact-channel-icon:hover path,
-.contact-channel-icon.is-active path {
-  stroke: var(--color-brand-accent);
+  transition: stroke-dashoffset 0.55s ease;
   stroke-dashoffset: 0;
 }
 

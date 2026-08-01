@@ -1193,24 +1193,7 @@ function ContactChannelIcon({
     [icon, rawSvg],
   );
 
-  useEffect(() => {
-    const host = svgHostRef.current;
-    if (!host) return;
-
-    const setupPaths = () => {
-      host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
-        const length = path.getTotalLength();
-        if (length <= 0) return;
-        // Ready for hover draw animation, but KEEP the stroke fully visible at rest
-        path.style.strokeDasharray = `${length}`;
-        path.style.strokeDashoffset = "0";
-      });
-    };
-
-    requestAnimationFrame(() => requestAnimationFrame(setupPaths));
-  }, [svgMarkup]);
-
-  const replayStroke = () => {
+  const replayStroke = useCallback(() => {
     const host = svgHostRef.current;
     if (!host) return;
     host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
@@ -1219,10 +1202,32 @@ function ContactChannelIcon({
       path.style.transition = "none";
       path.style.strokeDashoffset = `${length}`;
       void path.getBoundingClientRect();
-      path.style.transition = "";
+      path.style.transition = "stroke-dashoffset 0.55s ease";
       path.style.strokeDashoffset = "0";
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    const host = svgHostRef.current;
+    if (!host) return;
+
+    const setupPaths = () => {
+      host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+        const length = path.getTotalLength();
+        if (length <= 0) return;
+        path.style.strokeDasharray = `${length}`;
+        path.style.strokeDashoffset = "0";
+      });
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(setupPaths));
+  }, [svgMarkup]);
+
+  useEffect(() => {
+    if (active) {
+      replayStroke();
+    }
+  }, [active, replayStroke]);
 
   return (
     <button
@@ -1232,6 +1237,7 @@ function ContactChannelIcon({
       aria-pressed={active}
       onClick={onSelect}
       onMouseEnter={replayStroke}
+      onFocus={replayStroke}
     >
       <span
         ref={svgHostRef}
