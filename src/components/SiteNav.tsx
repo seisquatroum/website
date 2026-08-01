@@ -24,12 +24,17 @@ const navBtnClass = (active: boolean) =>
 export function SiteNav({
   items,
   trailing,
+  onNavigate,
+  activeKey: controlledActiveKey,
 }: {
   items: NavItem[];
   trailing?: ReactNode;
+  onNavigate?: (item: NavItem) => void;
+  activeKey?: string;
 }) {
   const [activeKey, setActiveKey] = useState(items[0]?.key ?? "");
   const [open, setOpen] = useState(false);
+  const visibleActiveKey = controlledActiveKey ?? activeKey;
 
   useEffect(() => {
     const sections = items
@@ -58,6 +63,10 @@ export function SiteNav({
   const scrollTo = (item: NavItem) => {
     setActiveKey(item.key);
     setOpen(false);
+    if (onNavigate) {
+      onNavigate(item);
+      return;
+    }
     document.getElementById(item.sectionId)?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -71,7 +80,7 @@ export function SiteNav({
               key={item.key}
               type="button"
               onClick={() => scrollTo(item)}
-              className={`shrink-0 ${navBtnClass(activeKey === item.key)}`}
+              className={`shrink-0 ${navBtnClass(visibleActiveKey === item.key)}`}
               style={{ fontFamily: "'Special Elite','Courier Prime',monospace" }}
             >
               {item.label}
@@ -107,7 +116,7 @@ export function SiteNav({
                     type="button"
                     onClick={() => scrollTo(item)}
                     className={`rounded-sm px-3 py-3 text-left font-mono-zine text-xs uppercase tracking-[0.2em] transition-colors ${
-                      activeKey === item.key
+                      visibleActiveKey === item.key
                         ? "bg-brand-magenta/20 text-brand-accent"
                         : "text-brand-pink/80 hover:bg-brand-pink/10 hover:text-brand-pink"
                     }`}
@@ -124,7 +133,7 @@ export function SiteNav({
             className="truncate font-mono-zine text-[10px] uppercase tracking-[0.2em] text-brand-pink/80"
             style={{ fontFamily: "'Special Elite','Courier Prime',monospace" }}
           >
-            {items.find((i) => i.key === activeKey)?.label ?? ""}
+            {items.find((i) => i.key === visibleActiveKey)?.label ?? ""}
           </span>
         </div>
 

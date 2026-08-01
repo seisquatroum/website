@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import HTMLFlipBook from "react-pageflip";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
@@ -210,9 +211,9 @@ function RichText({ children }: { children: string }) {
  * paper scraps, and a digital-camera photo frame.
  * ------------------------------------------------------------------ */
 const WASHI_COLORS = {
-  magenta: "bg-brand-magenta/85",
-  yellow: "bg-brand-accent/90",
-  teal: "bg-brand-teal/85",
+  magenta: "washi-magenta-img",
+  yellow: "washi-yellow-img",
+  teal: "washi-teal-img",
 } as const;
 
 function WashiTape({
@@ -450,9 +451,9 @@ function ZPage({
   return (
     <Tag
       id={sectionId}
-      className={`relative w-full overflow-hidden zine-noise ${sectionId ? "scroll-mt-14" : ""} ${bgCls} ${className}`}
+      className={`zine-page relative w-full overflow-hidden zine-noise ${sectionId ? "scroll-mt-14" : ""} ${bgCls} ${className}`}
     >
-      <div className="relative mx-auto flex w-full max-w-4xl flex-col px-5 py-10 sm:px-6 sm:py-12">
+      <div className="zine-page-inner relative mx-auto flex w-full max-w-4xl flex-col px-5 py-10 sm:px-6 sm:py-12">
         {children}
       </div>
     </Tag>
@@ -464,50 +465,8 @@ function ZPage({
  * own and speeds up / shifts further as the user scrolls.
  * ------------------------------------------------------------------ */
 function LogoMarquee() {
-  const [offset, setOffset] = useState(0);
-  const target = useRef(0);
-  const current = useRef(0);
-  const raf = useRef<number | null>(null);
-  const touchY = useRef<number | null>(null);
-
-  useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      target.current += e.deltaY * 0.9;
-    };
-    const onTouchStart = (e: TouchEvent) => {
-      touchY.current = e.touches[0]?.clientY ?? null;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? 0;
-      if (touchY.current !== null) target.current += (touchY.current - y) * 1.4;
-      touchY.current = y;
-    };
-    const onScroll = () => {
-      target.current = window.scrollY * 0.9;
-    };
-    window.addEventListener("wheel", onWheel, { passive: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    const tick = () => {
-      current.current += (target.current - current.current) * 0.09;
-      setOffset(current.current);
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-
-    return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("scroll", onScroll);
-      if (raf.current) cancelAnimationFrame(raf.current);
-    };
-  }, []);
-
   const UNIT = 160; // px per logo slot (incl. gap) — keeps the loop seamless
-  const shift = -(((offset % UNIT) + UNIT) % UNIT);
+  const shift = 0;
   const logos = Array.from({ length: 14 });
 
   return (
@@ -546,7 +505,7 @@ function LogoMarquee() {
 
 function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="dark" className="ink-stain min-h-svh" sectionId={sectionId}>
+    <ZPage bg="dark" className="ink-stain" sectionId={sectionId}>
       <WashiTape variant="yellow" className="left-4 top-2 h-4 w-32 -rotate-3" />
       <WashiTape variant="teal" className="right-16 top-6 h-4 w-24 rotate-6" />
       <StarSticker className="left-[6%] top-[38%]" size={40} rotate={-18} />
@@ -1035,9 +994,607 @@ function ContactosPage({ locale, sectionId }: { locale: Locale; sectionId?: stri
   );
 }
 
+type FlipBookHandle = {
+  pageFlip: () => {
+    flipNext: (corner?: "top" | "bottom") => void;
+    flipPrev: (corner?: "top" | "bottom") => void;
+    flip: (page: number, corner?: "top" | "bottom") => void;
+  };
+};
+
+type MagazinePage = {
+  key: string;
+  label: string;
+  content: React.ReactNode;
+  hard?: boolean;
+};
+
+type MagazineMarkerItem = NavItem & {
+  page: number;
+  secondaryLabel?: string;
+  keys: string[];
+};
+
+const MagazineSheet = forwardRef<
+  HTMLDivElement,
+  {
+    children: React.ReactNode;
+    number: number;
+    hard?: boolean;
+  }
+>(function MagazineSheet({ children, number, hard = false }, ref) {
+  return (
+    <div
+      ref={ref}
+      className={`magazine-sheet ${hard ? "magazine-sheet-hard" : ""}`}
+      data-density={hard ? "hard" : "soft"}
+    >
+      <div className="magazine-sheet-face">
+        {children}
+        <span className="magazine-page-number">- {number} -</span>
+      </div>
+    </div>
+  );
+});
+
+function IndexPage({
+  locale,
+  entries,
+  onJump,
+}: {
+  locale: Locale;
+  entries: { label: string; page: number }[];
+  onJump: (page: number) => void;
+}) {
+  return (
+    <ZPage bg="paper">
+      <WashiTape variant="yellow" className="left-8 top-3 h-4 w-28 -rotate-3" />
+      <StarSticker className="right-[9%] top-[8%]" size={34} rotate={18} />
+      <div className="flex h-full flex-col">
+        <p className="font-mono-zine text-[8px] uppercase tracking-widest text-brand-magenta">
+          {locale === "pt" ? "associação 641 / edição web" : "association 641 / web issue"}
+        </p>
+        <h2 className="mt-3 leading-none">
+          <CutoutText size="text-2xl sm:text-3xl" gap="gap-0.5">
+            {locale === "pt" ? "ÍNDICE" : "INDEX"}
+          </CutoutText>
+        </h2>
+        <div className="magazine-index-list mt-4 flex flex-col gap-1.5">
+          {entries.map((entry, i) => (
+            <button
+              key={entry.label}
+              type="button"
+              onClick={() => onJump(entry.page)}
+              className={`magazine-index-item group grid grid-cols-[1fr_auto] items-center gap-3 border-[3px] border-brand-black bg-brand-pink px-3 py-1.5 text-left text-brand-black shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-1 ${
+                i % 2 === 0 ? "-rotate-1" : "rotate-1"
+              }`}
+            >
+              <span className="font-serif-display text-[13px] font-black italic uppercase leading-none text-brand-magenta-ink">
+                {entry.label}
+              </span>
+              <span className="font-mono-zine text-xs text-brand-black/60">
+                {String(entry.page + 1).padStart(2, "0")}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </ZPage>
+  );
+}
+
+function SobrePhotoPage({ locale }: { locale: Locale }) {
+  return (
+    <ZPage bg="paper">
+      <WashiTape variant="teal" className="left-6 top-2 h-4 w-28 -rotate-6" />
+      <WashiTape variant="yellow" className="right-8 top-4 h-4 w-24 rotate-6" />
+      <div className="magazine-index-page flex h-full flex-col">
+        <h2 className="mb-4 -rotate-1">
+          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "sobre" : "about"}</CutoutText>
+        </h2>
+        <Polaroid
+          label={locale === "pt" ? "ensaio na rua" : "street rehearsal"}
+          src="/street-rehearsal.jpg"
+          aspect="aspect-[16/10]"
+          rotate="-rotate-1"
+          className="about-photo-card w-full"
+        />
+        <div className="mt-5 grid gap-3 text-[14px] leading-relaxed">
+          <ScrapPaper color="pink" rotate="rotate-1" className="about-lead">
+            {locale === "pt"
+              ? "Antes da 641, ensaiava-se onde dava: na rua, com cabos no chão, instrumentos às costas e vontade a mais para ficar em silêncio."
+              : "Before 641, rehearsals happened wherever they could: on the street, with cables on the ground, instruments on shoulders and too much will to stay quiet."}
+          </ScrapPaper>
+          <p>
+            <RichText>
+              {locale === "pt"
+                ? "A associação nasce para transformar essa energia improvisada num lugar acessível, técnico e aberto a quem está a começar."
+                : "The association turns that improvised energy into an accessible, supported place for people who are just starting out."}
+            </RichText>
+          </p>
+        </div>
+      </div>
+    </ZPage>
+  );
+}
+
+function SobreOriginPage({ locale }: { locale: Locale }) {
+  const blocks = locale === "pt"
+    ? [
+        {
+          title: "O problema",
+          body: "Há bandas novas, instrumentos e vontade. O que costuma faltar é o mais simples e mais caro: um espaço para ensaiar.",
+        },
+        {
+          title: "A rua",
+          body: "Sem garagens nem salas acessíveis, a rua serviu de sala de ensaio improvisada. Divertido, sim. Sustentável, nem por isso.",
+        },
+        {
+          title: "A resposta",
+          body: "A 641 existe para que ninguém em Oeiras perca música por não ter onde experimentar, errar, repetir e crescer.",
+        },
+      ]
+    : [
+        {
+          title: "The problem",
+          body: "There are new bands, instruments and ambition. What is usually missing is the simplest and most expensive thing: a rehearsal room.",
+        },
+        {
+          title: "The street",
+          body: "With no garages or affordable rooms, the street became an improvised rehearsal space. Fun, yes. Sustainable, not really.",
+        },
+        {
+          title: "The answer",
+          body: "641 exists so nobody in Oeiras loses music because they have nowhere to try, fail, repeat and grow.",
+        },
+      ];
+
+  return (
+    <ZPage bg="paper">
+      <WashiTape variant="yellow" className="left-8 top-3 h-4 w-24 -rotate-3" />
+      <StarSticker className="right-10 top-16" size={34} rotate={12} />
+      <div className="flex h-full flex-col">
+        <h2 className="mb-5 -rotate-1">
+          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "origem" : "origin"}</CutoutText>
+        </h2>
+        <div className="about-blocks">
+          {blocks.map((block, index) => (
+            <article key={block.title} className={`about-block ${index % 2 ? "about-block-alt" : ""}`}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>{block.title}</h3>
+                <p>{block.body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="mt-auto pt-4">
+          <ScrapPaper color="pink" rotate="-rotate-1" className="text-sm">
+            {t(site.sobre.highlight, locale)}
+          </ScrapPaper>
+        </div>
+      </div>
+    </ZPage>
+  );
+}
+
+function BackCoverPage({ locale }: { locale: Locale }) {
+  return (
+    <ZPage bg="cream" className="back-cover-page">
+      <StarSticker className="left-[18%] top-[20%]" size={46} rotate={-14} />
+      <StarSticker className="right-[22%] bottom-[26%]" size={52} rotate={18} />
+      <div className="flex h-full flex-col items-center justify-center text-center">
+        <div className="back-cover-logo paper-tex">
+          <span>641</span>
+        </div>
+        <p className="mt-7 font-hand text-2xl font-bold text-brand-accent sm:text-3xl">
+          {t(site.footer.tagline, locale)}
+        </p>
+        <p className="mt-7 font-mono-zine text-[10px] uppercase tracking-[0.28em] text-brand-magenta/70">
+          Associação 641 · 2026 · Oeiras, PT
+        </p>
+      </div>
+    </ZPage>
+  );
+}
+
+function MagazineMarkers({
+  items,
+  activeKey,
+  onNavigate,
+}: {
+  items: MagazineMarkerItem[];
+  activeKey?: string;
+  onNavigate: (item: MagazineMarkerItem) => void;
+}) {
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const activeMarkerRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    const list = listRef.current;
+    const marker = activeMarkerRef.current;
+    if (!list || !marker) return;
+
+    const isMobile = window.matchMedia("(max-width: 760px)").matches;
+    marker.scrollIntoView({
+      behavior: "smooth",
+      block: isMobile ? "nearest" : "center",
+      inline: isMobile ? "center" : "nearest",
+    });
+  }, [activeKey]);
+
+  return (
+    <div className="magazine-markers" aria-label="Índice da revista">
+      <div className="magazine-marker-list" ref={listRef}>
+        {items.map((item) => {
+          const isActive = Boolean(activeKey && item.keys.includes(activeKey));
+          return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => onNavigate(item)}
+            ref={isActive ? activeMarkerRef : undefined}
+            className={`magazine-marker ${isActive ? "is-active" : ""}`}
+          >
+            <span>{item.label}</span>
+            {item.secondaryLabel && <span>{item.secondaryLabel}</span>}
+          </button>
+          );
+        })}
+      </div>
+      <LangToggle className="magazine-lang" />
+    </div>
+  );
+}
+
+function MagazineIndex() {
+  const { locale } = useI18n();
+  const bookRef = useRef<FlipBookHandle | null>(null);
+  const wheelLocked = useRef(false);
+  const wheelRemainder = useRef(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const flipTo = useCallback((page: number) => {
+    bookRef.current?.pageFlip().flip(page, "bottom");
+  }, []);
+
+  const flipPrev = useCallback(() => {
+    bookRef.current?.pageFlip().flipPrev("bottom");
+  }, []);
+
+  const flipNext = useCallback(() => {
+    bookRef.current?.pageFlip().flipNext("bottom");
+  }, []);
+
+  const handleWheel = useCallback(
+    (event: React.WheelEvent<HTMLElement>) => {
+      event.preventDefault();
+      wheelRemainder.current += event.deltaY;
+      if (wheelLocked.current || Math.abs(wheelRemainder.current) < 24) return;
+
+      const direction = wheelRemainder.current;
+      wheelRemainder.current = 0;
+      wheelLocked.current = true;
+      if (direction > 0) {
+        flipNext();
+      } else {
+        flipPrev();
+      }
+
+      window.setTimeout(() => {
+        wheelLocked.current = false;
+      }, 170);
+    },
+    [flipNext, flipPrev],
+  );
+
+  const magazinePages: MagazinePage[] = useMemo(() => {
+    const jumpEntries = [
+      { label: locale === "pt" ? "Sobre" : "About", page: 2 },
+      { label: locale === "pt" ? "Origem" : "Origin", page: 3 },
+      { label: locale === "pt" ? "Razões" : "Reasons", page: 4 },
+      { label: locale === "pt" ? "O que fazemos" : "What we do", page: 5 },
+      { label: t(site.nav.noticias, locale), page: 6 },
+      { label: "Agenda", page: 7 },
+      { label: locale === "pt" ? "Quero ajudar" : "Support us", page: 8 },
+      { label: locale === "pt" ? "Junta-te" : "Join us", page: 9 },
+      { label: t(site.nav.banda, locale), page: 10 },
+      { label: locale === "pt" ? "Concurso" : "Contest", page: 11 },
+      { label: t(site.nav.contactos, locale), page: 12 },
+      { label: t(site.nav.parceiros, locale), page: 13 },
+    ];
+
+    return [
+      {
+        key: "cover",
+        label: locale === "pt" ? "Capa" : "Cover",
+        hard: true,
+        content: <Cover locale={locale} sectionId="inicio" />,
+      },
+      {
+        key: "indice",
+        label: locale === "pt" ? "Índice" : "Index",
+        content: <IndexPage locale={locale} entries={jumpEntries} onJump={flipTo} />,
+      },
+      {
+        key: "sobre",
+        label: locale === "pt" ? "Sobre" : "About",
+        content: <SobrePhotoPage locale={locale} />,
+      },
+      {
+        key: "origem",
+        label: locale === "pt" ? "Origem" : "Origin",
+        content: <SobreOriginPage locale={locale} />,
+      },
+      {
+        key: "porque-b",
+        label: locale === "pt" ? "Razões" : "Reasons",
+        content: <SobreB locale={locale} />,
+      },
+      {
+        key: "servicos",
+        label: locale === "pt" ? "Fazemos" : "Services",
+        content: <ServicesPage locale={locale} />,
+      },
+      {
+        key: "noticias",
+        label: t(site.nav.noticias, locale),
+        content: (
+          <NewsPage
+            locale={locale}
+            items={site.news.slice(0, 2)}
+            title={locale === "pt" ? "notícias" : "news"}
+            sectionId="noticias"
+          />
+        ),
+      },
+      {
+        key: "agenda",
+        label: "Agenda",
+        content: (
+          <NewsPage
+            locale={locale}
+            items={site.news.slice(2)}
+            title={locale === "pt" ? "agenda" : "agenda"}
+          />
+        ),
+      },
+      {
+        key: "ajudar",
+        label: locale === "pt" ? "Ajudar" : "Support",
+        content: <AjudarPage locale={locale} sectionId="junta" />,
+      },
+      {
+        key: "junta",
+        label: locale === "pt" ? "Junta-te" : "Join us",
+        content: <JuntaPage locale={locale} />,
+      },
+      {
+        key: "banda",
+        label: t(site.nav.banda, locale),
+        content: <BandaPage locale={locale} sectionId="banda" />,
+      },
+      {
+        key: "concurso",
+        label: locale === "pt" ? "Concurso" : "Contest",
+        content: <ConcursoPage locale={locale} sectionId="concurso" />,
+      },
+      {
+        key: "contactos",
+        label: t(site.nav.contactos, locale),
+        content: <ContactosPage locale={locale} sectionId="contactos" />,
+      },
+      {
+        key: "parceiros",
+        label: t(site.nav.parceiros, locale),
+        content: <ParceirosPage locale={locale} sectionId="parceiros" />,
+      },
+      {
+        key: "back",
+        label: locale === "pt" ? "Fim" : "End",
+        hard: true,
+        content: <BackCoverPage locale={locale} />,
+      },
+    ];
+  }, [flipTo, locale]);
+
+  const navItems: MagazineMarkerItem[] = [
+    {
+      key: "inicio-spread",
+      label: locale === "pt" ? "Capa" : "Cover",
+      secondaryLabel: locale === "pt" ? "Índice" : "Index",
+      sectionId: "indice",
+      page: 1,
+      keys: ["cover", "indice"],
+    },
+    {
+      key: "sobre-spread",
+      label: locale === "pt" ? "Sobre" : "About",
+      secondaryLabel: locale === "pt" ? "Origem" : "Origin",
+      sectionId: "sobre",
+      page: 2,
+      keys: ["sobre", "origem"],
+    },
+    {
+      key: "porque-spread",
+      label: locale === "pt" ? "Razões" : "Reasons",
+      secondaryLabel: locale === "pt" ? "Fazemos" : "Services",
+      sectionId: "porque-b",
+      page: 4,
+      keys: ["porque-b", "servicos"],
+    },
+    {
+      key: "noticias-spread",
+      label: locale === "pt" ? "Notícias" : "News",
+      secondaryLabel: "Agenda",
+      sectionId: "noticias",
+      page: 6,
+      keys: ["noticias", "agenda"],
+    },
+    {
+      key: "ajudar-spread",
+      label: locale === "pt" ? "Ajudar" : "Support",
+      secondaryLabel: locale === "pt" ? "Junta-te" : "Join us",
+      sectionId: "ajudar",
+      page: 8,
+      keys: ["ajudar", "junta"],
+    },
+    {
+      key: "bandas-spread",
+      label: locale === "pt" ? "Bandas" : "Bands",
+      secondaryLabel: locale === "pt" ? "Concurso" : "Contest",
+      sectionId: "banda",
+      page: 10,
+      keys: ["banda", "concurso"],
+    },
+    {
+      key: "contactos-spread",
+      label: locale === "pt" ? "Contactos" : "Contact",
+      secondaryLabel: locale === "pt" ? "Parceiros" : "Partners",
+      sectionId: "contactos",
+      page: 12,
+      keys: ["contactos", "parceiros"],
+    },
+    {
+      key: "fim-spread",
+      label: locale === "pt" ? "Fim" : "End",
+      sectionId: "back",
+      page: 14,
+      keys: ["back"],
+    },
+  ];
+
+  const spreadNavItems: MagazineMarkerItem[] = [
+    {
+      key: "capa-page",
+      label: locale === "pt" ? "Capa" : "Cover",
+      sectionId: "inicio",
+      page: 0,
+      keys: ["cover"],
+    },
+    {
+      key: "indice-spread",
+      label: locale === "pt" ? "Índice" : "Index",
+      secondaryLabel: locale === "pt" ? "Sobre" : "About",
+      sectionId: "indice",
+      page: 1,
+      keys: ["indice", "sobre"],
+    },
+    {
+      key: "origem-spread",
+      label: locale === "pt" ? "Origem" : "Origin",
+      secondaryLabel: locale === "pt" ? "Razões" : "Reasons",
+      sectionId: "origem",
+      page: 3,
+      keys: ["origem", "porque-b"],
+    },
+    {
+      key: "fazemos-spread",
+      label: locale === "pt" ? "Fazemos" : "Services",
+      secondaryLabel: locale === "pt" ? "Notícias" : "News",
+      sectionId: "servicos",
+      page: 5,
+      keys: ["servicos", "noticias"],
+    },
+    {
+      key: "agenda-spread",
+      label: "Agenda",
+      secondaryLabel: locale === "pt" ? "Ajudar" : "Support",
+      sectionId: "agenda",
+      page: 7,
+      keys: ["agenda", "ajudar"],
+    },
+    {
+      key: "junta-spread",
+      label: locale === "pt" ? "Junta-te" : "Join us",
+      secondaryLabel: locale === "pt" ? "Bandas" : "Bands",
+      sectionId: "junta",
+      page: 9,
+      keys: ["junta", "banda"],
+    },
+    {
+      key: "concurso-spread",
+      label: locale === "pt" ? "Concurso" : "Contest",
+      secondaryLabel: locale === "pt" ? "Contactos" : "Contact",
+      sectionId: "concurso",
+      page: 11,
+      keys: ["concurso", "contactos"],
+    },
+    {
+      key: "parceiros-spread",
+      label: locale === "pt" ? "Parceiros" : "Partners",
+      secondaryLabel: locale === "pt" ? "Fim" : "End",
+      sectionId: "parceiros",
+      page: 13,
+      keys: ["parceiros", "back"],
+    },
+  ];
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
+      <main className="magazine-stage" onWheel={handleWheel}>
+        <div className="magazine-book-wrap">
+          <HTMLFlipBook
+            ref={bookRef}
+            className="magazine-book"
+            style={{}}
+            startPage={1}
+            size="stretch"
+            width={520}
+            height={720}
+            minWidth={285}
+            maxWidth={440}
+            minHeight={420}
+            maxHeight={620}
+            drawShadow
+            flippingTime={360}
+            usePortrait
+            startZIndex={10}
+            autoSize
+            maxShadowOpacity={0.65}
+            showCover
+            mobileScrollSupport
+            clickEventForward
+            useMouseEvents
+            swipeDistance={24}
+            showPageCorners
+            disableFlipByClick={false}
+            onFlip={(event) => setCurrentPage(Number(event.data) || 0)}
+          >
+            {magazinePages.map((page, index) => (
+              <MagazineSheet
+                key={page.key}
+                number={index + 1}
+                hard={page.hard}
+              >
+                <div id={page.key} className="h-full">
+                  {page.content}
+                </div>
+              </MagazineSheet>
+            ))}
+          </HTMLFlipBook>
+          <MagazineMarkers
+            items={spreadNavItems}
+            onNavigate={(item) => {
+              flipTo(item.page);
+            }}
+            activeKey={magazinePages[currentPage]?.key}
+          />
+        </div>
+
+        <div className="magazine-controls" aria-label="Página atual">
+          <span className="magazine-counter">
+            PÁG {currentPage + 1} / {magazinePages.length}
+          </span>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function Index() {
   // placeholder — real body below
-  return _Index();
+  return <MagazineIndex />;
 }
 
 function _Index() {
