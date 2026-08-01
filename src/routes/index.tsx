@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Copy, ExternalLink, X } from "lucide-react";
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
@@ -8,6 +9,12 @@ import logoWhiteAsset from "@/assets/641-logo-white.png";
 import sixDigitAsset from "@/assets/six6.png";
 import fourDigitAsset from "@/assets/four4.png";
 import oneDigitAsset from "@/assets/one1.png";
+import emailIconSvg from "@/assets/email-icon.svg?raw";
+import phoneIconSvg from "@/assets/phone-icon.svg?raw";
+import locationIconSvg from "@/assets/location-icon.svg?raw";
+import instaIconSvg from "@/assets/insta-icon.svg?raw";
+import whatsappIconSvg from "@/assets/whatsapp-icon.svg?raw";
+import discordIconSvg from "@/assets/discord-icon.svg?raw";
 import {
   Dialog,
   DialogContent,
@@ -987,54 +994,252 @@ function ParceirosPage({ locale, sectionId }: { locale: Locale; sectionId?: stri
   );
 }
 
-function ContactosPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
+const CONTACT_DIRECT_REDIRECT_IDS = new Set(["instagram", "whatsapp", "discord"]);
+
+function ContactosPage({
+  locale,
+  sectionId,
+  isVisible = true,
+}: {
+  locale: Locale;
+  sectionId?: string;
+  isVisible?: boolean;
+}) {
   const c = site.contactos;
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isVisible) {
+      setActiveChannelId(null);
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
+    setCopied(false);
+    if (copyTimeoutRef.current !== null) {
+      window.clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = null;
+    }
+  }, [activeChannelId]);
+
+  useEffect(
+    () => () => {
+      if (copyTimeoutRef.current !== null) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
+  const activeChannel = c.channels.find((ch) => ch.id === activeChannelId);
+
+  const closePopup = () => {
+    setActiveChannelId(null);
+  };
+
+  const handleSelect = (id: string, href: string) => {
+    if (CONTACT_DIRECT_REDIRECT_IDS.has(id)) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (activeChannelId === id) {
+      closePopup();
+      return;
+    }
+    setActiveChannelId(id);
+  };
+
+  const handleCopy = async () => {
+    if (!activeChannel) return;
+
+    try {
+      await navigator.clipboard.writeText(activeChannel.value);
+      setCopied(true);
+      if (copyTimeoutRef.current !== null) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+        copyTimeoutRef.current = null;
+      }, 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
-    <ZPage bg="dark" sectionId={sectionId}>
-      <div className="flex flex-col text-center">
-        <h2 className="mb-2 flex justify-center -rotate-1">
-          <CutoutText size="text-2xl sm:text-3xl">{t(c.kicker, locale)}</CutoutText>
-        </h2>
-        <p className="font-hand text-lg text-brand-accent">
-          {locale === "pt" ? "fala connosco" : "get in touch"}
-        </p>
-        <div className="mt-5 flex flex-col justify-center gap-3 text-left">
-          <a
-            href={`mailto:${c.email}`}
-            className="rotate-1 border-2 border-brand-pink bg-brand-black/30 p-3 text-xs transition hover:bg-brand-pink hover:text-brand-black"
-          >
-            <div className="font-marker text-base">email</div>
-            <div className="mt-1 break-words">{c.email}</div>
-          </a>
-          <a
-            href={`tel:${c.phone.replace(/\s/g, "")}`}
-            className="-rotate-1 border-2 border-brand-pink bg-brand-black/30 p-3 text-xs transition hover:bg-brand-pink hover:text-brand-black"
-          >
-            <div className="font-marker text-base">telefone</div>
-            <div className="mt-1">{c.phone}</div>
-          </a>
-          <div className="rotate-1 border-2 border-brand-pink bg-brand-black/30 p-3 text-xs">
-            <div className="font-marker text-base">
-              {locale === "pt" ? "onde" : "where"}
-            </div>
-            <div className="mt-1">{c.city}</div>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {Object.entries(c.socials).map(([name, url]) => (
-            <a
-              key={name}
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="border-2 border-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent hover:border-brand-accent hover:text-brand-black"
-            >
-              {name}
-            </a>
+    <ZPage bg="paper" sectionId={sectionId} className="contactos-page">
+      <div className="contactos-layout flex h-full min-h-full w-full flex-col items-center justify-center text-center">
+        <div className="contactos-icon-column" role="toolbar" aria-label={t(c.kicker, locale)}>
+          {c.channels.map((channel) => (
+            <ContactChannelIcon
+              key={channel.id}
+              icon={channel.icon}
+              label={t(channel.label, locale)}
+              active={activeChannelId === channel.id}
+              onSelect={() => handleSelect(channel.id, channel.href)}
+            />
           ))}
         </div>
+
+        {activeChannel && (
+          <div className="contactos-popup-layer">
+            <button
+              type="button"
+              className="contactos-popup-backdrop"
+              aria-label={locale === "pt" ? "fechar" : "close"}
+              onClick={closePopup}
+              onMouseDown={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+            />
+            <div
+              className="contactos-popup"
+              role="dialog"
+              aria-labelledby="contactos-popup-value"
+              aria-live="polite"
+              onMouseDown={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+            >
+            <button
+              type="button"
+              className="contactos-popup-close"
+              aria-label={locale === "pt" ? "fechar" : "close"}
+              onClick={closePopup}
+            >
+              <X className="contactos-popup-close-icon" aria-hidden="true" />
+            </button>
+            <p id="contactos-popup-value" className="contactos-detail-value">
+              {activeChannel.value}
+            </p>
+            <div className="contactos-popup-actions">
+              <button
+                type="button"
+                className={`contactos-detail-action contactos-detail-copy ${copied ? "is-copied" : ""}`}
+                onClick={handleCopy}
+              >
+                <Copy className="contactos-detail-action-icon" aria-hidden="true" />
+                <span>{copied ? (locale === "pt" ? "copiado!" : "copied!") : locale === "pt" ? "copiar" : "copy"}</span>
+              </button>
+              <a
+                href={activeChannel.href}
+                target={activeChannel.href.startsWith("http") ? "_blank" : undefined}
+                rel={activeChannel.href.startsWith("http") ? "noreferrer" : undefined}
+                className="contactos-detail-action contactos-detail-link"
+              >
+                <span>{t(activeChannel.cta, locale)}</span>
+                <ExternalLink className="contactos-detail-action-icon" aria-hidden="true" />
+              </a>
+            </div>
+            </div>
+          </div>
+        )}
       </div>
     </ZPage>
+  );
+}
+
+const CONTACT_ICON_SVGS: Record<string, string> = {
+  email: emailIconSvg,
+  phone: phoneIconSvg,
+  location: locationIconSvg,
+  instagram: instaIconSvg,
+  whatsapp: whatsappIconSvg,
+  discord: discordIconSvg,
+};
+
+function prepareContactIconSvg(svg: string, prefix: string) {
+  let out = svg
+    .replace(/\bid="([^"]+)"/g, `id="${prefix}-$1"`)
+    .replace(/url\(#([^)]+)\)/g, `url(#${prefix}-$1)`)
+    .replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}-$1"`);
+
+  // These exports have width/height but no viewBox — force a proper viewport so CSS sizing works
+  out = out.replace(/<svg\b([^>]*)>/i, (_match, attrs: string) => {
+    const width = attrs.match(/\bwidth="(\d+(?:\.\d+)?)"/i)?.[1];
+    const height = attrs.match(/\bheight="(\d+(?:\.\d+)?)"/i)?.[1];
+    let next = attrs
+      .replace(/\swidth="[^"]*"/gi, "")
+      .replace(/\sheight="[^"]*"/gi, "")
+      .replace(/\soverflow="[^"]*"/gi, "");
+
+    if (width && height && !/\bviewBox=/i.test(attrs)) {
+      next += ` viewBox="0 0 ${width} ${height}"`;
+    }
+
+    next += ' width="100%" height="100%" overflow="visible" preserveAspectRatio="xMidYMid meet"';
+    return `<svg${next}>`;
+  });
+
+  return out;
+}
+
+function ContactChannelIcon({
+  icon,
+  label,
+  active,
+  onSelect,
+}: {
+  icon: string;
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const svgHostRef = useRef<HTMLSpanElement>(null);
+  const rawSvg = CONTACT_ICON_SVGS[icon] ?? "";
+  const svgMarkup = useMemo(
+    () => prepareContactIconSvg(rawSvg, `contact-${icon}`),
+    [icon, rawSvg],
+  );
+
+  useEffect(() => {
+    const host = svgHostRef.current;
+    if (!host) return;
+
+    const setupPaths = () => {
+      host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+        const length = path.getTotalLength();
+        if (length <= 0) return;
+        // Ready for hover draw animation, but KEEP the stroke fully visible at rest
+        path.style.strokeDasharray = `${length}`;
+        path.style.strokeDashoffset = "0";
+      });
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(setupPaths));
+  }, [svgMarkup]);
+
+  const replayStroke = () => {
+    const host = svgHostRef.current;
+    if (!host) return;
+    host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+      const length = path.getTotalLength();
+      if (length <= 0) return;
+      path.style.transition = "none";
+      path.style.strokeDashoffset = `${length}`;
+      void path.getBoundingClientRect();
+      path.style.transition = "";
+      path.style.strokeDashoffset = "0";
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      className={`contact-channel-icon contact-channel-icon--${icon} ${active ? "is-active" : ""}`}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onSelect}
+      onMouseEnter={replayStroke}
+    >
+      <span
+        ref={svgHostRef}
+        className="contact-channel-icon-graphic pointer-events-none"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+    </button>
   );
 }
 
@@ -1043,6 +1248,7 @@ type FlipBookHandle = {
     flipNext: (corner?: "top" | "bottom") => void;
     flipPrev: (corner?: "top" | "bottom") => void;
     flip: (page: number, corner?: "top" | "bottom") => void;
+    turnToPage: (page: number) => void;
   };
 };
 
@@ -1265,6 +1471,7 @@ function MagazineIndex() {
   const logoDriftOffset = useRef(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [showFlipHint, setShowFlipHint] = useState(true);
+  const [isFlipping, setIsFlipping] = useState(false);
   const [usePortrait, setUsePortrait] = useState(true);
   const flipDurationMs = 900;
 
@@ -1283,7 +1490,10 @@ function MagazineIndex() {
   }, []);
 
   const flipTo = useCallback((page: number) => {
-    bookRef.current?.pageFlip().flip(page, "bottom");
+    // flip() only advances one spread; turnToPage jumps directly (markers + in-book hash links)
+    bookRef.current?.pageFlip().turnToPage(page);
+    setCurrentPage(page);
+    if (page !== 0) setShowFlipHint(false);
   }, []);
 
   const flipPrev = useCallback(() => {
@@ -1342,9 +1552,11 @@ function MagazineIndex() {
       state === "flipping"
     ) {
       setShowFlipHint(false);
+      setIsFlipping(true);
       return;
     }
     if (state === "read") {
+      setIsFlipping(false);
       // Restore only if we're still/back on the cover (after cancel or flip home)
       window.requestAnimationFrame(() => {
         const page =
@@ -1417,7 +1629,7 @@ function MagazineIndex() {
       {
         key: "contactos",
         label: t(site.nav.contactos, locale),
-        content: <ContactosPage locale={locale} sectionId="contactos" />,
+        content: null,
       },
       {
         key: "parceiros",
@@ -1444,6 +1656,25 @@ function MagazineIndex() {
       })),
     [magazinePages],
   );
+
+  useEffect(() => {
+    const handleBookHashLink = (event: MouseEvent) => {
+      const link = (event.target as HTMLElement).closest(
+        ".magazine-book a[href^='#']",
+      ) as HTMLAnchorElement | null;
+      if (!link?.hash || link.hash.length < 2) return;
+
+      const key = decodeURIComponent(link.hash.slice(1));
+      const pageIndex = magazinePages.findIndex((page) => page.key === key);
+      if (pageIndex < 0) return;
+
+      event.preventDefault();
+      flipTo(pageIndex);
+    };
+
+    document.addEventListener("click", handleBookHashLink);
+    return () => document.removeEventListener("click", handleBookHashLink);
+  }, [flipTo, magazinePages]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
@@ -1479,7 +1710,7 @@ function MagazineIndex() {
             useMouseEvents
             swipeDistance={24}
             showPageCorners
-            disableFlipByClick={false}
+            disableFlipByClick
             onChangeState={handleFlipStateChange}
             onFlip={(event) => {
               const page = Number(event.data) || 0;
@@ -1494,7 +1725,15 @@ function MagazineIndex() {
                 hard={page.hard}
               >
                 <div id={page.key} className="h-full">
-                  {page.content}
+                  {page.key === "contactos" ? (
+                    <ContactosPage
+                      locale={locale}
+                      sectionId="contactos"
+                      isVisible={currentPage === index && !isFlipping}
+                    />
+                  ) : (
+                    page.content
+                  )}
                 </div>
               </MagazineSheet>
             ))}
@@ -1502,10 +1741,7 @@ function MagazineIndex() {
         </div>
         <MagazineMarkers
           items={markerItems}
-          onNavigate={(item) => {
-            if (item.page !== 0) setShowFlipHint(false);
-            flipTo(item.page);
-          }}
+          onNavigate={(item) => flipTo(item.page)}
           activeKey={magazinePages[currentPage]?.key}
           showFlipHint={showFlipHint}
           flipHintLabel={locale === "pt" ? "* folheia-me *" : "* flip me *"}

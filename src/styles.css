@@ -766,6 +766,11 @@
   flex-direction: column;
 }
 
+/* Nudge CutoutText page headlines down slightly on every sheet */
+.magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
+  padding-top: 2.8rem;
+}
+
 .magazine-sheet-hard .zine-page > .zine-page-inner {
   position: relative;
   padding: 0;
@@ -929,6 +934,242 @@
   text-decoration-thickness: 2px;
   text-underline-offset: 5px;
   transform: rotate(-2deg);
+}
+
+/* Contactos — vertical icons + centered popup */
+.contactos-page.zine-page,
+.contactos-page .zine-page-inner {
+  overflow: visible;
+}
+
+.contactos-page .zine-page-inner {
+  min-height: 100%;
+}
+
+.contactos-page .contactos-layout {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  gap: 0;
+}
+
+.contactos-icon-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.contact-channel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  padding: 5px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.contact-channel-icon:focus-visible {
+  outline: 2px solid var(--color-brand-accent);
+  outline-offset: 2px;
+}
+
+.contact-channel-icon:hover,
+.contact-channel-icon.is-active {
+  transform: scale(1.06);
+}
+
+.contact-channel-icon.is-active {
+  filter: drop-shadow(0 0 6px rgba(196, 25, 88, 0.45));
+}
+
+.contact-channel-icon--instagram {
+  width: 72px;
+  height: 72px;
+}
+
+.contact-channel-icon--discord {
+  width: 88px;
+  height: 88px;
+}
+
+.contact-channel-icon-graphic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.contact-channel-icon-graphic svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.contact-channel-icon path {
+  stroke: var(--color-brand-magenta);
+  fill: none;
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  transition: stroke-dashoffset 0.45s ease, stroke 0.2s ease;
+  stroke-dashoffset: 0;
+}
+
+.contact-channel-icon:hover path,
+.contact-channel-icon.is-active path {
+  stroke: var(--color-brand-accent);
+  stroke-dashoffset: 0;
+}
+
+.contactos-popup-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.contactos-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.contactos-popup {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  width: min(17rem, calc(100% - 1.5rem));
+  max-width: calc(100% - 1.5rem);
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--color-brand-magenta);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 5px 5px 0 0 #000;
+  animation: contactos-popup-in 0.32s ease;
+}
+
+.contactos-popup-close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  border: 2px solid #000;
+  background: var(--color-brand-accent);
+  color: var(--color-brand-black);
+  cursor: pointer;
+  line-height: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.contactos-popup-close svg,
+.contactos-popup-close-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  pointer-events: none;
+}
+
+.contactos-popup-close:hover {
+  background: var(--color-brand-pink);
+  transform: scale(1.05);
+}
+
+@keyframes contactos-popup-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.contactos-detail-value {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--color-brand-black);
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.contactos-popup .contactos-detail-value {
+  width: 100%;
+  margin-top: 1.85rem;
+  text-align: center;
+}
+
+.contactos-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.contactos-detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 2px solid #000;
+  background: var(--color-brand-accent);
+  color: var(--color-brand-black);
+  font-family: var(--font-marker);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 2px 2px 0 0 #000;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.contactos-detail-copy {
+  cursor: pointer;
+  line-height: 1;
+}
+
+.contactos-detail-copy.is-copied {
+  background: var(--color-brand-pink);
+}
+
+.contactos-detail-action:hover {
+  background: var(--color-brand-pink);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 #000;
+}
+
+.contactos-detail-action-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 .magazine-page-number {
@@ -1153,6 +1394,37 @@
   .magazine-index-item > span:last-child {
     align-self: end;
     font-size: 9px;
+  }
+
+  .contact-channel-icon {
+    width: 68px;
+    height: 68px;
+  }
+
+  .contact-channel-icon--instagram {
+    width: 62px;
+    height: 62px;
+  }
+
+  .contact-channel-icon--discord {
+    width: 74px;
+    height: 74px;
+  }
+
+  .contactos-icon-column {
+    gap: 0.75rem;
+  }
+
+  .contactos-popup {
+    width: min(15rem, calc(100% - 1rem));
+  }
+
+  .contactos-popup .contactos-detail-value {
+    margin-top: 1.65rem;
+  }
+
+  .contactos-detail-value {
+    font-size: 0.9rem;
   }
 
 }
