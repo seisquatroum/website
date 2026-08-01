@@ -4,7 +4,10 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "r
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
-import logoAsset from "@/assets/641-logo.png";
+import logoWhiteAsset from "@/assets/641-logo-white.png";
+import sixDigitAsset from "@/assets/six6.png";
+import fourDigitAsset from "@/assets/four4.png";
+import oneDigitAsset from "@/assets/one1.png";
 import {
   Dialog,
   DialogContent,
@@ -22,23 +25,32 @@ export const Route = createFileRoute("/")({
  * cutout with mixed fonts, backgrounds and rotations. Used for the
  * big scrapbook headlines and CTAs.
  * ------------------------------------------------------------------ */
-/* Headline cutout palette — locked to the magenta family
- * (#C31958 magenta, #CF5D87 pink, #6A0A30 ink, #A4144D deep, #F2C4D4 soft).
- * All swatches stay within magenta/pink hues so headlines read like
- * one coherent scrapbook. */
+/* Headline cutout palette — punk collage: magenta family plus mustard,
+ * teal, torn-poster orange, dusty blue, kraft and newsprint black, so
+ * headlines read like letters ripped from different magazines. */
 const CUTOUT_PALETTE = [
-  // Directly mirrors the reference alphabet: bold pink backgrounds with
-  // black or dark-magenta letters, plus inverse magenta/cream combos.
+  // magenta / pink core
   "bg-brand-pink-soft text-brand-black",
   "bg-brand-pink text-brand-black",
   "bg-brand-magenta text-brand-pink-soft",
   "bg-brand-pink-soft text-brand-magenta-ink",
-  "bg-brand-pink text-brand-magenta-ink",
   "bg-brand-magenta-ink text-brand-pink-soft",
   "bg-brand-pink-deep text-brand-pink-soft",
-  "bg-brand-pink-soft text-brand-pink-deep",
   "bg-brand-magenta text-white",
-  "bg-brand-pink text-white",
+  // punk accents
+  "bg-brand-accent text-brand-black",
+  "bg-brand-accent text-brand-magenta-ink",
+  "bg-brand-teal text-brand-black",
+  "bg-brand-teal text-brand-paper",
+  "bg-brand-orange text-brand-black",
+  "bg-brand-orange text-brand-paper",
+  "bg-brand-blue text-brand-paper",
+  "bg-brand-kraft text-brand-black",
+  "bg-brand-paper text-brand-black",
+  "bg-brand-paper text-brand-magenta",
+  "bg-brand-black text-brand-pink",
+  "bg-brand-black text-brand-accent",
+  "bg-brand-black text-brand-paper",
 ];
 const CUTOUT_FONTS = [
   "font-marker uppercase",
@@ -48,6 +60,19 @@ const CUTOUT_FONTS = [
   "font-marker lowercase",
   "font-serif-display italic lowercase",
   "font-sans font-black italic",
+];
+/* Print-style textures layered over each cutout: halftone dots,
+ * newsprint lines, photocopy grain, graph grid… (background-image so
+ * they tint with each swatch). */
+const CUTOUT_TEXTURES = [
+  "cutout-tex-halftone",
+  "cutout-tex-lines",
+  "cutout-tex-grain",
+  "cutout-tex-grid",
+  "cutout-tex-stripes",
+  "cutout-tex-grain",
+  "cutout-tex-halftone",
+  "", // some letters stay flat
 ];
 // Seeded pseudo-random so SSR & client stay consistent.
 function hash(str: string) {
@@ -63,7 +88,7 @@ function CutoutText({
   children,
   className = "",
   size = "text-3xl sm:text-4xl md:text-5xl",
-  gap = "gap-1",
+  gap = "gap-0",
 }: {
   children: string;
   className?: string;
@@ -74,29 +99,49 @@ function CutoutText({
   return (
     <span className={`inline-flex flex-wrap items-end ${gap} ${className}`}>
       {words.map((w, wi) => {
-        if (/^\s+$/.test(w)) return <span key={wi} className="w-2 sm:w-3" />;
+        if (/^\s+$/.test(w)) return <span key={wi} className="w-1.5 sm:w-2" />;
         return (
           <span key={wi} className={`inline-flex items-end ${gap}`}>
             {Array.from(w).map((ch, ci) => {
               const seed = hash(`${w}-${wi}-${ci}`);
               const bg = CUTOUT_PALETTE[seed % CUTOUT_PALETTE.length];
               const font = CUTOUT_FONTS[(seed >> 3) % CUTOUT_FONTS.length];
+              const tex = CUTOUT_TEXTURES[(seed >> 13) % CUTOUT_TEXTURES.length];
               const rot = ((seed % 11) - 5) * 1.6; // -8 .. 8 deg
               const yOff = ((seed >> 5) % 9) - 4; // -4 .. 4 px
+              // Pull letters together; occasionally a light overlap
+              const overlap =
+                ci === 0
+                  ? 0
+                  : (seed >> 17) % 3 === 0
+                  ? -5 - ((seed >> 19) % 3) // light overlap: -5..-7px
+                  : -1 - ((seed >> 19) % 3); // snug: -1..-3px
+              const z = 10 + (ci % 5) + ((seed >> 21) % 3);
               const padX = (seed >> 7) % 2 === 0 ? "px-2" : "px-2.5";
               const padY = (seed >> 9) % 2 === 0 ? "py-0.5" : "py-1";
+              // A few letters get a rough staple/border, like taped scraps
+              const border =
+                (seed >> 15) % 5 === 0
+                  ? "border-2 border-brand-black"
+                  : (seed >> 15) % 7 === 0
+                  ? "border border-white/60"
+                  : "";
               // Every other letter uses an irregular torn-paper clip-path
               const clips = [
                 "polygon(3% 8%, 12% 0%, 32% 6%, 55% 0%, 78% 5%, 96% 0%, 100% 24%, 97% 55%, 100% 82%, 92% 100%, 68% 96%, 42% 100%, 18% 96%, 2% 100%, 0% 74%, 3% 42%, 0% 18%)",
                 "polygon(0% 6%, 22% 0%, 48% 8%, 72% 0%, 100% 10%, 96% 40%, 100% 72%, 88% 100%, 60% 94%, 32% 100%, 8% 92%, 0% 68%, 4% 34%)",
                 "polygon(6% 0%, 30% 6%, 60% 0%, 92% 8%, 100% 32%, 94% 62%, 100% 92%, 74% 100%, 44% 94%, 14% 100%, 0% 78%, 6% 46%, 0% 20%)",
+                "polygon(0% 14%, 10% 2%, 28% 8%, 46% 0%, 66% 8%, 84% 2%, 100% 12%, 95% 38%, 100% 60%, 94% 86%, 100% 100%, 70% 95%, 48% 100%, 24% 94%, 6% 100%, 0% 76%, 5% 48%)",
+                "polygon(2% 0%, 40% 4%, 70% 0%, 100% 6%, 96% 30%, 100% 55%, 96% 78%, 100% 100%, 62% 96%, 30% 100%, 0% 94%, 4% 66%, 0% 38%, 5% 16%)",
               ];
               const clip = clips[(seed >> 11) % clips.length];
               return (
                 <span
                   key={ci}
-                  className={`relative inline-block paper-tex ${bg} ${font} ${size} ${padX} ${padY} leading-none`}
+                  className={`relative inline-block paper-tex ${tex} ${border} ${bg} ${font} ${size} ${padX} ${padY} leading-none`}
                   style={{
+                    marginLeft: overlap,
+                    zIndex: z,
                     transform: `rotate(${rot}deg) translateY(${yOff}px)`,
                     clipPath: clip,
                     filter:
@@ -343,11 +388,12 @@ function StarSticker({
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute z-10 select-none font-bold leading-none text-brand-magenta ${className}`}
+      className={`pointer-events-none absolute z-10 select-none font-bold leading-none text-brand-accent ${className}`}
       style={{
         fontSize: size * 0.85,
         transform: `rotate(${rotate}deg)`,
-        filter: "drop-shadow(2px 3px 3px rgba(0,0,0,0.35))",
+        filter:
+          "drop-shadow(0 0 5px rgba(244,193,77,0.75)) drop-shadow(2px 3px 3px rgba(0,0,0,0.35))",
         ...style,
       }}
     >
@@ -384,10 +430,6 @@ function LangToggle({ className = "" }: { className?: string }) {
     <div
       className={`relative flex items-center gap-1 rounded-sm px-1 py-1 ${className}`}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-2 left-1/2 h-3 w-10 -translate-x-1/2 -rotate-6 tape-strip"
-      />
       {pill("pt", "🇵🇹")}
       {pill("en", "🇬🇧")}
     </div>
@@ -461,44 +503,59 @@ function ZPage({
 }
 
 /* ------------------------------------------------------------------ *
- * LogoMarquee — a repeated line of 641 logos that drifts left on its
- * own and speeds up / shifts further as the user scrolls.
+ * CoverDigits — stacked collage numerals 6 → 4 → 1.
  * ------------------------------------------------------------------ */
-function LogoMarquee() {
-  const UNIT = 160; // px per logo slot (incl. gap) — keeps the loop seamless
-  const shift = 0;
-  const logos = Array.from({ length: 14 });
+function CoverDigits() {
+  return (
+    <div className="cover-digits" aria-hidden="true">
+      <img src={sixDigitAsset} alt="" className="cover-digit cover-digit-6" />
+      <img src={fourDigitAsset} alt="" className="cover-digit cover-digit-4" />
+      <img src={oneDigitAsset} alt="" className="cover-digit cover-digit-1" />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * SiteLogoDrift — full-viewport background rows of the white 641 logo
+ * scrolling in alternating directions behind the whole site.
+ * ------------------------------------------------------------------ */
+function SiteLogoDrift({
+  driftRef,
+}: {
+  driftRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const rows = [
+    { dir: "left" as const, speed: 1, size: "h-10" },
+    { dir: "right" as const, speed: 0.82, size: "h-8" },
+    { dir: "left" as const, speed: 1.18, size: "h-12" },
+    { dir: "right" as const, speed: 0.74, size: "h-7" },
+    { dir: "left" as const, speed: 0.95, size: "h-9" },
+    { dir: "right" as const, speed: 1.08, size: "h-11" },
+    { dir: "left" as const, speed: 0.88, size: "h-8" },
+    { dir: "right" as const, speed: 1.12, size: "h-10" },
+  ];
 
   return (
-    <div
-      className="relative my-4 w-screen max-w-none overflow-hidden border-y-2 border-brand-magenta/40 py-3"
-      style={{
-        marginLeft: "calc(50% - 50vw)",
-        maskImage:
-          "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-        WebkitMaskImage:
-          "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-      }}
-      aria-hidden="true"
-    >
-      <div
-        className="flex items-center will-change-transform"
-        style={{ gap: 24, transform: `translate3d(${shift}px,0,0)` }}
-      >
-        {logos.map((_, i) => (
-          <img
-            key={i}
-            src={logoAsset}
-            alt=""
-            className="h-16 w-auto shrink-0 sm:h-20"
-            style={{
-              width: UNIT - 24,
-              objectFit: "contain",
-              transform: `rotate(${i % 2 === 0 ? -1.5 : 1.5}deg)`,
-            }}
-          />
-        ))}
-      </div>
+    <div ref={driftRef} className="site-logo-drift" aria-hidden="true">
+      {rows.map((row, i) => {
+        return (
+          <div key={i} className={`site-logo-drift-row site-logo-drift-${row.dir}`}>
+            <div
+              className="site-logo-drift-track"
+              data-drift-speed={row.speed * (row.dir === "left" ? 1 : -1)}
+            >
+              {Array.from({ length: 20 }).map((_, j) => (
+                <img
+                  key={j}
+                  src={logoWhiteAsset}
+                  alt=""
+                  className={`site-logo-drift-item ${row.size}`}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -510,31 +567,18 @@ function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
       <WashiTape variant="teal" className="right-16 top-6 h-4 w-24 rotate-6" />
       <StarSticker className="left-[6%] top-[38%]" size={40} rotate={-18} />
       <StarSticker className="right-[10%] top-[16%]" size={48} rotate={22} />
-      <StarSticker className="left-[42%] bottom-[8%]" size={36} rotate={12} />
-      <div className="flex min-h-[70vh] flex-col items-center justify-center py-8 text-center">
-        <span className="mb-3 inline-block -rotate-2 border border-brand-pink bg-brand-magenta px-2 py-0.5 font-mono-zine text-[9px] uppercase tracking-widest text-brand-pink shadow-[2px_2px_0_#000]">
-          {t(site.hero.tagline, locale)}
-        </span>
-        <h1 className="leading-[1]">
-          <CutoutText size="text-2xl sm:text-3xl" gap="gap-0.5">
-            {t(site.hero.title, locale)}
-          </CutoutText>
-        </h1>
-        <span className="sr-only">641</span>
-        <LogoMarquee />
-        <p className="mt-4 max-w-[85%] text-xs leading-snug text-brand-pink-soft/95 sm:text-sm">
-          {t(site.hero.subtitle, locale)}
-        </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <PostIt color="yellow" rotate="-rotate-3" className="!text-sm !px-3 !py-1.5">
-            Oeiras · PT
-          </PostIt>
-          <PostIt color="teal" rotate="rotate-2" className="!text-sm !px-3 !py-1.5">
-            {locale === "pt" ? "aberto a novas bandas" : "open to new bands"}
-          </PostIt>
+      <div className="magazine-cover-layout">
+        <div className="cover-hero-cluster">
+          <h1 className="cover-title leading-[1]">
+            <CutoutText size="text-2xl sm:text-3xl">
+              {t(site.hero.title, locale)}
+            </CutoutText>
+          </h1>
+          <span className="sr-only">641</span>
+          <CoverDigits />
         </div>
-        <p className="mt-6 font-hand text-lg text-brand-accent">
-          {locale === "pt" ? "folheia →" : "flip →"}
+        <p className="cover-tagline-line">
+          {locale === "pt" ? "DESDE 2025" : "SINCE 2025"}
         </p>
       </div>
     </ZPage>
@@ -1011,7 +1055,6 @@ type MagazinePage = {
 
 type MagazineMarkerItem = NavItem & {
   page: number;
-  secondaryLabel?: string;
   keys: string[];
 };
 
@@ -1023,6 +1066,9 @@ const MagazineSheet = forwardRef<
     hard?: boolean;
   }
 >(function MagazineSheet({ children, number, hard = false }, ref) {
+  // Cover has an external flip hint; other pages keep the page number
+  const footer = number === 1 ? null : `- ${number} -`;
+
   return (
     <div
       ref={ref}
@@ -1031,57 +1077,11 @@ const MagazineSheet = forwardRef<
     >
       <div className="magazine-sheet-face">
         {children}
-        <span className="magazine-page-number">- {number} -</span>
+        {footer && <span className="magazine-page-number">{footer}</span>}
       </div>
     </div>
   );
 });
-
-function IndexPage({
-  locale,
-  entries,
-  onJump,
-}: {
-  locale: Locale;
-  entries: { label: string; page: number }[];
-  onJump: (page: number) => void;
-}) {
-  return (
-    <ZPage bg="paper">
-      <WashiTape variant="yellow" className="left-8 top-3 h-4 w-28 -rotate-3" />
-      <StarSticker className="right-[9%] top-[8%]" size={34} rotate={18} />
-      <div className="flex h-full flex-col">
-        <p className="font-mono-zine text-[8px] uppercase tracking-widest text-brand-magenta">
-          {locale === "pt" ? "associação 641 / edição web" : "association 641 / web issue"}
-        </p>
-        <h2 className="mt-3 leading-none">
-          <CutoutText size="text-2xl sm:text-3xl" gap="gap-0.5">
-            {locale === "pt" ? "ÍNDICE" : "INDEX"}
-          </CutoutText>
-        </h2>
-        <div className="magazine-index-list mt-4 flex flex-col gap-1.5">
-          {entries.map((entry, i) => (
-            <button
-              key={entry.label}
-              type="button"
-              onClick={() => onJump(entry.page)}
-              className={`magazine-index-item group grid grid-cols-[1fr_auto] items-center gap-3 border-[3px] border-brand-black bg-brand-pink px-3 py-1.5 text-left text-brand-black shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-1 ${
-                i % 2 === 0 ? "-rotate-1" : "rotate-1"
-              }`}
-            >
-              <span className="font-serif-display text-[13px] font-black italic uppercase leading-none text-brand-magenta-ink">
-                {entry.label}
-              </span>
-              <span className="font-mono-zine text-xs text-brand-black/60">
-                {String(entry.page + 1).padStart(2, "0")}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </ZPage>
-  );
-}
 
 function SobrePhotoPage({ locale }: { locale: Locale }) {
   return (
@@ -1202,10 +1202,14 @@ function MagazineMarkers({
   items,
   activeKey,
   onNavigate,
+  showFlipHint = false,
+  flipHintLabel,
 }: {
   items: MagazineMarkerItem[];
   activeKey?: string;
   onNavigate: (item: MagazineMarkerItem) => void;
+  showFlipHint?: boolean;
+  flipHintLabel?: string;
 }) {
   const listRef = useRef<HTMLDivElement | null>(null);
   const activeMarkerRef = useRef<HTMLButtonElement | null>(null);
@@ -1215,11 +1219,10 @@ function MagazineMarkers({
     const marker = activeMarkerRef.current;
     if (!list || !marker) return;
 
-    const isMobile = window.matchMedia("(max-width: 760px)").matches;
     marker.scrollIntoView({
       behavior: "smooth",
-      block: isMobile ? "nearest" : "center",
-      inline: isMobile ? "center" : "nearest",
+      block: "nearest",
+      inline: "nearest",
     });
   }, [activeKey]);
 
@@ -1237,12 +1240,18 @@ function MagazineMarkers({
             className={`magazine-marker ${isActive ? "is-active" : ""}`}
           >
             <span>{item.label}</span>
-            {item.secondaryLabel && <span>{item.secondaryLabel}</span>}
           </button>
           );
         })}
       </div>
-      <LangToggle className="magazine-lang" />
+      <div className="magazine-lang-stack">
+        {showFlipHint && flipHintLabel && (
+          <span className="magazine-flip-hint-external" aria-hidden="true">
+            {flipHintLabel}
+          </span>
+        )}
+        <LangToggle className="magazine-lang" />
+      </div>
     </div>
   );
 }
@@ -1252,7 +1261,26 @@ function MagazineIndex() {
   const bookRef = useRef<FlipBookHandle | null>(null);
   const wheelLocked = useRef(false);
   const wheelRemainder = useRef(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const logoDriftRef = useRef<HTMLDivElement | null>(null);
+  const logoDriftOffset = useRef(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [showFlipHint, setShowFlipHint] = useState(true);
+  const [usePortrait, setUsePortrait] = useState(true);
+  const flipDurationMs = 900;
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 760px)");
+    const syncLayout = () => {
+      setUsePortrait(media.matches);
+      window.requestAnimationFrame(() => {
+        bookRef.current?.pageFlip().update();
+      });
+    };
+
+    syncLayout();
+    media.addEventListener("change", syncLayout);
+    return () => media.removeEventListener("change", syncLayout);
+  }, []);
 
   const flipTo = useCallback((page: number) => {
     bookRef.current?.pageFlip().flip(page, "bottom");
@@ -1269,52 +1297,70 @@ function MagazineIndex() {
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLElement>) => {
       event.preventDefault();
-      wheelRemainder.current += event.deltaY;
-      if (wheelLocked.current || Math.abs(wheelRemainder.current) < 24) return;
+      const delta = event.deltaY;
+      logoDriftOffset.current += delta * 0.35;
+      logoDriftRef.current
+        ?.querySelectorAll<HTMLElement>("[data-drift-speed]")
+        .forEach((track) => {
+          const speed = Number(track.dataset.driftSpeed) || 0;
+          track.style.transform = `translate3d(${logoDriftOffset.current * speed}px, 0, 0)`;
+        });
+
+      // Ignore further page flips while an animation is playing
+      if (wheelLocked.current) return;
+
+      wheelRemainder.current += delta;
+      // Trigger mid-scroll once intent is clear (not after a big backlog)
+      if (Math.abs(wheelRemainder.current) < 48) return;
 
       const direction = wheelRemainder.current;
       wheelRemainder.current = 0;
       wheelLocked.current = true;
+      setShowFlipHint(false);
+
       if (direction > 0) {
         flipNext();
       } else {
         flipPrev();
       }
 
+      // Stay locked for the full flip so leftover scroll can't fire a delayed turn
       window.setTimeout(() => {
         wheelLocked.current = false;
-      }, 170);
+        wheelRemainder.current = 0;
+      }, flipDurationMs + 100);
     },
-    [flipNext, flipPrev],
+    [flipDurationMs, flipNext, flipPrev],
   );
 
-  const magazinePages: MagazinePage[] = useMemo(() => {
-    const jumpEntries = [
-      { label: locale === "pt" ? "Sobre" : "About", page: 2 },
-      { label: locale === "pt" ? "Origem" : "Origin", page: 3 },
-      { label: locale === "pt" ? "Razões" : "Reasons", page: 4 },
-      { label: locale === "pt" ? "O que fazemos" : "What we do", page: 5 },
-      { label: t(site.nav.noticias, locale), page: 6 },
-      { label: "Agenda", page: 7 },
-      { label: locale === "pt" ? "Quero ajudar" : "Support us", page: 8 },
-      { label: locale === "pt" ? "Junta-te" : "Join us", page: 9 },
-      { label: t(site.nav.banda, locale), page: 10 },
-      { label: locale === "pt" ? "Concurso" : "Contest", page: 11 },
-      { label: t(site.nav.contactos, locale), page: 12 },
-      { label: t(site.nav.parceiros, locale), page: 13 },
-    ];
+  const handleFlipStateChange = useCallback((event: { data?: unknown }) => {
+    const state = String(event.data ?? "");
+    // Hide as soon as the page starts moving (fold / flip), not only when it lands
+    if (
+      state === "user_fold" ||
+      state === "fold_corner" ||
+      state === "flipping"
+    ) {
+      setShowFlipHint(false);
+      return;
+    }
+    if (state === "read") {
+      // Restore only if we're still/back on the cover (after cancel or flip home)
+      window.requestAnimationFrame(() => {
+        const page =
+          bookRef.current?.pageFlip()?.getCurrentPageIndex?.() ?? 0;
+        setShowFlipHint(page === 0);
+      });
+    }
+  }, []);
 
+  const magazinePages: MagazinePage[] = useMemo(() => {
     return [
       {
         key: "cover",
         label: locale === "pt" ? "Capa" : "Cover",
         hard: true,
         content: <Cover locale={locale} sectionId="inicio" />,
-      },
-      {
-        key: "indice",
-        label: locale === "pt" ? "Índice" : "Index",
-        content: <IndexPage locale={locale} entries={jumpEntries} onJump={flipTo} />,
       },
       {
         key: "sobre",
@@ -1342,20 +1388,9 @@ function MagazineIndex() {
         content: (
           <NewsPage
             locale={locale}
-            items={site.news.slice(0, 2)}
+            items={site.news}
             title={locale === "pt" ? "notícias" : "news"}
             sectionId="noticias"
-          />
-        ),
-      },
-      {
-        key: "agenda",
-        label: "Agenda",
-        content: (
-          <NewsPage
-            locale={locale}
-            items={site.news.slice(2)}
-            title={locale === "pt" ? "agenda" : "agenda"}
           />
         ),
       },
@@ -1396,159 +1431,45 @@ function MagazineIndex() {
         content: <BackCoverPage locale={locale} />,
       },
     ];
-  }, [flipTo, locale]);
+  }, [locale]);
 
-  const navItems: MagazineMarkerItem[] = [
-    {
-      key: "inicio-spread",
-      label: locale === "pt" ? "Capa" : "Cover",
-      secondaryLabel: locale === "pt" ? "Índice" : "Index",
-      sectionId: "indice",
-      page: 1,
-      keys: ["cover", "indice"],
-    },
-    {
-      key: "sobre-spread",
-      label: locale === "pt" ? "Sobre" : "About",
-      secondaryLabel: locale === "pt" ? "Origem" : "Origin",
-      sectionId: "sobre",
-      page: 2,
-      keys: ["sobre", "origem"],
-    },
-    {
-      key: "porque-spread",
-      label: locale === "pt" ? "Razões" : "Reasons",
-      secondaryLabel: locale === "pt" ? "Fazemos" : "Services",
-      sectionId: "porque-b",
-      page: 4,
-      keys: ["porque-b", "servicos"],
-    },
-    {
-      key: "noticias-spread",
-      label: locale === "pt" ? "Notícias" : "News",
-      secondaryLabel: "Agenda",
-      sectionId: "noticias",
-      page: 6,
-      keys: ["noticias", "agenda"],
-    },
-    {
-      key: "ajudar-spread",
-      label: locale === "pt" ? "Ajudar" : "Support",
-      secondaryLabel: locale === "pt" ? "Junta-te" : "Join us",
-      sectionId: "ajudar",
-      page: 8,
-      keys: ["ajudar", "junta"],
-    },
-    {
-      key: "bandas-spread",
-      label: locale === "pt" ? "Bandas" : "Bands",
-      secondaryLabel: locale === "pt" ? "Concurso" : "Contest",
-      sectionId: "banda",
-      page: 10,
-      keys: ["banda", "concurso"],
-    },
-    {
-      key: "contactos-spread",
-      label: locale === "pt" ? "Contactos" : "Contact",
-      secondaryLabel: locale === "pt" ? "Parceiros" : "Partners",
-      sectionId: "contactos",
-      page: 12,
-      keys: ["contactos", "parceiros"],
-    },
-    {
-      key: "fim-spread",
-      label: locale === "pt" ? "Fim" : "End",
-      sectionId: "back",
-      page: 14,
-      keys: ["back"],
-    },
-  ];
-
-  const spreadNavItems: MagazineMarkerItem[] = [
-    {
-      key: "capa-page",
-      label: locale === "pt" ? "Capa" : "Cover",
-      sectionId: "inicio",
-      page: 0,
-      keys: ["cover"],
-    },
-    {
-      key: "indice-spread",
-      label: locale === "pt" ? "Índice" : "Index",
-      secondaryLabel: locale === "pt" ? "Sobre" : "About",
-      sectionId: "indice",
-      page: 1,
-      keys: ["indice", "sobre"],
-    },
-    {
-      key: "origem-spread",
-      label: locale === "pt" ? "Origem" : "Origin",
-      secondaryLabel: locale === "pt" ? "Razões" : "Reasons",
-      sectionId: "origem",
-      page: 3,
-      keys: ["origem", "porque-b"],
-    },
-    {
-      key: "fazemos-spread",
-      label: locale === "pt" ? "Fazemos" : "Services",
-      secondaryLabel: locale === "pt" ? "Notícias" : "News",
-      sectionId: "servicos",
-      page: 5,
-      keys: ["servicos", "noticias"],
-    },
-    {
-      key: "agenda-spread",
-      label: "Agenda",
-      secondaryLabel: locale === "pt" ? "Ajudar" : "Support",
-      sectionId: "agenda",
-      page: 7,
-      keys: ["agenda", "ajudar"],
-    },
-    {
-      key: "junta-spread",
-      label: locale === "pt" ? "Junta-te" : "Join us",
-      secondaryLabel: locale === "pt" ? "Bandas" : "Bands",
-      sectionId: "junta",
-      page: 9,
-      keys: ["junta", "banda"],
-    },
-    {
-      key: "concurso-spread",
-      label: locale === "pt" ? "Concurso" : "Contest",
-      secondaryLabel: locale === "pt" ? "Contactos" : "Contact",
-      sectionId: "concurso",
-      page: 11,
-      keys: ["concurso", "contactos"],
-    },
-    {
-      key: "parceiros-spread",
-      label: locale === "pt" ? "Parceiros" : "Partners",
-      secondaryLabel: locale === "pt" ? "Fim" : "End",
-      sectionId: "parceiros",
-      page: 13,
-      keys: ["parceiros", "back"],
-    },
-  ];
+  const markerItems: MagazineMarkerItem[] = useMemo(
+    () =>
+      magazinePages.map((page, index) => ({
+        key: `${page.key}-marker`,
+        label: page.label,
+        sectionId: page.key,
+        page: index,
+        keys: [page.key],
+      })),
+    [magazinePages],
+  );
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
+      <SiteLogoDrift driftRef={logoDriftRef} />
       <main className="magazine-stage" onWheel={handleWheel}>
         <div className="magazine-book-wrap">
+          {showFlipHint && (
+            <span className="magazine-flip-hint-desktop" aria-hidden="true">
+              {locale === "pt" ? "* folheia-me -> *" : "* flip me -> *"}
+            </span>
+          )}
           <HTMLFlipBook
             ref={bookRef}
             className="magazine-book"
             style={{}}
-            startPage={1}
+            startPage={0}
             size="stretch"
             width={520}
             height={720}
             minWidth={285}
             maxWidth={440}
-            minHeight={420}
-            maxHeight={620}
+            minHeight={380}
+            maxHeight={2000}
             drawShadow
-            flippingTime={360}
-            usePortrait
+            flippingTime={900}
+            usePortrait={usePortrait}
             startZIndex={10}
             autoSize
             maxShadowOpacity={0.65}
@@ -1559,7 +1480,12 @@ function MagazineIndex() {
             swipeDistance={24}
             showPageCorners
             disableFlipByClick={false}
-            onFlip={(event) => setCurrentPage(Number(event.data) || 0)}
+            onChangeState={handleFlipStateChange}
+            onFlip={(event) => {
+              const page = Number(event.data) || 0;
+              setCurrentPage(page);
+              setShowFlipHint(page === 0);
+            }}
           >
             {magazinePages.map((page, index) => (
               <MagazineSheet
@@ -1573,20 +1499,17 @@ function MagazineIndex() {
               </MagazineSheet>
             ))}
           </HTMLFlipBook>
-          <MagazineMarkers
-            items={spreadNavItems}
-            onNavigate={(item) => {
-              flipTo(item.page);
-            }}
-            activeKey={magazinePages[currentPage]?.key}
-          />
         </div>
-
-        <div className="magazine-controls" aria-label="Página atual">
-          <span className="magazine-counter">
-            PÁG {currentPage + 1} / {magazinePages.length}
-          </span>
-        </div>
+        <MagazineMarkers
+          items={markerItems}
+          onNavigate={(item) => {
+            if (item.page !== 0) setShowFlipHint(false);
+            flipTo(item.page);
+          }}
+          activeKey={magazinePages[currentPage]?.key}
+          showFlipHint={showFlipHint}
+          flipHintLabel={locale === "pt" ? "* folheia-me *" : "* flip me *"}
+        />
       </main>
     </div>
   );
@@ -1621,14 +1544,9 @@ function _Index() {
         <ServicesPage locale={locale} />
         <NewsPage
           locale={locale}
-          items={site.news.slice(0, 2)}
+          items={site.news}
           title={locale === "pt" ? "notícias" : "news"}
           sectionId="noticias"
-        />
-        <NewsPage
-          locale={locale}
-          items={site.news.slice(2)}
-          title={locale === "pt" ? "agenda" : "agenda"}
         />
         <AjudarPage locale={locale} sectionId="junta" />
         <JuntaPage locale={locale} />
