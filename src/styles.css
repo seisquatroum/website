@@ -1011,11 +1011,10 @@
 }
 
 .contact-channel-icon path {
-  stroke: var(--color-brand-magenta);
+  stroke: #c41958;
   fill: none;
   stroke-width: 0.6px;
   vector-effect: non-scaling-stroke;
-  transition: stroke-dashoffset 0.55s ease;
   stroke-dashoffset: 0;
 }
 

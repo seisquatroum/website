@@ -1175,6 +1175,22 @@ function prepareContactIconSvg(svg: string, prefix: string) {
   return out;
 }
 
+const CONTACT_STROKE_BASE_MS: Record<string, number> = {
+  instagram: 5200,
+  phone: 5200,
+  location: 4500,
+};
+const CONTACT_STROKE_DEFAULT_MS = 3800;
+const CONTACT_STROKE_MIN_MS = 3200;
+
+function contactStrokeDurationMs(length: number, maxLength: number, icon: string) {
+  const base = CONTACT_STROKE_BASE_MS[icon] ?? CONTACT_STROKE_DEFAULT_MS;
+  if (maxLength <= 0) return base;
+  // Scale by path length so longer strokes take longer; short ones aren't rushed at the end
+  const scaled = Math.round((length / maxLength) * base);
+  return Math.max(CONTACT_STROKE_MIN_MS, scaled);
+}
+
 function ContactChannelIcon({
   icon,
   label,
@@ -1187,47 +1203,70 @@ function ContactChannelIcon({
   onSelect: () => void;
 }) {
   const svgHostRef = useRef<HTMLSpanElement>(null);
+  const strokeRunRef = useRef(0);
   const rawSvg = CONTACT_ICON_SVGS[icon] ?? "";
   const svgMarkup = useMemo(
     () => prepareContactIconSvg(rawSvg, `contact-${icon}`),
     [icon, rawSvg],
   );
 
-  const replayStroke = useCallback(() => {
+  const resetPaths = useCallback(() => {
     const host = svgHostRef.current;
     if (!host) return;
     host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
       const length = path.getTotalLength();
       if (length <= 0) return;
       path.style.transition = "none";
-      path.style.strokeDashoffset = `${length}`;
-      void path.getBoundingClientRect();
-      path.style.transition = "stroke-dashoffset 0.55s ease";
+      path.style.strokeDasharray = `${length}`;
       path.style.strokeDashoffset = "0";
     });
   }, []);
 
-  useEffect(() => {
+  const stopStroke = useCallback(() => {
+    strokeRunRef.current += 1;
+    resetPaths();
+  }, [resetPaths]);
+
+  const setupPaths = useCallback(() => {
+    resetPaths();
+  }, [resetPaths]);
+
+  const replayStroke = useCallback(() => {
     const host = svgHostRef.current;
     if (!host) return;
 
-    const setupPaths = () => {
-      host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
-        const length = path.getTotalLength();
-        if (length <= 0) return;
-        path.style.strokeDasharray = `${length}`;
-        path.style.strokeDashoffset = "0";
-      });
-    };
+    const runId = ++strokeRunRef.current;
 
-    requestAnimationFrame(() => requestAnimationFrame(setupPaths));
-  }, [svgMarkup]);
+    const paths = Array.from(host.querySelectorAll<SVGPathElement>("path")).filter(
+      (path) => path.getTotalLength() > 0,
+    );
+    if (paths.length === 0) return;
+
+    const maxLength = Math.max(...paths.map((path) => path.getTotalLength()));
+
+    paths.forEach((path) => {
+      const length = path.getTotalLength();
+      path.style.transition = "none";
+      path.style.strokeDasharray = `${length}`;
+      path.style.strokeDashoffset = `${length}`;
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (runId !== strokeRunRef.current) return;
+        paths.forEach((path) => {
+          const length = path.getTotalLength();
+          const durationMs = contactStrokeDurationMs(length, maxLength, icon);
+          path.style.transition = `stroke-dashoffset ${durationMs}ms ease-in-out`;
+          path.style.strokeDashoffset = "0";
+        });
+      });
+    });
+  }, [icon]);
 
   useEffect(() => {
-    if (active) {
-      replayStroke();
-    }
-  }, [active, replayStroke]);
+    requestAnimationFrame(() => requestAnimationFrame(setupPaths));
+  }, [svgMarkup, setupPaths]);
 
   return (
     <button
@@ -1237,7 +1276,7 @@ function ContactChannelIcon({
       aria-pressed={active}
       onClick={onSelect}
       onMouseEnter={replayStroke}
-      onFocus={replayStroke}
+      onMouseLeave={stopStroke}
     >
       <span
         ref={svgHostRef}
