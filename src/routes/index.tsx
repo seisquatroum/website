@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Copy, ExternalLink, X } from "lucide-react";
+import { Copy, ExternalLink, Trash2, X } from "lucide-react";
 import { site, t, type Locale } from "@/content/site";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
@@ -15,6 +15,12 @@ import locationIconSvg from "@/assets/location-icon.svg?raw";
 import instaIconSvg from "@/assets/insta-icon.svg?raw";
 import whatsappIconSvg from "@/assets/whatsapp-icon.svg?raw";
 import discordIconSvg from "@/assets/discord-icon.svg?raw";
+import fundacaoEdpLogo from "@/assets/partners-logos/fundacao-edp.jpg";
+import cmlLogo from "@/assets/partners-logos/camara-municipal-de-lisboa-logo.png";
+import oeirasLogo from "@/assets/partners-logos/municipio_de_oeiras_logo.jpg";
+import hackerSchoolLogo from "@/assets/partners-logos/Imagem3.png";
+import circleDrawingSvg from "@/assets/circle-drawing.svg?raw";
+import exercicioAsset from "@/assets/exercicio.png";
 import {
   Dialog,
   DialogContent,
@@ -751,6 +757,19 @@ function NewsPage({
                   <p className="mt-1 font-hand text-xs leading-snug text-brand-black">
                     {t(n.excerpt, locale)}
                   </p>
+                  {n.href && (
+                    <a
+                      href={n.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="news-item-link"
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onTouchStart={(event) => event.stopPropagation()}
+                    >
+                      {locale === "pt" ? "saber mais" : "learn more"}
+                      <ExternalLink aria-hidden="true" />
+                    </a>
+                  )}
                 </PostIt>
               </div>
             );
@@ -962,32 +981,511 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
   );
 }
 
+const PARTNER_LOGO_SRC: Record<string, string> = {
+  "fundacao-edp": fundacaoEdpLogo,
+  cml: cmlLogo,
+  oeiras: oeirasLogo,
+  "hacker-school": hackerSchoolLogo,
+};
+
+function prepareContactIconSvg(svg: string, prefix: string) {
+  let out = svg
+    .replace(/\bid="([^"]+)"/g, `id="${prefix}-$1"`)
+    .replace(/url\(#([^)]+)\)/g, `url(#${prefix}-$1)`)
+    .replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}-$1"`);
+
+  out = out.replace(/<svg\b([^>]*)>/i, (_match, attrs: string) => {
+    const width = attrs.match(/\bwidth="(\d+(?:\.\d+)?)"/i)?.[1];
+    const height = attrs.match(/\bheight="(\d+(?:\.\d+)?)"/i)?.[1];
+    let next = attrs
+      .replace(/\swidth="[^"]*"/gi, "")
+      .replace(/\sheight="[^"]*"/gi, "")
+      .replace(/\soverflow="[^"]*"/gi, "");
+
+    if (width && height && !/\bviewBox=/i.test(attrs)) {
+      next += ` viewBox="0 0 ${width} ${height}"`;
+    }
+
+    next += ' width="100%" height="100%" overflow="visible" preserveAspectRatio="xMidYMid meet"';
+    return `<svg${next}>`;
+  });
+
+  return out;
+}
+
+const CONTACT_STROKE_BASE_MS: Record<string, number> = {
+  instagram: 5200,
+  phone: 5200,
+  location: 4500,
+};
+const CONTACT_STROKE_DEFAULT_MS = 3800;
+const CONTACT_STROKE_MIN_MS = 3200;
+
+function contactStrokeDurationMs(length: number, maxLength: number, icon: string) {
+  const base = CONTACT_STROKE_BASE_MS[icon] ?? CONTACT_STROKE_DEFAULT_MS;
+  if (maxLength <= 0) return base;
+  const scaled = Math.round((length / maxLength) * base);
+  return Math.max(CONTACT_STROKE_MIN_MS, scaled);
+}
+
+function PartnerLogoSlot({
+  partner,
+  logoSrc,
+}: {
+  partner: (typeof site.parceiros.list)[number];
+  logoSrc: string;
+}) {
+  const svgHostRef = useRef<HTMLSpanElement>(null);
+  const strokeRunRef = useRef(0);
+  const svgMarkup = useMemo(
+    () => prepareContactIconSvg(circleDrawingSvg, `partner-ring-${partner.logo}`),
+    [partner.logo],
+  );
+
+  const resetPaths = useCallback(() => {
+    const host = svgHostRef.current;
+    if (!host) return;
+    host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+      const length = path.getTotalLength();
+      if (length <= 0) return;
+      path.style.transition = "none";
+      path.style.strokeDasharray = `${length}`;
+      path.style.strokeDashoffset = "0";
+    });
+  }, []);
+
+  const stopStroke = useCallback(() => {
+    strokeRunRef.current += 1;
+    resetPaths();
+  }, [resetPaths]);
+
+  const replayStroke = useCallback(() => {
+    const host = svgHostRef.current;
+    if (!host) return;
+
+    const runId = ++strokeRunRef.current;
+    const paths = Array.from(host.querySelectorAll<SVGPathElement>("path")).filter(
+      (path) => path.getTotalLength() > 0,
+    );
+    if (paths.length === 0) return;
+
+    const maxLength = Math.max(...paths.map((path) => path.getTotalLength()));
+
+    paths.forEach((path) => {
+      const length = path.getTotalLength();
+      path.style.transition = "none";
+      path.style.strokeDasharray = `${length}`;
+      path.style.strokeDashoffset = `${length}`;
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (runId !== strokeRunRef.current) return;
+        paths.forEach((path) => {
+          const length = path.getTotalLength();
+          const durationMs = contactStrokeDurationMs(length, maxLength, "ring");
+          path.style.transition = `stroke-dashoffset ${durationMs}ms ease-in-out`;
+          path.style.strokeDashoffset = "0";
+        });
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    requestAnimationFrame(() => requestAnimationFrame(resetPaths));
+  }, [svgMarkup, resetPaths]);
+
+  return (
+    <a
+      href={partner.href}
+      target="_blank"
+      rel="noreferrer"
+      className={`parceiros-logo-slot ${partner.logo === "cml" ? "parceiros-logo-slot--cml" : ""}`}
+      aria-label={partner.name}
+      onMouseEnter={replayStroke}
+      onMouseLeave={stopStroke}
+      onMouseDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+    >
+      <img src={logoSrc} alt="" className="parceiros-logo" loading="lazy" />
+      <span
+        ref={svgHostRef}
+        className="parceiros-logo-ring"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+    </a>
+  );
+}
+
 function ParceirosPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="magenta" sectionId={sectionId}>
-      <div className="flex flex-col">
+    <ZPage bg="magenta" sectionId={sectionId} className="parceiros-page">
+      <div className="parceiros-page-layout flex h-full min-h-0 flex-col">
         <h2 className="mb-4 -rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
             {t(site.parceiros.kicker, locale)}
           </CutoutText>
         </h2>
-        <div className="flex flex-col justify-center gap-3">
-          {site.parceiros.list.map((p, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-4 border-[3px] border-brand-black bg-brand-pink p-3 text-brand-black shadow-[4px_4px_0_0_#000] ${
-                i % 2 === 0 ? "-rotate-1" : "rotate-1"
-              }`}
-            >
-              <div className="grid size-14 shrink-0 place-items-center border-2 border-brand-black bg-brand-pink-soft font-marker text-xl">
-                {p.name.charAt(0)}
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-bold">{p.name}</h3>
-                {p.note && <p className="mt-0.5 text-xs text-brand-black/70">{t(p.note, locale)}</p>}
-              </div>
-            </div>
-          ))}
+        <div className="parceiros-logo-row">
+          {site.parceiros.list.map((partner) => {
+            const logoSrc = partner.logo ? PARTNER_LOGO_SRC[partner.logo] : undefined;
+            if (!logoSrc || !partner.href) return null;
+            return <PartnerLogoSlot key={partner.name} partner={partner} logoSrc={logoSrc} />;
+          })}
+        </div>
+        <p className="parceiros-outro">{t(site.parceiros.outro, locale)}</p>
+      </div>
+    </ZPage>
+  );
+}
+
+const DRAWING_STORAGE_KEY = "assoc641-magazine-drawing";
+
+function applyDrawStrokeStyle(ctx: CanvasRenderingContext2D) {
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#c41958";
+  ctx.fillStyle = "#c41958";
+  ctx.lineWidth = 3.5;
+}
+
+function DrawMagazinePage({
+  locale,
+  onFlipPrev,
+  onFlipNext,
+}: {
+  locale: Locale;
+  onFlipPrev: (corner: "top" | "bottom") => void;
+  onFlipNext: (corner: "top" | "bottom") => void;
+}) {
+  const canvasWrapRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingRef = useRef(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
+  const logicalSizeRef = useRef({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const layout = canvasWrapRef.current?.closest(".draw-page-layout");
+    if (!layout) return;
+
+    const blockFlipStart = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".draw-page-flip-zone")) return;
+      event.stopPropagation();
+    };
+
+    layout.addEventListener("mousedown", blockFlipStart);
+    layout.addEventListener("touchstart", blockFlipStart, { passive: false });
+
+    return () => {
+      layout.removeEventListener("mousedown", blockFlipStart);
+      layout.removeEventListener("touchstart", blockFlipStart);
+    };
+  }, []);
+
+  const saveDrawing = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || canvas.width <= 0 || canvas.height <= 0) return;
+
+    try {
+      localStorage.setItem(DRAWING_STORAGE_KEY, canvas.toDataURL("image/png"));
+    } catch {
+      // ignore quota / private mode errors
+    }
+  }, []);
+
+  const scheduleSave = useCallback(() => {
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = window.setTimeout(() => {
+      saveDrawing();
+      saveTimeoutRef.current = null;
+    }, 250);
+  }, [saveDrawing]);
+
+  const getDrawContext = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || canvas.width <= 0 || canvas.height <= 0) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    applyDrawStrokeStyle(ctx);
+    return ctx;
+  }, []);
+
+  useEffect(() => {
+    const wrap = canvasWrapRef.current;
+    const canvas = canvasRef.current;
+    if (!wrap || !canvas) return;
+
+    const sync = () => {
+      const rect = wrap.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+
+      if (
+        logicalSizeRef.current.width === width &&
+        logicalSizeRef.current.height === height
+      ) {
+        return;
+      }
+
+      const snapshot =
+        logicalSizeRef.current.width > 0
+          ? canvas.toDataURL("image/png")
+          : localStorage.getItem(DRAWING_STORAGE_KEY);
+
+      logicalSizeRef.current = { width, height };
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      applyDrawStrokeStyle(ctx);
+
+      if (!snapshot) return;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, width, height);
+        applyDrawStrokeStyle(ctx);
+      };
+      img.src = snapshot;
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(wrap);
+    // Flip-book pages often get their real size a frame later
+    const raf = window.requestAnimationFrame(sync);
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = canvasWrapRef.current;
+    if (!canvas || !wrap) return;
+
+    const pointFrom = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
+    };
+
+    const bootIfNeeded = () => {
+      if (canvas.width > 0 && canvas.height > 0) return getDrawContext();
+      const rect = wrap.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      logicalSizeRef.current = { width, height };
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      applyDrawStrokeStyle(ctx);
+      return ctx;
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const ctx = bootIfNeeded();
+      const point = pointFrom(event);
+      if (!ctx || !point) return;
+
+      drawingRef.current = true;
+      lastPointRef.current = point;
+      canvas.setPointerCapture(event.pointerId);
+
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 1.75, 0, Math.PI * 2);
+      ctx.fill();
+      scheduleSave();
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!drawingRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      const ctx = getDrawContext();
+      const point = pointFrom(event);
+      const last = lastPointRef.current;
+      if (!ctx || !point || !last) return;
+
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+      lastPointRef.current = point;
+      scheduleSave();
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (!drawingRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      drawingRef.current = false;
+      lastPointRef.current = null;
+      try {
+        canvas.releasePointerCapture(event.pointerId);
+      } catch {
+        // already released
+      }
+      saveDrawing();
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [getDrawContext, saveDrawing, scheduleSave]);
+
+  const clearDrawing = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      applyDrawStrokeStyle(ctx);
+    }
+
+    drawingRef.current = false;
+    lastPointRef.current = null;
+
+    try {
+      localStorage.removeItem(DRAWING_STORAGE_KEY);
+    } catch {
+      // ignore private mode errors
+    }
+  };
+
+  const triggerFlip = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    direction: "prev" | "next",
+    corner: "top" | "bottom",
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (direction === "prev") onFlipPrev(corner);
+    else onFlipNext(corner);
+  };
+
+  return (
+    <ZPage bg="paper" className="draw-page">
+      <div
+        className="draw-page-layout"
+        onMouseDown={(event) => {
+          if (
+            (event.target as HTMLElement).closest(
+              ".draw-page-flip-zone, .draw-page-clear, .draw-page-corner-shield",
+            )
+          ) {
+            return;
+          }
+          event.stopPropagation();
+        }}
+        onTouchStart={(event) => {
+          if (
+            (event.target as HTMLElement).closest(
+              ".draw-page-flip-zone, .draw-page-clear, .draw-page-corner-shield",
+            )
+          ) {
+            return;
+          }
+          event.stopPropagation();
+        }}
+      >
+        <button
+          type="button"
+          className="draw-page-clear"
+          aria-label={locale === "pt" ? "limpar desenho" : "clear drawing"}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={clearDrawing}
+        >
+          <Trash2 aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="draw-page-corner-shield draw-page-corner-shield--tl"
+          tabIndex={-1}
+          aria-hidden="true"
+          onMouseDown={(event) => {
+            event.stopPropagation();
+            event.preventDefault();
+          }}
+          onTouchStart={(event) => event.stopPropagation()}
+        />
+        <button
+          type="button"
+          className="draw-page-corner-shield draw-page-corner-shield--tr"
+          tabIndex={-1}
+          aria-hidden="true"
+          onMouseDown={(event) => {
+            event.stopPropagation();
+            event.preventDefault();
+          }}
+          onTouchStart={(event) => event.stopPropagation()}
+        />
+        <button
+          type="button"
+          className="draw-page-flip-zone draw-page-flip-zone--bl"
+          aria-label={locale === "pt" ? "página anterior" : "previous page"}
+          onMouseDown={(event) => triggerFlip(event, "prev", "bottom")}
+        />
+        <button
+          type="button"
+          className="draw-page-flip-zone draw-page-flip-zone--br"
+          aria-label={locale === "pt" ? "página seguinte" : "next page"}
+          onMouseDown={(event) => triggerFlip(event, "next", "bottom")}
+        />
+        <div className="draw-page-canvas-wrap" ref={canvasWrapRef}>
+          <img
+            src={exercicioAsset}
+            alt=""
+            className="draw-page-exercise"
+            draggable={false}
+          />
+          <canvas
+            ref={canvasRef}
+            className="draw-page-canvas"
+            aria-label={locale === "pt" ? "área de desenho" : "drawing area"}
+          />
         </div>
       </div>
     </ZPage>
@@ -1149,48 +1647,6 @@ const CONTACT_ICON_SVGS: Record<string, string> = {
   discord: discordIconSvg,
 };
 
-function prepareContactIconSvg(svg: string, prefix: string) {
-  let out = svg
-    .replace(/\bid="([^"]+)"/g, `id="${prefix}-$1"`)
-    .replace(/url\(#([^)]+)\)/g, `url(#${prefix}-$1)`)
-    .replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}-$1"`);
-
-  // These exports have width/height but no viewBox — force a proper viewport so CSS sizing works
-  out = out.replace(/<svg\b([^>]*)>/i, (_match, attrs: string) => {
-    const width = attrs.match(/\bwidth="(\d+(?:\.\d+)?)"/i)?.[1];
-    const height = attrs.match(/\bheight="(\d+(?:\.\d+)?)"/i)?.[1];
-    let next = attrs
-      .replace(/\swidth="[^"]*"/gi, "")
-      .replace(/\sheight="[^"]*"/gi, "")
-      .replace(/\soverflow="[^"]*"/gi, "");
-
-    if (width && height && !/\bviewBox=/i.test(attrs)) {
-      next += ` viewBox="0 0 ${width} ${height}"`;
-    }
-
-    next += ' width="100%" height="100%" overflow="visible" preserveAspectRatio="xMidYMid meet"';
-    return `<svg${next}>`;
-  });
-
-  return out;
-}
-
-const CONTACT_STROKE_BASE_MS: Record<string, number> = {
-  instagram: 5200,
-  phone: 5200,
-  location: 4500,
-};
-const CONTACT_STROKE_DEFAULT_MS = 3800;
-const CONTACT_STROKE_MIN_MS = 3200;
-
-function contactStrokeDurationMs(length: number, maxLength: number, icon: string) {
-  const base = CONTACT_STROKE_BASE_MS[icon] ?? CONTACT_STROKE_DEFAULT_MS;
-  if (maxLength <= 0) return base;
-  // Scale by path length so longer strokes take longer; short ones aren't rushed at the end
-  const scaled = Math.round((length / maxLength) * base);
-  return Math.max(CONTACT_STROKE_MIN_MS, scaled);
-}
-
 function ContactChannelIcon({
   icon,
   label,
@@ -1294,6 +1750,11 @@ type FlipBookHandle = {
     flipPrev: (corner?: "top" | "bottom") => void;
     flip: (page: number, corner?: "top" | "bottom") => void;
     turnToPage: (page: number) => void;
+    getSettings: () => { showPageCorners: boolean };
+    userStop: (
+      point: { x: number; y: number },
+      isSwipe?: boolean,
+    ) => void;
   };
 };
 
@@ -1302,6 +1763,7 @@ type MagazinePage = {
   label: string;
   content: React.ReactNode;
   hard?: boolean;
+  hidden?: boolean;
 };
 
 type MagazineMarkerItem = NavItem & {
@@ -1317,8 +1779,7 @@ const MagazineSheet = forwardRef<
     hard?: boolean;
   }
 >(function MagazineSheet({ children, number, hard = false }, ref) {
-  // Cover has an external flip hint; other pages keep the page number
-  const footer = number === 1 ? null : `- ${number} -`;
+  const footer = hard ? null : `- ${number} -`;
 
   return (
     <div
@@ -1429,20 +1890,12 @@ function SobreOriginPage({ locale }: { locale: Locale }) {
   );
 }
 
-function BackCoverPage({ locale }: { locale: Locale }) {
+function ThankYouCover() {
   return (
-    <ZPage bg="cream" className="back-cover-page">
-      <StarSticker className="left-[18%] top-[20%]" size={46} rotate={-14} />
-      <StarSticker className="right-[22%] bottom-[26%]" size={52} rotate={18} />
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <div className="back-cover-logo paper-tex">
-          <span>641</span>
-        </div>
-        <p className="mt-7 font-hand text-2xl font-bold text-brand-accent sm:text-3xl">
-          {t(site.footer.tagline, locale)}
-        </p>
-        <p className="mt-7 font-mono-zine text-[10px] uppercase tracking-[0.28em] text-brand-magenta/70">
-          Associação 641 · 2026 · Oeiras, PT
+    <ZPage bg="dark" className="ink-stain">
+      <div className="magazine-cover-layout magazine-back-cover-layout">
+        <p className="magazine-back-cover-credits">
+          obrigado à bia, góis, armando e lameiras
         </p>
       </div>
     </ZPage>
@@ -1549,6 +2002,14 @@ function MagazineIndex() {
     bookRef.current?.pageFlip().flipNext("bottom");
   }, []);
 
+  const flipPrevCorner = useCallback((corner: "top" | "bottom") => {
+    bookRef.current?.pageFlip().flipPrev(corner);
+  }, []);
+
+  const flipNextCorner = useCallback((corner: "top" | "bottom") => {
+    bookRef.current?.pageFlip().flipNext(corner);
+  }, []);
+
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLElement>) => {
       event.preventDefault();
@@ -1612,13 +2073,7 @@ function MagazineIndex() {
   }, []);
 
   const magazinePages: MagazinePage[] = useMemo(() => {
-    return [
-      {
-        key: "cover",
-        label: locale === "pt" ? "Capa" : "Cover",
-        hard: true,
-        content: <Cover locale={locale} sectionId="inicio" />,
-      },
+    const pagesBeforeContactos: MagazinePage[] = [
       {
         key: "sobre",
         label: locale === "pt" ? "Sobre" : "About",
@@ -1672,35 +2127,93 @@ function MagazineIndex() {
         content: <ConcursoPage locale={locale} sectionId="concurso" />,
       },
       {
+        key: "parceiros",
+        label: t(site.nav.parceiros, locale),
+        content: <ParceirosPage locale={locale} sectionId="parceiros" />,
+      },
+    ];
+
+    const contactosIndexWithoutBlank = 1 + pagesBeforeContactos.length;
+    const needsBlankBeforeContactos = contactosIndexWithoutBlank % 2 !== 0;
+
+    const pages: MagazinePage[] = [
+      {
+        key: "cover",
+        label: locale === "pt" ? "Capa" : "Cover",
+        hard: true,
+        content: <Cover locale={locale} sectionId="inicio" />,
+      },
+      ...pagesBeforeContactos,
+    ];
+
+    if (needsBlankBeforeContactos) {
+      pages.push({
+        key: "blank-contactos-pad",
+        label: "",
+        hidden: true,
+        content: null,
+      });
+    }
+
+    pages.push(
+      {
         key: "contactos",
         label: t(site.nav.contactos, locale),
         content: null,
       },
       {
-        key: "parceiros",
-        label: t(site.nav.parceiros, locale),
-        content: <ParceirosPage locale={locale} sectionId="parceiros" />,
-      },
-      {
         key: "back",
-        label: locale === "pt" ? "Fim" : "End",
+        label: "",
         hard: true,
-        content: <BackCoverPage locale={locale} />,
+        hidden: true,
+        content: <ThankYouCover />,
       },
-    ];
+    );
+
+    return pages;
   }, [locale]);
 
   const markerItems: MagazineMarkerItem[] = useMemo(
     () =>
-      magazinePages.map((page, index) => ({
-        key: `${page.key}-marker`,
-        label: page.label,
-        sectionId: page.key,
-        page: index,
-        keys: [page.key],
-      })),
+      magazinePages
+        .map((page, index) => ({
+          key: `${page.key}-marker`,
+          label: page.label,
+          sectionId: page.key,
+          page: index,
+          keys: [page.key],
+        }))
+        .filter((item) => item.label.length > 0),
     [magazinePages],
   );
+
+  const drawPageIndex = useMemo(
+    () => magazinePages.findIndex((page) => page.key === "blank-contactos-pad"),
+    [magazinePages],
+  );
+
+  // In landscape, page-flip reports the spread's leading page, not always the
+  // exact visible sheet. Include the adjacent index so the draw sheet disables
+  // the library's large global hover corners whenever it is visible.
+  useEffect(() => {
+    const flip = bookRef.current?.pageFlip?.();
+    if (!flip?.getSettings) return;
+
+    const settings = flip.getSettings() as { showPageCorners?: boolean };
+    const onDrawPage =
+      drawPageIndex >= 0 &&
+      (currentPage === drawPageIndex ||
+        (!usePortrait && Math.abs(currentPage - drawPageIndex) <= 1));
+    settings.showPageCorners = !onDrawPage;
+
+    if (onDrawPage) {
+      try {
+        flip.userStop?.({ x: -1, y: -1 }, true);
+      } catch {
+        // ignore if flip API isn't ready
+      }
+    }
+  }, [currentPage, drawPageIndex, usePortrait]);
 
   useEffect(() => {
     const handleBookHashLink = (event: MouseEvent) => {
@@ -1776,6 +2289,12 @@ function MagazineIndex() {
                       sectionId="contactos"
                       isVisible={currentPage === index && !isFlipping}
                     />
+                  ) : page.key === "blank-contactos-pad" ? (
+                    <DrawMagazinePage
+                      locale={locale}
+                      onFlipPrev={flipPrevCorner}
+                      onFlipNext={flipNextCorner}
+                    />
                   ) : (
                     page.content
                   )}
@@ -1811,8 +2330,8 @@ function _Index() {
     { key: "junta", label: locale === "pt" ? "Junta-te" : "Join us", sectionId: "junta" },
     { key: "banda", label: t(site.nav.banda, locale), sectionId: "banda" },
     { key: "concurso", label: locale === "pt" ? "concurso" : "contest", sectionId: "concurso" },
-    { key: "contactos", label: t(site.nav.contactos, locale), sectionId: "contactos" },
     { key: "parceiros", label: t(site.nav.parceiros, locale), sectionId: "parceiros" },
+    { key: "contactos", label: t(site.nav.contactos, locale), sectionId: "contactos" },
   ];
 
   return (
@@ -1833,8 +2352,8 @@ function _Index() {
         <JuntaPage locale={locale} />
         <BandaPage locale={locale} sectionId="banda" />
         <ConcursoPage locale={locale} sectionId="concurso" />
-        <ContactosPage locale={locale} sectionId="contactos" />
         <ParceirosPage locale={locale} sectionId="parceiros" />
+        <ContactosPage locale={locale} sectionId="contactos" />
       </main>
     </div>
   );

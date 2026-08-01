@@ -768,7 +768,17 @@
 
 /* Nudge CutoutText page headlines down slightly on every sheet */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-  padding-top: 2.8rem;
+  padding-top: 3.25rem;
+  margin-bottom: 2rem;
+}
+
+/* Push page body below titles without moving the headline */
+.magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
+  margin-top: 3rem;
+}
+
+.magazine-sheet .contactos-page .contactos-layout {
+  padding-top: 1.75rem;
 }
 
 .magazine-sheet-hard .zine-page > .zine-page-inner {
@@ -788,6 +798,25 @@
   justify-content: flex-start;
   overflow: hidden;
   padding: 14px 16px 32px;
+  text-align: center;
+}
+
+.magazine-back-cover-layout {
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline: clamp(16px, 3vw, 24px);
+  padding-bottom: clamp(36px, 7vh, 56px);
+}
+
+.magazine-back-cover-credits {
+  margin: 0;
+  max-width: 92%;
+  color: var(--color-brand-pink-soft);
+  font-family: "Caveat", var(--font-hand);
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.35;
+  opacity: 0.82;
   text-align: center;
 }
 
@@ -1159,6 +1188,238 @@
   height: 0.85rem;
   flex-shrink: 0;
   pointer-events: none;
+}
+
+.news-item-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.45rem;
+  font-family: var(--font-marker);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-magenta);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.news-item-link svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.parceiros-page-layout {
+  height: 100%;
+  min-height: 0;
+}
+
+.parceiros-logo-row {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(0.45rem, 2vw, 0.85rem);
+  width: 100%;
+}
+
+.parceiros-outro {
+  margin-top: auto;
+  padding-top: clamp(1rem, 3vh, 1.25rem);
+  padding-bottom: clamp(0.35rem, 1.5vh, 0.75rem);
+  color: var(--color-brand-pink-soft);
+  font-family: "Caveat", var(--font-hand);
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
+  line-height: 1.35;
+  text-align: center;
+}
+
+.parceiros-logo-slot {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(2.35rem, 15vw, 4rem);
+  max-width: clamp(2.35rem, 15vw, 4rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: visible;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.parceiros-logo-slot:hover {
+  transform: scale(1.06);
+}
+
+.parceiros-logo-slot--cml {
+  background-color: #fff;
+}
+
+.parceiros-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.parceiros-logo-ring {
+  position: absolute;
+  inset: -5%;
+  pointer-events: none;
+}
+
+.parceiros-logo-ring svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.parceiros-logo-ring path {
+  stroke: #c41958;
+  fill: none;
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  stroke-dashoffset: 0;
+}
+
+.draw-page .zine-page-inner,
+.magazine-sheet .draw-page.zine-page > .zine-page-inner {
+  padding: 0;
+  overflow: hidden;
+}
+
+.draw-page-layout {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  touch-action: none;
+}
+
+.draw-page-clear {
+  position: absolute;
+  bottom: clamp(1.2rem, 3.8vh, 1.65rem);
+  left: 50%;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(10, 5, 7, 0.55);
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.draw-page-clear svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke-width: 2.1;
+}
+
+.draw-page-clear:hover {
+  color: #c41958;
+  transform: translateX(-50%) scale(1.08);
+}
+
+.draw-page-flip-zone {
+  position: absolute;
+  z-index: 6;
+  width: 52px;
+  height: 52px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.draw-page-flip-zone--tl {
+  top: 0;
+  left: 0;
+}
+
+.draw-page-flip-zone--tr {
+  top: 0;
+  right: 0;
+}
+
+.draw-page-flip-zone--bl {
+  bottom: 0;
+  left: 0;
+}
+
+.draw-page-flip-zone--br {
+  right: 0;
+  bottom: 0;
+}
+
+.draw-page-corner-shield {
+  position: absolute;
+  z-index: 6;
+  width: 52px;
+  height: 52px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+  pointer-events: auto;
+}
+
+.draw-page-corner-shield--tl {
+  top: 0;
+  left: 0;
+}
+
+.draw-page-corner-shield--tr {
+  top: 0;
+  right: 0;
+}
+
+.draw-page-canvas-wrap {
+  position: absolute;
+  z-index: 3;
+  inset: clamp(2.75rem, 9.5vh, 3.55rem) clamp(0.65rem, 2.5vw, 0.85rem)
+    clamp(2.75rem, 9vh, 3.35rem);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.draw-page-exercise {
+  position: absolute;
+  top: clamp(0.55rem, 2.5vh, 0.95rem);
+  left: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100% - clamp(0.55rem, 2.5vh, 0.95rem));
+  object-fit: contain;
+  object-position: top center;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.draw-page-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  pointer-events: auto;
+  background: transparent;
 }
 
 .magazine-page-number {

@@ -16,11 +16,13 @@ export type NewsItem = {
   title: { pt: string; en: string };
   excerpt: { pt: string; en: string };
   image?: string; // URL opcional
+  href?: string; // link externo opcional
 };
 
 export type Partner = {
   name: string;
-  logo?: string; // URL da imagem do logo (opcional)
+  logo?: string; // chave do logo em partners-logos (opcional)
+  href?: string;
   note?: { pt: string; en: string };
 };
 
@@ -115,6 +117,44 @@ export const site = {
   // ---------- NOTÍCIAS / EVENTOS ----------
   // Adiciona novas entradas no topo do array.
   news: [
+    {
+      date: "01 AGO 2026",
+      tag: { pt: "PODCAST", en: "PODCAST" },
+      title: {
+        pt: "641 na RDP Internacional",
+        en: "641 on RDP Internacional",
+      },
+      excerpt: {
+        pt: "A associação esteve em antena no podcast Manual de Canções.",
+        en: "The association was on air on the Manual de Canções podcast.",
+      },
+    },
+    {
+      date: "15 JUL 2026",
+      tag: { pt: "HACKATHON", en: "HACKATHON" },
+      title: {
+        pt: "641 na JunctionX Lisbon",
+        en: "641 at JunctionX Lisbon",
+      },
+      excerpt: {
+        pt: "Participação na maior hackathon de AI da Europa, com workshop sobre energia pela música.",
+        en: "Taking part in Europe's largest AI hackathon, with a workshop on energy through music.",
+      },
+      href: "https://lisbon.hackjunction.com/agenda.html",
+    },
+    {
+      date: "10 JUN 2026",
+      tag: { pt: "FINANCIAMENTO", en: "FUNDING" },
+      title: {
+        pt: "Fundação EDP financia “Onda Verde”",
+        en: "EDP Foundation funds “Onda Verde”",
+      },
+      excerpt: {
+        pt: "Apoio de 2.500€ da Fundação EDP ao projeto da 641, através da Energy Academy.",
+        en: "€2,500 from the EDP Foundation for 641's project via the Energy Academy.",
+      },
+      href: "https://energyacademy.edp.com/pt-pt/universitarios",
+    },
     {
       date: "02 ABR 2026",
       tag: { pt: "CONCERTO", en: "CONCERT" },
@@ -249,15 +289,40 @@ export const site = {
   // ---------- PARCEIROS ----------
   parceiros: {
     kicker: { pt: "parceiros", en: "partners" },
+    outro: {
+      pt: "um agradecimento especial aos nossos parceiros!",
+      en: "a special thanks to our partners!",
+    },
     list: [
       {
         name: "Fundação EDP",
-        note: {
-          pt: "Financiamento de 2.500€ para o desenvolvimento do projeto “Onda Verde”.",
-          en: "€2,500 grant for the development of the “Onda Verde” project.",
-        },
+        logo: "fundacao-edp",
+        href: "https://www.fundacaoedp.pt/pt",
+      },
+      {
+        name: "Câmara Municipal de Lisboa",
+        logo: "cml",
+        href: "https://www.lisboa.pt/",
+      },
+      {
+        name: "Município de Oeiras",
+        logo: "oeiras",
+        href: "https://www.oeiras.pt/",
+      },
+      {
+        name: "Hacker School",
+        logo: "hacker-school",
+        href: "https://hackerschool.tecnico.ulisboa.pt/pt/",
       },
     ] as Partner[],
+  },
+
+  // ---------- DESENHO (página em branco) ----------
+  drawPage: {
+    hint: {
+      pt: "desenha-nos algo",
+      en: "draw us something",
+    },
   },
 
   // ---------- CONTACTOS ----------
