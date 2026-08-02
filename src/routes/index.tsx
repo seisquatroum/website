@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
 import {
   forwardRef,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useId,
@@ -734,11 +735,13 @@ function NewsPage({
 }) {
   const items = useMemo(() => getNews(locale), [locale]);
   const [index, setIndex] = useState(0);
+  const [cameraMode, setCameraMode] = useState<"photo" | "menu">("photo");
   const clipId = useId().replace(/:/g, "");
   const cameraMarkup = useMemo(() => prepareCameraSvg(cameraSvg), []);
 
   useEffect(() => {
     setIndex(0);
+    setCameraMode("photo");
   }, [locale]);
 
   const active = items[index] ?? null;
@@ -754,8 +757,37 @@ function NewsPage({
     setIndex((current) => (current + 1) % count);
   }, [count]);
 
+  const openCameraMenu = useCallback(() => {
+    if (count === 0) return;
+    setCameraMode("menu");
+  }, [count]);
+
+  const openSelectedNews = useCallback(() => {
+    if (count === 0) return;
+    setCameraMode("photo");
+  }, [count]);
+
+  const menuStart =
+    count <= 5 ? 0 : Math.min(Math.max(index - 2, 0), count - 5);
+  const menuItems = items.slice(menuStart, menuStart + 5);
+
   const stopFlip = (event: React.SyntheticEvent) => {
     event.stopPropagation();
+  };
+
+  const handleCameraStagePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("button,a")) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+
+    if (x >= 0.84 && y >= 0.72) {
+      event.preventDefault();
+      event.stopPropagation();
+      openCameraMenu();
+    }
   };
 
   return (
@@ -780,10 +812,26 @@ function NewsPage({
               } else if (event.key === "ArrowRight") {
                 event.preventDefault();
                 goNext();
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                goPrev();
+              } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                goNext();
+              } else if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                if (cameraMode === "menu") openSelectedNews();
+                else openCameraMenu();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                setCameraMode("photo");
               }
             }}
           >
-            <div className="news-camera-stage">
+            <div
+              className="news-camera-stage"
+              onPointerDownCapture={handleCameraStagePointer}
+            >
               <span
                 className="news-camera-body pointer-events-none"
                 aria-hidden="true"
@@ -791,7 +839,9 @@ function NewsPage({
               />
 
               <svg
-                className="news-camera-lcd pointer-events-none"
+                className={`news-camera-lcd pointer-events-none ${
+                  cameraMode === "menu" ? "is-menu" : ""
+                }`}
                 viewBox="0 0 2139 1298"
                 aria-hidden="true"
               >
@@ -800,7 +850,111 @@ function NewsPage({
                     <path d={NEWS_CAMERA_SCREEN_PATH} />
                   </clipPath>
                 </defs>
-                {active.image ? (
+                {cameraMode === "menu" ? (
+                  <>
+                    <path d={NEWS_CAMERA_SCREEN_PATH} fill="#d9decf" opacity="0.98" />
+                    <path
+                      d="M135 252 H1503 V364 H135 Z"
+                      fill="#a51d22"
+                      clipPath={`url(#${clipId})`}
+                    />
+                    <text
+                      x="214"
+                      y="328"
+                      fill="#fff8ea"
+                      fontFamily="Courier New, monospace"
+                      fontSize="58"
+                      fontWeight="700"
+                      letterSpacing="8"
+                      clipPath={`url(#${clipId})`}
+                    >
+                      REC
+                    </text>
+                    <text
+                      x="1302"
+                      y="328"
+                      fill="#fff8ea"
+                      fontFamily="Courier New, monospace"
+                      fontSize="46"
+                      fontWeight="700"
+                      clipPath={`url(#${clipId})`}
+                    >
+                      {index + 1}/{count}
+                    </text>
+                    {menuItems.map((item, itemIndex) => {
+                      const absoluteIndex = menuStart + itemIndex;
+                      const selected = absoluteIndex === index;
+                      const y = 452 + itemIndex * 122;
+                      return (
+                        <g key={item.slug} clipPath={`url(#${clipId})`}>
+                          {selected ? (
+                            <rect
+                              x="188"
+                              y={y - 62}
+                              width="814"
+                              height="88"
+                              fill="#dfb836"
+                              opacity="0.96"
+                            />
+                          ) : null}
+                          <text
+                            x="226"
+                            y={y}
+                            fill={selected ? "#1a0a10" : "#253136"}
+                            fontFamily="Courier New, monospace"
+                            fontSize="39"
+                            fontWeight="700"
+                          >
+                            {item.title.slice(0, 25)}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    {active.image ? (
+                      <image
+                        href={active.image}
+                        x={1040}
+                        y={428}
+                        width={340}
+                        height={255}
+                        preserveAspectRatio="xMidYMid slice"
+                        clipPath={`url(#${clipId})`}
+                      />
+                    ) : null}
+                    <rect
+                      x="1040"
+                      y="428"
+                      width="340"
+                      height="255"
+                      fill="none"
+                      stroke="#1a0a10"
+                      strokeWidth="10"
+                      clipPath={`url(#${clipId})`}
+                    />
+                    <text
+                      x="204"
+                      y="1136"
+                      fill="#fff8ea"
+                      fontFamily="Courier New, monospace"
+                      fontSize="48"
+                      fontWeight="700"
+                      clipPath={`url(#${clipId})`}
+                    >
+                      SELECT &lt;&gt;
+                    </text>
+                    <text
+                      x="1094"
+                      y="1136"
+                      fill="#fff8ea"
+                      fontFamily="Courier New, monospace"
+                      fontSize="48"
+                      fontWeight="700"
+                      clipPath={`url(#${clipId})`}
+                    >
+                      ENTER SET
+                    </text>
+                  </>
+                ) : active.image ? (
                   <image
                     href={active.image}
                     x={134}
@@ -823,7 +977,7 @@ function NewsPage({
               </svg>
 
               <span className="news-camera-date">
-                {newsMatrixDate(active.slug) || active.date}
+                {cameraMode === "menu" ? "" : newsMatrixDate(active.slug) || active.date}
               </span>
 
               <button
@@ -846,6 +1000,36 @@ function NewsPage({
               >
                 <ChevronRight className="news-camera-arrow-icon" aria-hidden="true" strokeWidth={2.5} />
               </button>
+              <button
+                type="button"
+                className="news-camera-set-button"
+                aria-label={
+                  locale === "pt" ? "abrir notícia selecionada" : "open selected news"
+                }
+                onClick={openSelectedNews}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openSelectedNews();
+                }}
+                onMouseDown={stopFlip}
+                onTouchStart={stopFlip}
+              />
+              <button
+                type="button"
+                className="news-camera-menu-button"
+                aria-label={
+                  locale === "pt" ? "abrir menu da câmara" : "open camera menu"
+                }
+                onClick={openCameraMenu}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openCameraMenu();
+                }}
+                onMouseDown={stopFlip}
+                onTouchStart={stopFlip}
+              />
             </div>
 
             <div className="news-camera-caption">
@@ -2054,7 +2238,7 @@ type MagazineMarkerItem = NavItem & {
 };
 
 const COMPACT_BOOK_MEDIA_QUERY =
-  "(max-width: 1280px), (pointer: coarse), (hover: none)";
+  "(max-width: 980px), (pointer: coarse), (hover: none)";
 
 const MagazineSheet = forwardRef<
   HTMLDivElement,
@@ -2367,6 +2551,41 @@ function MagazineIndex() {
   const flipNextCorner = useCallback((corner: "top" | "bottom") => {
     bookRef.current?.pageFlip().flipNext(corner);
   }, []);
+
+  const handleCompactBookPointer = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!window.matchMedia(COMPACT_BOOK_MEDIA_QUERY).matches) return;
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          [
+            "a",
+            "button",
+            "input",
+            "textarea",
+            "select",
+            "[role='button']",
+            "[role='link']",
+            ".news-camera",
+            ".draw-page-layout",
+            ".contactos-page",
+          ].join(","),
+        )
+      ) {
+        return;
+      }
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      if (x < 0 || x > rect.width) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      turnCompactPage(x < rect.width / 2 ? -1 : 1);
+    },
+    [turnCompactPage],
+  );
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLElement>) => {
@@ -2709,6 +2928,7 @@ function MagazineIndex() {
         <div
           ref={bookWrapRef}
           className="magazine-book-wrap"
+          onPointerDownCapture={handleCompactBookPointer}
         >
           <button
             type="button"
