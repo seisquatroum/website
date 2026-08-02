@@ -435,12 +435,16 @@
 }
 
 .magazine-stage {
+  --marker-page-gap: clamp(6px, 1vw, 14px);
+  --magazine-spread-w: min(880px, calc(100vw - 156px), calc((100svh - 8px) * 1040 / 720));
+  --magazine-spread-h: calc(var(--magazine-spread-w) * 720 / 1040);
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 118px;
+  grid-template-columns: minmax(0, auto) 118px;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: var(--marker-page-gap);
   min-height: 100svh;
   max-height: 100svh;
   overflow: hidden;
@@ -469,18 +473,18 @@
 
 .magazine-markers {
   position: relative;
-  z-index: 24;
+  z-index: 1;
   display: flex;
   width: 100%;
-  height: 100%;
+  margin-left: calc(-28px - var(--marker-page-gap));
+  height: var(--magazine-spread-h);
   max-height: calc(100svh - 8px);
   min-height: 0;
-  align-self: stretch;
+  align-self: center;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   gap: 8px;
-  align-self: stretch;
   pointer-events: none;
 }
 
@@ -642,7 +646,7 @@
   display: none;
 }
 
-@media (min-width: 761px) {
+@media (min-width: 981px) {
   .magazine-flip-hint-external {
     display: none;
   }
@@ -665,7 +669,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1280px), (pointer: coarse), (hover: none) {
   .magazine-flip-hint-external {
     font-size: 0.85rem;
   }
@@ -674,9 +678,9 @@
 .magazine-book-wrap {
   /* Hard covers in page-flip idle at top:rect.top but flip at top:0.
      Keep the flip parent exactly page-sized so rect.top stays 0. */
-  --magazine-page-w: min(440px, 100%, calc((100svh - 8px) * 520 / 720));
+  --magazine-page-w: min(440px, calc(100vw - 136px), calc((100svh - 8px) * 520 / 720));
   position: relative;
-  z-index: 1;
+  z-index: 120;
   box-sizing: border-box;
   width: var(--magazine-page-w);
   aspect-ratio: 520 / 720;
@@ -686,18 +690,20 @@
   justify-self: center;
   align-self: center;
   filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.58));
+  cursor: pointer;
+  will-change: filter;
 }
 
-@media (min-width: 761px) {
+@media (min-width: 981px) {
   .magazine-book-wrap {
-    --magazine-page-w: min(880px, 100%, calc((100svh - 8px) * 1040 / 720));
+    --magazine-page-w: min(880px, calc(100vw - 156px), calc((100svh - 8px) * 1040 / 720));
     aspect-ratio: 1040 / 720;
   }
 }
 
 .magazine-book.stf__parent {
   position: relative;
-  z-index: 30;
+  z-index: 120;
   box-sizing: border-box;
   width: 100% !important;
   max-width: none !important;
@@ -706,6 +712,12 @@
   min-height: 0 !important;
   max-height: none !important;
   margin-inline: auto;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.magazine-page-tap-zone {
+  display: none;
 }
 
 .magazine-book .stf__wrapper,
@@ -730,6 +742,28 @@
   overflow: hidden;
   border: 2px solid rgba(10, 5, 7, 0.88);
   box-shadow: none;
+  contain: layout paint style;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.magazine-stage.is-flipping .magazine-book-wrap {
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.42));
+}
+
+.magazine-stage.is-flipping .magazine-book :is(
+  .paper-tex,
+  .cover-digit,
+  .tape-strip,
+  [class*="washi-"],
+  .about-photo-card,
+  .polaroid-frame,
+  .origem-stroke-art,
+  .contact-channel-icon,
+  .parceiros-logo
+) {
+  filter: none !important;
+  transition: none !important;
 }
 
 .magazine-sheet .zine-page,
@@ -767,15 +801,15 @@
   flex-direction: column;
 }
 
-/* Nudge CutoutText page headlines down slightly on every sheet */
+/* Keep headings responsive inside the fixed magazine sheet. Large fixed offsets
+   make pages feel misplaced or clipped on shorter screens. */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-  padding-top: 3.25rem;
-  margin-bottom: 2rem;
+  padding-top: clamp(0.75rem, 3vh, 2rem);
+  margin-bottom: clamp(0.6rem, 1.8vh, 1.35rem);
 }
 
-/* Push page body below titles without moving the headline */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-  margin-top: 3rem;
+  margin-top: clamp(0.4rem, 1.5vh, 1.4rem);
 }
 
 .magazine-sheet .contactos-page .contactos-layout {
@@ -1763,6 +1797,7 @@
 }
 
 .about-photo-card {
+  flex: 0 1 auto;
   margin-inline: auto;
   max-width: 100%;
 }
@@ -1780,7 +1815,8 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  gap: 0.65rem;
+  gap: clamp(0.35rem, 1.3vh, 0.65rem);
+  overflow: hidden;
 }
 
 .oque-page-title {
@@ -1796,11 +1832,12 @@
   justify-items: center;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .oque-polaroid {
-  width: min(108%, 13rem);
-  z-index: 1;
+  width: min(100%, 12rem);
+  z-index: 30;
 }
 
 .oque-polaroid:hover {
@@ -1860,7 +1897,7 @@
   text-align: center;
   color: var(--color-brand-black);
   font-family: var(--font-marker);
-  font-size: 0.62rem;
+  font-size: clamp(0.5rem, 1.35vh, 0.62rem);
   letter-spacing: 0.04em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -1874,15 +1911,16 @@
 .origem-page-layout {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: clamp(0.25rem, 1.2vh, 0.55rem);
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .origem-copy {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: clamp(10px, 1.55vh, 14px);
+  line-height: 1.36;
 }
 
 .origem-stroke-art {
@@ -1913,7 +1951,7 @@
 }
 
 .origem-art-oeiras {
-  width: min(52%, 10rem);
+  width: min(46%, 9rem);
   margin-inline: auto;
   aspect-ratio: 2371 / 1647;
 }
@@ -1930,7 +1968,7 @@
 .origem-art-lines {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: clamp(0.05rem, 0.7vh, 0.2rem);
   width: 100%;
   margin-top: -0.15rem;
 }
@@ -1943,12 +1981,12 @@
   gap: 0.35rem 0.45rem;
   min-width: 0;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: clamp(10px, 1.55vh, 14px);
+  line-height: 1.3;
 }
 
 .origem-art-line--lame-setup {
-  margin-top: 1.15rem;
+  margin-top: clamp(0.25rem, 2vh, 1.15rem);
 }
 
 .origem-art-line-label {
@@ -1972,7 +2010,7 @@
   position: relative;
   flex: 0 0 auto;
   display: inline-block;
-  width: 9.5rem;
+  width: min(37%, 8.5rem);
   aspect-ratio: 1820 / 1050;
   line-height: 0;
   /* no z-index: keep mixer/jbl/vizinhos in one stacking context */
@@ -1992,14 +2030,14 @@
 }
 
 .origem-art-inline--jbl {
-  width: 6.4rem;
+  width: min(28%, 5.8rem);
   aspect-ratio: 1482 / 1495;
 }
 
 .origem-art-inline--jbl-overlay {
   position: absolute;
-  right: -68%;
-  bottom: -80%;
+  right: -58%;
+  bottom: -68%;
   /* above idle mixer, below vizinhos */
   z-index: 2;
   width: 96%;
@@ -2015,9 +2053,9 @@
 .origem-art-inline--vizinhos {
   position: relative;
   z-index: 3;
-  width: 7.25rem;
+  width: min(30%, 6.4rem);
   aspect-ratio: 2197 / 1888;
-  margin-top: -1.6rem;
+  margin-top: clamp(-1.35rem, -2vh, -0.5rem);
 }
 
 .origem-art-inline--vizinhos:hover {
@@ -2027,7 +2065,7 @@
 .origem-art-line--vizinhos {
   position: relative;
   z-index: 3;
-  margin-top: -0.35rem;
+  margin-top: clamp(-0.35rem, -0.8vh, -0.05rem);
 }
 
 .origem-art-line--vizinhos:hover {
@@ -2101,6 +2139,26 @@
 }
 
 @media (max-height: 760px) {
+  .magazine-sheet .zine-page > .zine-page-inner {
+    padding-top: 9px;
+    padding-right: 12px;
+    padding-left: 12px;
+    padding-bottom: 24px;
+  }
+
+  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
+    padding-top: 0.6rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
+    margin-top: 0.55rem;
+  }
+
+  .about-photo-card {
+    max-width: min(78%, 300px);
+  }
+
   .magazine-index-page h2 {
     margin-top: 8px;
   }
@@ -2122,70 +2180,123 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1280px), (pointer: coarse), (hover: none) {
   .magazine-stage {
-    /* Size columns to content, then center the book + markers as one group */
-    grid-template-columns: minmax(0, auto) 48px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, auto) auto;
+    align-content: center;
     justify-content: center;
-    gap: 2px;
-    padding: 2px 8px;
+    gap: 8px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
   }
 
   .magazine-book-wrap {
     --magazine-page-w: min(
       440px,
-      calc(100vw - 48px - 20px),
-      calc((100svh - 4px) * 520 / 720)
+      calc(100vw - 20px),
+      calc((100svh - 104px) * 520 / 720)
     );
-    max-height: calc(100svh - 4px);
+    max-height: calc(100svh - 104px);
     margin-top: 0;
     justify-self: center;
   }
 
+  .magazine-page-tap-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 220;
+    display: block;
+    width: 34%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .magazine-page-tap-zone--prev {
+    left: 0;
+  }
+
+  .magazine-page-tap-zone--next {
+    right: 0;
+  }
+
+  .magazine-page-tap-zone:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: -6px;
+  }
+
   .magazine-markers {
-    max-height: calc(100svh - 4px);
+    z-index: 24;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    height: auto;
+    max-height: none;
     margin-left: 0;
-    width: 100%;
+    width: min(100%, 680px);
+    align-self: center;
     justify-self: center;
+    align-items: end;
   }
 
   .magazine-marker-list {
-    padding: 0 0 4px;
-    align-items: stretch;
+    flex-direction: row;
+    flex: 0 1 auto;
+    max-height: none;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 4px 7px;
+    align-items: flex-end;
+    mask-image: none;
+    -webkit-mask-image: none;
+    scroll-snap-type: x proximity;
   }
 
   .magazine-marker {
-    max-width: none;
-    min-height: 28px;
-    padding: 5px 3px 5px 14px;
-    font-size: 6.5px;
+    flex: 0 0 clamp(68px, 18vw, 116px);
+    max-width: 116px;
+    min-height: 40px;
+    padding: 7px 7px 7px 24px;
+    border-left-width: 2px;
+    font-size: clamp(6.8px, 1.9vw, 8.5px);
     line-height: 1.05;
     box-shadow:
-      inset 20px 0 10px rgba(0, 0, 0, 0.22),
-      2px 2px 0 rgba(0, 0, 0, 0.82);
-    transform: translateX(-2px) rotate(-0.4deg);
+      inset 30px 0 12px rgba(0, 0, 0, 0.22),
+      3px 3px 0 rgba(0, 0, 0, 0.82);
+    scroll-snap-align: center;
+    transform: translateY(0) rotate(-0.8deg);
   }
 
   .magazine-marker::before {
-    left: 12px;
+    left: 19px;
   }
 
   .magazine-marker::after {
-    left: 1px;
+    left: 2px;
     top: 3px;
     bottom: 3px;
-    width: 12px;
+    width: 20px;
   }
 
   .magazine-marker:nth-child(2n),
   .magazine-marker:nth-child(3n),
   .magazine-marker:nth-child(5n) {
-    transform: translateX(-4px) rotate(0.5deg);
+    transform: translateY(0) rotate(0.7deg);
   }
 
   .magazine-marker:hover,
   .magazine-marker.is-active {
-    transform: translateX(0) rotate(-0.4deg);
+    transform: translateY(-4px) rotate(-0.8deg);
+  }
+
+  .magazine-lang-stack {
+    align-self: end;
+    gap: 4px;
+    margin-top: 0;
   }
 
   .magazine-lang {
@@ -2209,7 +2320,25 @@
   }
 
   .magazine-sheet .zine-page > .zine-page-inner {
-    padding: 10px 12px 26px;
+    padding: 8px 10px 24px;
+  }
+
+  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
+    padding-top: 0.45rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
+    margin-top: 0.45rem;
+  }
+
+  .about-photo-card {
+    width: min(82%, 270px) !important;
+  }
+
+  .origem-copy,
+  .origem-art-line {
+    font-size: clamp(9px, 2.55vw, 12px);
   }
 
   .magazine-index-page h2 {

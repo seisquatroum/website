@@ -2053,6 +2053,9 @@ type MagazineMarkerItem = NavItem & {
   keys: string[];
 };
 
+const COMPACT_BOOK_MEDIA_QUERY =
+  "(max-width: 1280px), (pointer: coarse), (hover: none)";
+
 const MagazineSheet = forwardRef<
   HTMLDivElement,
   {
@@ -2198,15 +2201,17 @@ function MagazineMarkers({
         {items.map((item) => {
           const isActive = Boolean(activeKey && item.keys.includes(activeKey));
           return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onNavigate(item)}
-            ref={isActive ? activeMarkerRef : undefined}
-            className={`magazine-marker ${isActive ? "is-active" : ""}`}
-          >
-            <span>{item.label}</span>
-          </button>
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onNavigate(item)}
+              ref={isActive ? activeMarkerRef : undefined}
+              className={`magazine-marker ${isActive ? "is-active" : ""}`}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={item.label}
+            >
+              <span>{item.label}</span>
+            </button>
           );
         })}
       </div>
@@ -2225,36 +2230,61 @@ function MagazineMarkers({
 function MagazineIndex() {
   const { locale } = useI18n();
   const bookRef = useRef<FlipBookHandle | null>(null);
+  const bookWrapRef = useRef<HTMLDivElement | null>(null);
+  const compactTurnLocked = useRef(false);
   const wheelLocked = useRef(false);
   const wheelRemainder = useRef(0);
   const logoDriftRef = useRef<HTMLDivElement | null>(null);
   const logoDriftOffset = useRef(0);
+  const logoDriftFrame = useRef<number | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [showFlipHint, setShowFlipHint] = useState(true);
   const [isFlipping, setIsFlipping] = useState(false);
   const [usePortrait, setUsePortrait] = useState(true);
-  const flipDurationMs = 900;
+  const flipDurationMs = usePortrait ? 440 : 720;
+  const bookLayoutKey = `${locale}-${usePortrait ? "portrait" : "spread"}`;
+
+  const refreshBookLayout = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      bookRef.current?.pageFlip().update();
+      window.setTimeout(() => {
+        bookRef.current?.pageFlip().update();
+      }, 80);
+    });
+  }, []);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 760px)");
+    const media = window.matchMedia(COMPACT_BOOK_MEDIA_QUERY);
     const syncLayout = () => {
       setUsePortrait(media.matches);
-      window.requestAnimationFrame(() => {
-        bookRef.current?.pageFlip().update();
-      });
+      refreshBookLayout();
     };
 
     syncLayout();
     media.addEventListener("change", syncLayout);
     return () => media.removeEventListener("change", syncLayout);
-  }, []);
+  }, [refreshBookLayout]);
+
+  useEffect(() => {
+    const wrap = bookWrapRef.current;
+    if (!wrap) return;
+
+    const observer = new ResizeObserver(refreshBookLayout);
+    observer.observe(wrap);
+    window.addEventListener("resize", refreshBookLayout);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", refreshBookLayout);
+    };
+  }, [refreshBookLayout]);
 
   const flipTo = useCallback((page: number) => {
     // flip() only advances one spread; turnToPage jumps directly (markers + in-book hash links)
     bookRef.current?.pageFlip().turnToPage(page);
     setCurrentPage(page);
     if (page !== 0) setShowFlipHint(false);
-  }, []);
+    refreshBookLayout();
+  }, [refreshBookLayout]);
 
   const flipPrev = useCallback(() => {
     bookRef.current?.pageFlip().flipPrev("bottom");
@@ -2263,6 +2293,72 @@ function MagazineIndex() {
   const flipNext = useCallback(() => {
     bookRef.current?.pageFlip().flipNext("bottom");
   }, []);
+
+  const turnCompactPage = useCallback(
+    (delta: -1 | 1) => {
+      if (compactTurnLocked.current) return;
+
+      const flip = bookRef.current?.pageFlip();
+      if (!flip) return;
+
+      const api = flip as {
+        getPageCount?: () => number;
+        getCurrentPageIndex?: () => number;
+        getState?: () => string;
+        flip?: (page: number, corner?: "top" | "bottom") => void;
+        flipPrev: (corner?: "top" | "bottom") => void;
+        flipNext: (corner?: "top" | "bottom") => void;
+        turnToPage?: (page: number) => void;
+        update?: () => void;
+      };
+      const page = api.getCurrentPageIndex?.() ?? currentPage;
+      const pageCount = api.getPageCount?.() ?? Number.POSITIVE_INFINITY;
+      const targetPage = Math.max(0, Math.min(pageCount - 1, page + delta));
+      if (targetPage === page && (delta > 0 || currentPage <= 0)) return;
+
+      compactTurnLocked.current = true;
+      setIsFlipping(true);
+      setShowFlipHint(false);
+
+      if (api.flip) {
+        api.flip(targetPage, "bottom");
+      } else if (delta < 0) {
+        api.flipPrev("bottom");
+      } else {
+        api.flipNext("bottom");
+      }
+
+      window.setTimeout(() => {
+        const pageFlip = bookRef.current?.pageFlip() as typeof api | undefined;
+        if (!pageFlip || pageFlip.getState?.() !== "read") return;
+
+        const visiblePage = pageFlip.getCurrentPageIndex?.() ?? currentPage;
+        if (visiblePage !== page) return;
+
+        const fallbackPage =
+          delta < 0
+            ? Math.max(0, Math.min(visiblePage, currentPage) - 1)
+            : Math.min(pageCount - 1, visiblePage + 1);
+        if (fallbackPage === visiblePage) return;
+
+        pageFlip.turnToPage?.(fallbackPage);
+        pageFlip.update?.();
+        setCurrentPage(fallbackPage);
+      }, Math.min(260, flipDurationMs - 80));
+
+      window.setTimeout(() => {
+        const pageFlip = bookRef.current?.pageFlip();
+        pageFlip?.update();
+        const landedPage = pageFlip?.getCurrentPageIndex?.();
+        if (typeof landedPage === "number") {
+          setCurrentPage(landedPage);
+        }
+        compactTurnLocked.current = false;
+        setIsFlipping(false);
+      }, flipDurationMs + 80);
+    },
+    [currentPage, flipDurationMs],
+  );
 
   const flipPrevCorner = useCallback((corner: "top" | "bottom") => {
     bookRef.current?.pageFlip().flipPrev(corner);
@@ -2277,18 +2373,24 @@ function MagazineIndex() {
       event.preventDefault();
       const delta = event.deltaY;
       logoDriftOffset.current += delta * 0.35;
-      logoDriftRef.current
-        ?.querySelectorAll<HTMLElement>("[data-drift-speed]")
-        .forEach((track) => {
-          const speed = Number(track.dataset.driftSpeed) || 0;
-          const tile = track.querySelector<HTMLElement>(".site-logo-drift-tile");
-          const tileWidth = tile?.offsetWidth ?? track.scrollWidth / 2;
-          if (tileWidth <= 0) return;
-          // Wrap so the track loops instead of drifting forever off-content.
-          const raw = logoDriftOffset.current * speed;
-          const offset = ((raw % tileWidth) + tileWidth) % tileWidth;
-          track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+
+      if (logoDriftFrame.current === null) {
+        logoDriftFrame.current = window.requestAnimationFrame(() => {
+          logoDriftFrame.current = null;
+          logoDriftRef.current
+            ?.querySelectorAll<HTMLElement>("[data-drift-speed]")
+            .forEach((track) => {
+              const speed = Number(track.dataset.driftSpeed) || 0;
+              const tile = track.querySelector<HTMLElement>(".site-logo-drift-tile");
+              const tileWidth = tile?.offsetWidth ?? track.scrollWidth / 2;
+              if (tileWidth <= 0) return;
+              // Wrap so the track loops instead of drifting forever off-content.
+              const raw = logoDriftOffset.current * speed;
+              const offset = ((raw % tileWidth) + tileWidth) % tileWidth;
+              track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+            });
         });
+      }
 
       // Ignore further page flips while an animation is playing
       if (wheelLocked.current) return;
@@ -2339,6 +2441,15 @@ function MagazineIndex() {
       });
     }
   }, []);
+
+  useEffect(
+    () => () => {
+      if (logoDriftFrame.current !== null) {
+        window.cancelAnimationFrame(logoDriftFrame.current);
+      }
+    },
+    [],
+  );
 
   const magazinePages: MagazinePage[] = useMemo(() => {
     const pagesBeforeContactos: MagazinePage[] = [
@@ -2591,18 +2702,47 @@ function MagazineIndex() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
       <SiteLogoDrift driftRef={logoDriftRef} />
-      <main className="magazine-stage" onWheel={handleWheel}>
-        <div className="magazine-book-wrap">
+      <main
+        className={`magazine-stage ${isFlipping ? "is-flipping" : ""}`}
+        onWheel={handleWheel}
+      >
+        <div
+          ref={bookWrapRef}
+          className="magazine-book-wrap"
+        >
+          <button
+            type="button"
+            className="magazine-page-tap-zone magazine-page-tap-zone--prev"
+            aria-label={locale === "pt" ? "página anterior" : "previous page"}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              turnCompactPage(-1);
+            }}
+            onClick={(event) => event.preventDefault()}
+          />
+          <button
+            type="button"
+            className="magazine-page-tap-zone magazine-page-tap-zone--next"
+            aria-label={locale === "pt" ? "página seguinte" : "next page"}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              turnCompactPage(1);
+            }}
+            onClick={(event) => event.preventDefault()}
+          />
           {showFlipHint && (
             <span className="magazine-flip-hint-desktop" aria-hidden="true">
               {locale === "pt" ? "* folheia-me -> *" : "* flip me -> *"}
             </span>
           )}
           <HTMLFlipBook
+            key={bookLayoutKey}
             ref={bookRef}
             className="magazine-book"
             style={{}}
-            startPage={0}
+            startPage={Math.min(currentPage, magazinePages.length - 1)}
             size="stretch"
             width={520}
             height={720}
@@ -2610,16 +2750,16 @@ function MagazineIndex() {
             maxWidth={440}
             minHeight={380}
             maxHeight={2000}
-            drawShadow
-            flippingTime={900}
+            drawShadow={!usePortrait}
+            flippingTime={flipDurationMs}
             usePortrait={usePortrait}
             startZIndex={10}
             autoSize
-            maxShadowOpacity={0.65}
+            maxShadowOpacity={usePortrait ? 0.18 : 0.35}
             showCover
             mobileScrollSupport
             clickEventForward
-            useMouseEvents
+            useMouseEvents={!usePortrait}
             swipeDistance={24}
             showPageCorners
             disableFlipByClick
