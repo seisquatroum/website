@@ -622,6 +622,7 @@
   gap: 6px;
   margin-top: auto;
   margin-bottom: 14px;
+  margin-left: 36px;
   flex: 0 0 auto;
   overflow: visible;
   pointer-events: none;
@@ -743,6 +744,10 @@
   .magazine-lang {
     transform: scale(0.88);
     transform-origin: center bottom;
+  }
+
+  .magazine-lang-stack {
+    margin-left: 28px;
   }
 }
 
@@ -2373,6 +2378,7 @@
     gap: 4px;
     margin-top: 0;
     margin-bottom: 0;
+    margin-left: 0;
   }
 
   .magazine-lang {

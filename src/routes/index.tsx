@@ -863,12 +863,12 @@ function NewsPage({
                       y="328"
                       fill="#fff8ea"
                       fontFamily="Courier New, monospace"
-                      fontSize="58"
+                      fontSize="44"
                       fontWeight="700"
-                      letterSpacing="8"
+                      letterSpacing="4"
                       clipPath={`url(#${clipId})`}
                     >
-                      REC
+                      STORAGE
                     </text>
                     <text
                       x="1302"
