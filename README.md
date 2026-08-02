@@ -60,3 +60,9 @@ GITHUB_PAGES=true npm run build:pages
 - [ ] Fix para mobile
 - [ ] Corrigir animação de "andar para trás" no flipbook (ver nota acima)
 - [ ] Feature: reservar a sala
+- [ ] Notícias: pôr um ipod com botões interativos no podcast (para as pessoas poderem reproduzir logo na página)
+- [ ] Notícias: câmara com botões interativos para dar swap de fotos na própria página
+- [ ] Opcional: página interativa ao pé dos contactos: acrescentar uma câmara para as pessoas tirarem fotos no browser e pode ter molduras e filtros, tipo como um guestbook/logbook.
+- [ ] Substituir títulos pelas cenas do canvas (o que acham? vou fazer um branch e mostrar)
+- [ ] Alterar pagina dos parceiros para aparecerem maiores e preencherem melhor a página
+- [ ] Textos iniciais um pouco maiores para se ler melhor ( e potencialmente mudar a fonte?)
