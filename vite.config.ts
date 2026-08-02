@@ -6,10 +6,29 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const githubPages = process.env.GITHUB_PAGES === "true";
+const base = githubPages ? "/analogue-archive-hub/" : "/";
+
 export default defineConfig({
+  vite: {
+    base,
+  },
+  // Nitro targets Cloudflare by default (Lovable). Disable it for static GitHub Pages builds
+  // so TanStack Start can prerender an SPA shell under dist/client.
+  nitro: githubPages ? false : undefined,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
     server: { entry: "server" },
+    ...(githubPages
+      ? {
+          spa: {
+            enabled: true,
+            prerender: {
+              // GitHub Pages serves index.html for `/` and 404.html for unknown routes.
+              outputPath: "/index.html",
+            },
+          },
+        }
+      : {}),
   },
 });

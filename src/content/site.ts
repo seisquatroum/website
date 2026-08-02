@@ -2,22 +2,14 @@
  * ASSOCIAÇÃO 641 — CONTEÚDO DO SITE
  * ----------------------------------------------------------------------------
  * Este ficheiro é a fonte única de conteúdo do site.
- * Para atualizar textos, notícias, eventos, banda residente, parceiros ou
- * contactos, edita apenas este ficheiro e faz commit para o GitHub.
+ * Para atualizar textos, eventos, banda residente, parceiros ou
+ * contactos, edita este ficheiro e faz commit para o GitHub.
+ * Notícias: pastas em src/content/news/<slug>/ (pt.md, en.md, cover.*).
  *
  * Estrutura: cada bloco tem versão em português (pt) e inglês (en).
  * ============================================================================ */
 
 export type Locale = "pt" | "en";
-
-export type NewsItem = {
-  date: string; // formato livre, ex: "24 MAR 2026"
-  tag: { pt: string; en: string };
-  title: { pt: string; en: string };
-  excerpt: { pt: string; en: string };
-  image?: string; // URL opcional
-  href?: string; // link externo opcional
-};
 
 export type Partner = {
   name: string;
@@ -31,7 +23,7 @@ export const site = {
   nav: {
     sobre: { pt: "sobre", en: "about" },
     ajudar: { pt: "quero ajudar", en: "support us" },
-    banda: { pt: "BANDAS RESIDENTES", en: "resident bands" },
+    banda: { pt: "Bandas", en: "Bands" },
     parceiros: { pt: "parceiros", en: "partners" },
     contactos: { pt: "contactos", en: "contact" },
     noticias: { pt: "notícias", en: "news" },
@@ -76,129 +68,85 @@ export const site = {
       pt: "Queres saber mais? Fala connosco, vem visitar-nos ou torna-te sócio.",
       en: "Want to know more? Get in touch, come visit us or become a member.",
     },
+    origem: {
+      p1: {
+        pt: "Não faltam lugares para bandas ensaiarem em Oeiras, um dos municípios mais desenvolvidos de Portugal.",
+        en: "There's no shortage of places for bands to rehearse in Oeiras, one of Portugal's most developed municipalities.",
+      },
+      p2: {
+        pt: "O problema? Custam dinheiro, e não é propriamente pouco. Para miúdos a experimentar sons pela primeira vez, isso não era viável. E ninguém tinha garagens, um luxo em ambientes urbanos como este. Assim, a rua teve de servir:",
+        en: "The problem? They cost money, and not exactly a little. For kids trying out sounds for the first time, that wasn't viable. And nobody had a garage — a luxury in an urban setting like this. So the street had to do:",
+      },
+      lineMixer: { pt: "mixer DIY,", en: "DIY mixer," },
+      lineSetup: { pt: "um baixo ligado à JBL,", en: "a bass plugged into a JBL," },
+      lineVizinhos: {
+        pt: "vizinhos a espreitar às janelas.",
+        en: "neighbours peeking out of windows.",
+      },
+      p3: {
+        pt: "Agora mais graúdos, com mãos amigas a ajudar, criámos a 641, para que nunca se chegue a perder música em Oeiras só porque não há um cantinho para a explorar.",
+        en: "Now a bit older, and with friendly hands helping out, we created 641, so that music in Oeiras is never lost just because there's no little corner to explore it in.",
+      },
+      more: { pt: "Queres saber mais?", en: "Want to know more?" },
+      continue: { pt: "continuar a ler", en: "keep reading" },
+      visit: { pt: "vem visitar-nos", en: "come visit us" },
+      join: { pt: "Faz-te sócix", en: "Become a member" },
+    },
     est: { pt: "FUNDADA EM 2025", en: "EST. 2025" },
     /**
      * Link para o regulamento interno (PDF, Drive, Google Doc, etc).
      * Substitui "#" pelo URL final.
      */
-    regulamentoUrl: "#",
+    regulamentoUrl:
+      "https://drive.google.com/drive/folders/10yfI08c7mFxI_TyOwl-N3wMLpevA6XnH?usp=sharing",
     regulamentoLabel: {
       pt: "REGULAMENTO INTERNO",
       en: "INTERNAL RULES",
     },
   },
 
-  // ---------- O QUE FAZEMOS ----------
-  services: [
-    {
-      badge: { pt: "essencial", en: "core" },
-      title: { pt: "SALAS DE ENSAIO", en: "REHEARSAL ROOMS" },
-      body: {
-        pt: "Equipadas e acessíveis. O teu som, as tuas regras, o nosso suporte técnico.",
-        en: "Equipped and affordable. Your sound, your rules, our tech support.",
+  // ---------- O QUÊ? ----------
+  oQue: {
+    title: { pt: "O quê?", en: "What?" },
+    items: [
+      {
+        key: "studio",
+        title: { pt: "SALAS DE ENSAIO", en: "REHEARSAL ROOMS" },
+        hover: {
+          pt: "equipadas e a preços acessíveis",
+          en: "equipped and affordable",
+        },
       },
-    },
-    {
-      title: { pt: "APOIO À GRAVAÇÃO", en: "RECORDING SUPPORT" },
-      body: {
-        pt: "Do primeiro demo ao primeiro álbum. Suporte técnico e artístico para o teu lançamento.",
-        en: "From first demo to first album. Technical and artistic support for your release.",
+      {
+        key: "starting",
+        title: { pt: "APOIAR", en: "SUPPORT" },
+        hover: { pt: "novos talentos", en: "new talent" },
       },
-    },
-    {
-      title: { pt: "COMUNIDADE", en: "COMMUNITY" },
-      body: {
-        pt: "Fomento da criação artística feminina e inclusiva. Workshops abertos à comunidade de Oeiras.",
-        en: "Fostering inclusive and female-led artistic creation. Workshops open to the Oeiras community.",
+      {
+        key: "recording",
+        title: { pt: "SUPORTE", en: "GUIDANCE" },
+        hover: {
+          pt: "técnico e artístico até à 1ª demo lançada",
+          en: "technical and artistic support through the first demo",
+        },
       },
-    },
-  ],
-
-  // ---------- NOTÍCIAS / EVENTOS ----------
-  // Adiciona novas entradas no topo do array.
-  news: [
-    {
-      date: "01 AGO 2026",
-      tag: { pt: "PODCAST", en: "PODCAST" },
-      title: {
-        pt: "641 na RDP Internacional",
-        en: "641 on RDP Internacional",
+      {
+        key: "community",
+        title: { pt: "COMUNIDADE", en: "COMMUNITY" },
+        hover: {
+          pt: "capacitação, workshops, fomento criação artística feminina e inclusiva",
+          en: "training, workshops, fostering inclusive and female-led artistic creation",
+        },
       },
-      excerpt: {
-        pt: "A associação esteve em antena no podcast Manual de Canções.",
-        en: "The association was on air on the Manual de Canções podcast.",
-      },
-    },
-    {
-      date: "15 JUL 2026",
-      tag: { pt: "HACKATHON", en: "HACKATHON" },
-      title: {
-        pt: "641 na JunctionX Lisbon",
-        en: "641 at JunctionX Lisbon",
-      },
-      excerpt: {
-        pt: "Participação na maior hackathon de AI da Europa, com workshop sobre energia pela música.",
-        en: "Taking part in Europe's largest AI hackathon, with a workshop on energy through music.",
-      },
-      href: "https://lisbon.hackjunction.com/agenda.html",
-    },
-    {
-      date: "10 JUN 2026",
-      tag: { pt: "FINANCIAMENTO", en: "FUNDING" },
-      title: {
-        pt: "Fundação EDP financia “Onda Verde”",
-        en: "EDP Foundation funds “Onda Verde”",
-      },
-      excerpt: {
-        pt: "Apoio de 2.500€ da Fundação EDP ao projeto da 641, através da Energy Academy.",
-        en: "€2,500 from the EDP Foundation for 641's project via the Energy Academy.",
-      },
-      href: "https://energyacademy.edp.com/pt-pt/universitarios",
-    },
-    {
-      date: "02 ABR 2026",
-      tag: { pt: "CONCERTO", en: "CONCERT" },
-      title: {
-        pt: "Showcase 641: Madame G + convidados",
-        en: "641 Showcase: Madame G + guests",
-      },
-      excerpt: {
-        pt: "Uma noite de estreias com a banda residente e projetos convidados da cena de Oeiras.",
-        en: "A premiere night with our resident band and guest projects from the Oeiras scene.",
-      },
-    },
-    {
-      date: "24 MAR 2025",
-      tag: { pt: "WORKSHOP", en: "WORKSHOP" },
-      title: {
-        pt: "DIY de um microfone de contacto",
-        en: "DIY Contact Microphone",
-      },
-      excerpt: {
-        pt: "Inserido na Hackathon (...), workshop.....",
-        en: "Part of the Hackathon (...), workshop.....",
-      },
-    },
-    {
-      date: "15 MAR 2026",
-      tag: { pt: "RIFAS", en: "RAFFLE" },
-      title: {
-        pt: "Rifas encerradas — 166€ arrecadados",
-        en: "Raffle closed — €166 raised",
-      },
-      excerpt: {
-        pt: "Parabéns à vencedora Paula Alves! Obrigado a toda a gente que participou.",
-        en: "Congrats to winner Paula Alves! Thanks to everyone who took part.",
-      },
-    },
-  ] satisfies NewsItem[],
+    ],
+  },
 
   // ---------- QUERO AJUDAR ----------
   ajudar: {
     kicker: { pt: "quero ajudar", en: "support us" },
     intro: {
-      pt: "Estamos a aceitar doações via **MB Way** para o número **910 075 383**. Qualquer valor é bem-vindo.",
-      en: "We accept donations via **MB Way** to the number **910 075 383**. Any amount is welcome.",
+      pt: "Também estamos a aceitar doações via **MBWay**. Qualquer ajuda conta.",
+      en: "We're also accepting donations via **MBWay**. Any help counts.",
     },
     mbwayNumber: "910 075 383",
     reasons: [
@@ -235,15 +183,20 @@ export const site = {
     kicker: { pt: "bandas residentes", en: "resident bands" },
     name: "Madame G",
     quote: {
-      pt: "A 641 deu-nos o espaço e a comunidade que precisávamos para gravar o nosso primeiro EP.",
-      en: "641 gave us the space and community we needed to record our first EP.",
+      pt: "A 641 deu-nos a zona de conforto que há tanto ansiávamos enquanto banda.",
+      en: "641 gave us the comfort zone we had longed for as a band.",
     },
-    photoCredits: "fotos @grainy_john · @catarinasantosdiary · @whotfisrafa",
+    photoBy: { pt: "foto @grainy_john", en: "photo @grainy_john" },
+    photoCredits: "@catarinasantosdiary · @whotfisrafa",
+    comingSoon: {
+      pt: "MAIS BANDAS EM BREVE...",
+      en: "MORE BANDS COMING SOON...",
+    },
     links: {
-      instagram: "https://instagram.com/",
-      spotify: "https://open.spotify.com/",
-      youtube: "https://youtube.com/",
-      discord: "https://discord.com/",
+      instagram: "https://www.instagram.com/madame.gg/",
+      spotify: "https://open.spotify.com/playlist/1BHM7yVGoyUJIwAr7p67ax",
+      youtube: "https://www.youtube.com/channel/UCmFRT_bpKRa3zQ1vCs4TxrA",
+      discord: "https://discord.gg/gsTs5CJUHE",
     },
   },
 
@@ -259,8 +212,8 @@ export const site = {
     },
     // Kicker acima do título
     kicker: {
-      pt: "candidaturas abertas",
-      en: "applications open",
+      pt: "em breve...",
+      en: "coming soon...",
     },
     // Corpo (parágrafos, um por linha do array)
     body: {
@@ -275,8 +228,8 @@ export const site = {
     },
     // Prazo de candidatura
     deadline: {
-      pt: "prazo: 31 mai 2025",
-      en: "deadline: 31 may 2025",
+      pt: "prazo: 17 set 2026",
+      en: "deadline: 17 sep 2026",
     },
     // Botão dentro do popup — substitui "#" pelo Google Form / página do concurso
     formUrl: "#",
@@ -284,6 +237,10 @@ export const site = {
     // Link secundário (opcional) para regulamento do concurso
     rulesUrl: "#",
     rulesLabel: { pt: "ver regulamento", en: "see rules" },
+    comingSoonNotice: {
+      pt: "Abriremos as candidaturas muito em breve!",
+      en: "Applications will open very soon!",
+    },
   },
 
   // ---------- PARCEIROS ----------
@@ -295,6 +252,11 @@ export const site = {
     },
     list: [
       {
+        name: "Município de Oeiras",
+        logo: "oeiras",
+        href: "https://www.oeiras.pt/",
+      },
+      {
         name: "Fundação EDP",
         logo: "fundacao-edp",
         href: "https://www.fundacaoedp.pt/pt",
@@ -303,11 +265,6 @@ export const site = {
         name: "Câmara Municipal de Lisboa",
         logo: "cml",
         href: "https://www.lisboa.pt/",
-      },
-      {
-        name: "Município de Oeiras",
-        logo: "oeiras",
-        href: "https://www.oeiras.pt/",
       },
       {
         name: "Hacker School",
@@ -328,13 +285,14 @@ export const site = {
   // ---------- CONTACTOS ----------
   contactos: {
     kicker: { pt: "contactos", en: "contact" },
+    hint: { pt: "dá-nos um olá!", en: "say hello!" },
     email: "associacao641@gmail.com",
     phone: "+351 910 075 383",
     city: "Fábrica da Pólvora de Barcarena",
     socials: {
       instagram: "https://www.instagram.com/seisquatroum/",
       whatsapp: "https://wa.me/351910075383",
-      discord: "https://discord.gg/Ug5SPB8xD",
+      discord: "https://discord.gg/cbrvUGB8GV",
     },
     channels: [
       {
@@ -374,7 +332,7 @@ export const site = {
         icon: "discord",
         label: { pt: "discord", en: "discord" },
         value: "servidor associação 641",
-        href: "https://discord.gg/Ug5SPB8xD",
+        href: "https://discord.gg/cbrvUGB8GV",
         cta: { pt: "entrar", en: "join" },
       },
       {

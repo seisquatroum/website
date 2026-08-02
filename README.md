@@ -1,27 +1,62 @@
-# Remix of Associação 641: Analog Revival
+# Associação 641 — Analogue Archive Hub
 
-quero criar um site de raiz para a associação 641, tinha este site teste com este design ( screenshots do canvas), mas quero agora fazer um que funcione em mobile e desktop, e que mantenha uma estética de recortes/revista de papel mas evoluída ( tens uma imagem de referência com os coelhos, para perceberes o vibe). Quero que o site seja facilmente atualizável a longo prazo, para podemos colocar noticias, fotos e videos de eventoss e muito mais. Segue primeiro o conteúdo de estrutura do site anterior, mas adapta para uma estética mais evoluída ( a tal estética analógica de texturas de papel e revista, recortes e fontes manuscritas) e organizada. Link para veres o design e conteúdo do site anterior: https://www.canva.com/design/DAGgzx4ivog/Z9NjfwucljQdR8NFzaptSg/edit
-Nova referência estética: jfif anexado
+Site da Associação 641: estética de revista analógica / flipbook, notícias e páginas de conteúdo.
 
-Nota: vou utilizar o vs code depois para editar o codigo e alteraçoes, por isso manda me já o repositorio par ameter no git hub? o que achas?
+Built with [TanStack Start](https://tanstack.com/start) + Vite. Originally scaffolded with [Lovable](https://lovable.dev).
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/ca47d39a-6802-4f16-a037-de7fffff7b4f).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+**Live site (GitHub Pages):** https://mr-arpg.github.io/analogue-archive-hub/
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
+git clone https://github.com/mr-arpg/analogue-archive-hub.git
+cd analogue-archive-hub
 npm i
 npm run dev
 ```
+
+## Deploy (GitHub Pages)
+
+Push to `main` triggers [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+- Build uses `GITHUB_PAGES=true` → base path `/analogue-archive-hub/`, static SPA shell in `dist/client`
+- Workflow copies `index.html` → `404.html` for client-side routing fallback
+- Repo Settings → Pages → Source must be **GitHub Actions**
+
+Local static build:
+
+```sh
+# PowerShell
+$env:GITHUB_PAGES='true'; npm run build:pages
+
+# bash
+GITHUB_PAGES=true npm run build:pages
+```
+
+## Known Issues / Debugging Notes
+
+### Flipbook — assimetria na animação ao voltar página (seta esquerda)
+
+**Sintoma:** ao voltar para trás, a página que entra faz uma pequena correcção de posição no fim da animação. A ir para a frente isto não acontece.
+
+**Causa raiz** (confirmada no código-fonte da lib `page-flip` / `StPageFlip`):
+- **Forward:** a lib anima um *clone* da página que sai. A página de destino fica estática desde o início, já na posição final — não há snap porque nunca se mexeu.
+- **Back:** a lib anima a própria página de destino, usando `transform` + `clip-path` durante o turn (`draw()`). No fim da animação troca para o layout idle (`simpleDraw()`: posição absoluta, sem transform) — esse handoff produz a correcção visível.
+- Em modo portrait há mesmo um caso especial explícito no código-fonte (`drawBottomPage()`): a bottom page não é desenhada quando `orientation === PORTRAIT && direction === BACK`.
+
+**Opções em cima da mesa:**
+1. Trocar para o fork [`react-pageflip-enhanced`](https://npmjs.com/package/react-pageflip-enhanced) — API praticamente idêntica (mesmo import/props), alega corrigir exactamente este caso (back-flip em portrait). Risco: fork pequeno/pouco vetted, sem histórico de manutenção conhecido.
+2. Patch pontual via `patch-package` no `page-flip` original — mantém-nos no pacote mais popular, sem depender de manutenção de terceiros, mas requer manter o patch entre upgrades.
+
+**Decisão:** _(a preencher depois de testar em branch)_
+
+---
+
+## TODO
+
+- [ ] Mais features para a câmara (usar mais botões disponíveis no SVG)
+- [ ] Fix para mobile
+- [ ] Corrigir animação de "andar para trás" no flipbook (ver nota acima)
+- [ ] Feature: reservar a sala

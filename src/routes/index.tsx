@@ -1,8 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Copy, ExternalLink, Trash2, X } from "lucide-react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ChevronLeft, ChevronRight, Copy, ExternalLink, Trash2, X } from "lucide-react";
 import { site, t, type Locale } from "@/content/site";
+import { getNews } from "@/content/news/loadNews";
 import { useI18n } from "@/lib/i18n";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
 import logoWhiteAsset from "@/assets/641-logo-white.png";
@@ -15,12 +24,25 @@ import locationIconSvg from "@/assets/location-icon.svg?raw";
 import instaIconSvg from "@/assets/insta-icon.svg?raw";
 import whatsappIconSvg from "@/assets/whatsapp-icon.svg?raw";
 import discordIconSvg from "@/assets/discord-icon.svg?raw";
+import spotifyIconSvg from "@/assets/spotify-logo.svg?raw";
+import youtubeIconSvg from "@/assets/youtube-icon.svg?raw";
 import fundacaoEdpLogo from "@/assets/partners-logos/fundacao-edp.jpg";
 import cmlLogo from "@/assets/partners-logos/camara-municipal-de-lisboa-logo.png";
 import oeirasLogo from "@/assets/partners-logos/municipio_de_oeiras_logo.jpg";
 import hackerSchoolLogo from "@/assets/partners-logos/Imagem3.png";
 import circleDrawingSvg from "@/assets/circle-drawing.svg?raw";
+import arrowDrawingSvg from "@/assets/arrow-drawing.svg?raw";
+import cameraSvg from "@/assets/camera.svg?raw";
+import oeirasDrawingSvg from "@/assets/oeiras.svg?raw";
+import mixerDrawingSvg from "@/assets/mixer.svg?raw";
+import jblDrawingSvg from "@/assets/jbl.svg?raw";
+import vizinhosDrawingSvg from "@/assets/vizinhos.svg?raw";
 import exercicioAsset from "@/assets/exercicio.png";
+import madameGPhoto from "@/assets/madame-g.png";
+import studioPhoto from "@/assets/studio.jpeg";
+import startingPhoto from "@/assets/starting.jpg";
+import mixingPhoto from "@/assets/mixing.jpg";
+import communityPhoto from "@/assets/community.jpeg";
 import {
   Dialog,
   DialogContent,
@@ -357,36 +379,6 @@ function ScrapPaper({
   );
 }
 
-function CameraFrame({
-  children,
-  className = "",
-  rotate = "rotate-2",
-  variant = "black",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  rotate?: string;
-  variant?: "black" | "pink";
-}) {
-  const body =
-    variant === "pink"
-      ? "bg-gradient-to-br from-brand-pink via-brand-magenta to-brand-magenta-ink"
-      : "bg-gradient-to-br from-neutral-800 via-neutral-900 to-black";
-  return (
-    <div className={`relative ${rotate} ${className}`} style={{ aspectRatio: "5 / 4" }}>
-      <div
-        className={`relative h-full w-full rounded-md border-[3px] border-neutral-900 p-1.5 shadow-[6px_8px_0_rgba(0,0,0,0.55)] ${body}`}
-      >
-        <div className="absolute left-1.5 top-1/2 z-10 h-[36%] w-[20%] -translate-y-1/2 rounded-full border-2 border-neutral-600 bg-neutral-950 shadow-inner" />
-        <div className="absolute bottom-[14%] left-2 h-1 w-3 rounded-full bg-neutral-700" />
-        <div className="absolute right-1 top-[16%] bottom-[16%] left-[26%] overflow-hidden rounded-sm border border-neutral-600/80 bg-black">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function StarSticker({
   className = "",
   size = 56,
@@ -547,24 +539,35 @@ function SiteLogoDrift({
     { dir: "left" as const, speed: 0.88, size: "h-8" },
     { dir: "right" as const, speed: 1.12, size: "h-10" },
   ];
+  // Two identical tiles — each carries its own trailing gap so the seam matches.
+  // A repeat tile must be wider than the 160vw row; otherwise translating it
+  // by almost one tile width exposes empty space on the right.
+  const logosPerTile = 30;
 
   return (
     <div ref={driftRef} className="site-logo-drift" aria-hidden="true">
       {rows.map((row, i) => {
+        const tile = (copy: number) => (
+          <div key={copy} className="site-logo-drift-tile">
+            {Array.from({ length: logosPerTile }, (_, j) => (
+              <img
+                key={j}
+                src={logoWhiteAsset}
+                alt=""
+                className={`site-logo-drift-item ${row.size}`}
+              />
+            ))}
+          </div>
+        );
+
         return (
           <div key={i} className={`site-logo-drift-row site-logo-drift-${row.dir}`}>
             <div
               className="site-logo-drift-track"
               data-drift-speed={row.speed * (row.dir === "left" ? 1 : -1)}
             >
-              {Array.from({ length: 20 }).map((_, j) => (
-                <img
-                  key={j}
-                  src={logoWhiteAsset}
-                  alt=""
-                  className={`site-logo-drift-item ${row.size}`}
-                />
-              ))}
+              {tile(0)}
+              {tile(1)}
             </div>
           </div>
         );
@@ -630,29 +633,61 @@ function SobreA({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   );
 }
 
-function SobreB({ locale }: { locale: Locale }) {
+const OQUE_PHOTOS: Record<string, string> = {
+  studio: studioPhoto,
+  starting: startingPhoto,
+  recording: mixingPhoto,
+  community: communityPhoto,
+};
+
+const OQUE_ROTATES = ["-rotate-2", "rotate-2", "rotate-1", "-rotate-1"] as const;
+
+function OQuePolaroid({
+  src,
+  title,
+  hoverText,
+  rotate,
+}: {
+  src: string;
+  title: string;
+  hoverText: string;
+  rotate: string;
+}) {
   return (
-    <ZPage bg="magenta">
+    <div className={`oque-polaroid relative ${rotate}`}>
+      <div className="absolute left-1/2 top-[-10px] z-10 h-5 w-16 -translate-x-1/2 -rotate-6 bg-brand-accent/80 shadow-sm" />
+      <div className="oque-polaroid-frame border-4 border-white bg-white p-1.5 sticker-shadow">
+        <div
+          className="oque-polaroid-photo aspect-[4/3] bg-cover bg-center"
+          style={{ backgroundImage: `url(${src})` }}
+        >
+          <span className="oque-polaroid-hover-text">{hoverText}</span>
+        </div>
+        <p className="oque-polaroid-caption">{title}</p>
+      </div>
+    </div>
+  );
+}
+
+function OQuePage({ locale }: { locale: Locale }) {
+  return (
+    <ZPage bg="magenta" className="oque-page">
       <WashiTape variant="yellow" className="left-8 top-2 h-4 w-24 -rotate-3" />
-      <div className="flex flex-col">
-        <h3 className="mb-4 flex rotate-1 justify-center">
+      <div className="oque-page-layout">
+        <h3 className="oque-page-title -rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
-            {locale === "pt" ? "porquê a 641?" : "why 641?"}
+            {t(site.oQue.title, locale)}
           </CutoutText>
         </h3>
-        <div className="flex flex-col justify-center gap-3">
-          {site.ajudar.reasons.map((r, i) => (
-            <div
-              key={i}
-              className={`paper-tex border-[3px] border-brand-black bg-brand-pink p-3 text-brand-black shadow-[4px_4px_0_0_#000] ${
-                i % 2 === 0 ? "-rotate-1" : "rotate-1"
-              }`}
-            >
-              <h4 className="font-serif-display text-base font-black italic uppercase text-brand-magenta-ink">
-                {t(r.title, locale)}
-              </h4>
-              <p className="mt-1 text-xs leading-snug sm:text-sm">{t(r.body, locale)}</p>
-            </div>
+        <div className="oque-polaroid-grid">
+          {site.oQue.items.map((item, index) => (
+            <OQuePolaroid
+              key={item.key}
+              src={OQUE_PHOTOS[item.key]}
+              title={t(item.title, locale)}
+              hoverText={t(item.hover, locale)}
+              rotate={OQUE_ROTATES[index % OQUE_ROTATES.length]}
+            />
           ))}
         </div>
       </div>
@@ -660,187 +695,214 @@ function SobreB({ locale }: { locale: Locale }) {
   );
 }
 
-function ServicesPage({ locale }: { locale: Locale }) {
-  return (
-    <ZPage bg="dark">
-      <StarSticker className="right-[8%] top-[6%]" size={40} rotate={20} />
-      <div className="flex flex-col">
-        <h2 className="mb-4 flex justify-center -rotate-1">
-          <CutoutText size="text-xl sm:text-2xl">
-            {locale === "pt" ? "O QUE FAZEMOS" : "WHAT WE DO"}
-          </CutoutText>
-        </h2>
-        <div className="flex flex-col justify-center gap-3">
-          {site.services.map((s, i) => (
-            <div
-              key={i}
-              className={`relative border-[3px] border-brand-black bg-brand-paper p-3 text-brand-black shadow-[4px_4px_0_0_#000] ${
-                i % 2 === 0 ? "-rotate-1" : "rotate-1"
-              }`}
-            >
-              {"badge" in s && s.badge && (
-                <div className="absolute -right-2 -top-2 rotate-6 border border-brand-black bg-brand-accent px-2 py-0.5 text-[9px] font-bold uppercase">
-                  {t(s.badge, locale)}
-                </div>
-              )}
-              <h3 className="font-serif-display text-base font-black italic uppercase">
-                {t(s.title, locale)}
-              </h3>
-              <p className="mt-1 text-xs leading-snug sm:text-sm">{t(s.body, locale)}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </ZPage>
-  );
+/** Camera LCD screen path in viewport space (viewBox 0 0 2139 1298). */
+const NEWS_CAMERA_SCREEN_PATH =
+  "M134 268.81C134 259.53 141.525 252 150.809 252L1486.19 252C1495.47 252 1503 259.53 1503 268.81L1503 1201.19C1503 1210.47 1495.47 1218 1486.19 1218L150.809 1218C141.525 1218 134 1210.47 134 1201.19Z";
+
+/** Only touch the root <svg> tag — avoid rewriting the huge embedded PNG payload. */
+function prepareCameraSvg(svg: string) {
+  return svg.replace(/<svg\b([^>]*)>/i, (_match, attrs: string) => {
+    const width = attrs.match(/\bwidth="(\d+(?:\.\d+)?)"/i)?.[1] ?? "2139";
+    const height = attrs.match(/\bheight="(\d+(?:\.\d+)?)"/i)?.[1] ?? "1298";
+    let next = attrs
+      .replace(/\swidth="[^"]*"/gi, "")
+      .replace(/\sheight="[^"]*"/gi, "")
+      .replace(/\soverflow="[^"]*"/gi, "")
+      .replace(/\sviewBox="[^"]*"/gi, "");
+
+    /* none: fill the stage exactly so % overlays never drift vs letterboxed "meet" */
+    next += ` viewBox="0 0 ${width} ${height}" width="100%" height="100%" overflow="hidden" preserveAspectRatio="none"`;
+    return `<svg${next}>`;
+  });
+}
+
+/** Slug prefix `YYYY-MM-DD-...` → matrix overlay `DD-MM-YYYY`. */
+function newsMatrixDate(slug: string) {
+  const match = slug.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+  return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
 function NewsPage({
   locale,
-  items,
   title,
   sectionId,
 }: {
   locale: Locale;
-  items: readonly (typeof site.news)[number][];
   title?: string;
   sectionId?: string;
 }) {
+  const items = useMemo(() => getNews(locale), [locale]);
+  const [index, setIndex] = useState(0);
+  const clipId = useId().replace(/:/g, "");
+  const cameraMarkup = useMemo(() => prepareCameraSvg(cameraSvg), []);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [locale]);
+
+  const active = items[index] ?? null;
+  const count = items.length;
+
+  const goPrev = useCallback(() => {
+    if (count === 0) return;
+    setIndex((current) => (current - 1 + count) % count);
+  }, [count]);
+
+  const goNext = useCallback(() => {
+    if (count === 0) return;
+    setIndex((current) => (current + 1) % count);
+  }, [count]);
+
+  const stopFlip = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <ZPage bg="dark" sectionId={sectionId}>
       <WashiTape variant="magenta" className="left-6 top-2 h-4 w-32 -rotate-3" />
       <StarSticker className="right-[8%] top-[6%]" size={36} rotate={16} />
-      <div className="flex flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         {title && (
-          <h2 className="mb-3 -rotate-1">
+          <h2 className="mb-2 shrink-0 -rotate-1">
             <CutoutText size="text-xl sm:text-2xl">{title}</CutoutText>
           </h2>
         )}
-        <div className="flex flex-col justify-center gap-4">
-          {items.map((n, i) => {
-            const tagLower = n.tag.pt.toLowerCase();
-            const cameraVariant: "black" | "pink" = tagLower.includes("workshop") ? "pink" : "black";
-            return (
-              <div
-                key={i}
-                className={`grid grid-cols-[100px_1fr] items-center gap-3 ${
-                  i % 2 === 0 ? "-rotate-1" : "rotate-1"
-                }`}
+
+        {active ? (
+          <div
+            className="news-camera min-h-0 flex-1"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                goPrev();
+              } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                goNext();
+              }
+            }}
+          >
+            <div className="news-camera-stage">
+              <span
+                className="news-camera-body pointer-events-none"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: cameraMarkup }}
+              />
+
+              <svg
+                className="news-camera-lcd pointer-events-none"
+                viewBox="0 0 2139 1298"
+                aria-hidden="true"
               >
-                <CameraFrame rotate="" className="w-full" variant={cameraVariant}>
-                  <div
-                    className={`flex h-full w-full flex-col items-center justify-center p-1 text-center ${
-                      cameraVariant === "pink"
-                        ? "bg-gradient-to-br from-brand-pink via-brand-magenta to-brand-magenta-ink"
-                        : "bg-gradient-to-br from-brand-magenta-ink via-brand-black to-black"
-                    }`}
+                <defs>
+                  <clipPath id={clipId}>
+                    <path d={NEWS_CAMERA_SCREEN_PATH} />
+                  </clipPath>
+                </defs>
+                {active.image ? (
+                  <image
+                    href={active.image}
+                    x={134}
+                    y={252}
+                    width={1369}
+                    height={966}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#${clipId})`}
+                  />
+                ) : (
+                  <rect
+                    x={134}
+                    y={252}
+                    width={1369}
+                    height={966}
+                    fill="#1a0a10"
+                    clipPath={`url(#${clipId})`}
+                  />
+                )}
+              </svg>
+
+              <span className="news-camera-date">
+                {newsMatrixDate(active.slug) || active.date}
+              </span>
+
+              <button
+                type="button"
+                className="news-camera-arrow news-camera-arrow--prev"
+                aria-label={locale === "pt" ? "notícia anterior" : "previous news"}
+                onClick={goPrev}
+                onMouseDown={stopFlip}
+                onTouchStart={stopFlip}
+              >
+                <ChevronLeft className="news-camera-arrow-icon" aria-hidden="true" strokeWidth={2.5} />
+              </button>
+              <button
+                type="button"
+                className="news-camera-arrow news-camera-arrow--next"
+                aria-label={locale === "pt" ? "próxima notícia" : "next news"}
+                onClick={goNext}
+                onMouseDown={stopFlip}
+                onTouchStart={stopFlip}
+              >
+                <ChevronRight className="news-camera-arrow-icon" aria-hidden="true" strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <div className="news-camera-caption">
+              <p className="news-camera-caption-tag">{active.tag || "\u00a0"}</p>
+              <h3 className="news-camera-caption-title">{active.title}</h3>
+              <p className="news-camera-caption-body">
+                {active.body ? <RichText>{active.body}</RichText> : "\u00a0"}
+              </p>
+              <div className="news-camera-caption-link">
+                {active.href ? (
+                  <a
+                    href={active.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="news-item-link"
+                    onMouseDown={stopFlip}
+                    onTouchStart={stopFlip}
                   >
-                    <span className="font-marker text-[10px] leading-tight text-brand-pink-soft drop-shadow-[1px_1px_0_#000]">
-                      {t(n.tag, locale)}
-                    </span>
-                    <span className="mt-0.5 font-mono-zine text-[7px] uppercase tracking-widest text-brand-accent">
-                      rec ●
-                    </span>
-                  </div>
-                </CameraFrame>
-                <PostIt
-                  color="cream"
-                  rotate={i % 2 === 0 ? "-rotate-2" : "rotate-2"}
-                  className="!py-2 !px-3"
-                >
-                  <p className="font-mono-zine text-[8px] uppercase tracking-widest text-brand-magenta">
-                    {n.date}
-                  </p>
-                  <h3 className="mt-0.5 font-serif-display text-sm font-black italic leading-tight text-brand-magenta-ink">
-                    {t(n.title, locale)}
-                  </h3>
-                  <p className="mt-1 font-hand text-xs leading-snug text-brand-black">
-                    {t(n.excerpt, locale)}
-                  </p>
-                  {n.href && (
-                    <a
-                      href={n.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="news-item-link"
-                      onMouseDown={(event) => event.stopPropagation()}
-                      onTouchStart={(event) => event.stopPropagation()}
-                    >
-                      {locale === "pt" ? "saber mais" : "learn more"}
-                      <ExternalLink aria-hidden="true" />
-                    </a>
-                  )}
-                </PostIt>
+                    {locale === "pt" ? "saber mais" : "learn more"}
+                    <ExternalLink aria-hidden="true" />
+                  </a>
+                ) : null}
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </ZPage>
-  );
-}
-
-function AjudarPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
-  return (
-    <ZPage bg="paper" sectionId={sectionId}>
-      <StarSticker className="right-[6%] top-[8%]" size={40} rotate={16} />
-      <WashiTape variant="magenta" className="left-6 top-3 h-4 w-28 -rotate-6" />
-      <div className="flex flex-col">
-        <h2 className="mb-3 -rotate-1">
-          <CutoutText size="text-xl sm:text-2xl">
-            {locale === "pt" ? "doações" : "donate"}
-          </CutoutText>
-        </h2>
-        <p className="text-sm leading-relaxed">
-          <RichText>{t(site.ajudar.intro, locale)}</RichText>
-        </p>
-        <div className="mx-auto mt-5 w-full max-w-[260px] rotate-2 border-[3px] border-brand-black bg-brand-magenta halftone p-5 text-center text-white shadow-[6px_6px_0_0_#000]">
-          <span className="font-mono text-[10px] uppercase tracking-widest">MB WAY</span>
-          <div className="mt-2 font-marker text-2xl tracking-wide sm:text-3xl">
-            {site.ajudar.mbwayNumber}
+            </div>
           </div>
-          <p className="mt-2 text-xs text-white/90">
-            {locale === "pt"
-              ? "qualquer valor conta — obrigado!"
-              : "any amount counts — thank you!"}
+        ) : (
+          <p className="font-hand text-sm text-brand-pink-soft">
+            {locale === "pt" ? "Sem notícias por agora." : "No news yet."}
           </p>
-        </div>
-        <p className="mt-auto pt-3 font-hand text-lg text-brand-magenta">
-          {t(site.ajudar.outro, locale)}
-        </p>
+        )}
       </div>
     </ZPage>
   );
 }
 
-function JuntaPage({ locale }: { locale: Locale }) {
+function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   return (
-    <ZPage bg="magenta">
+    <ZPage bg="magenta" sectionId={sectionId}>
       <WashiTape variant="yellow" className="right-6 top-2 h-4 w-24 rotate-6" />
       <div className="flex flex-col">
         <h3 className="-rotate-1">
           <CutoutText size="text-xl sm:text-2xl">
-            {locale === "pt" ? "junta-te a nós" : "join us"}
+            {locale === "pt" ? "Junta-te!" : "Join us!"}
           </CutoutText>
         </h3>
         <p className="mt-3 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
           {locale === "pt"
-            ? "Há muitas formas de ajudar. Torna-te sócio/a, dá uma mão em eventos, oferece competências, equipamento ou espaço. A comunidade também se constrói com tempo."
-            : "Many ways to help. Become a member, lend a hand at events, share skills, gear or space. Community is built with time too."}
+            ? "Torna-te sócix, dá uma mão em eventos, oferece competências, equipamento ou espaço."
+            : "Become a member, lend a hand at events, share skills, gear or space."}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <PostIt color="yellow" rotate="-rotate-2" className="!text-sm !px-3 !py-1.5">
-            {locale === "pt" ? "sócio/a" : "member"}
-          </PostIt>
-          <PostIt color="teal" rotate="rotate-2" className="!text-sm !px-3 !py-1.5">
-            {locale === "pt" ? "voluntariado" : "volunteer"}
-          </PostIt>
-          <PostIt color="pink" rotate="-rotate-1" className="!text-sm !px-3 !py-1.5">
-            {locale === "pt" ? "equipamento" : "gear"}
-          </PostIt>
-        </div>
-        <div className="mt-auto flex flex-wrap gap-3 pt-4">
-          <CutoutButton href="#contactos" variant="accent" size="text-sm">
+        <div className="mt-9 flex flex-col items-start gap-6">
+          <CutoutButton
+            href="#contactos"
+            variant="accent"
+            size="text-[0.62rem] sm:text-xs"
+            className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
+          >
             {locale === "pt" ? "FALA CONNOSCO" : "GET IN TOUCH"}
           </CutoutButton>
           <CutoutButton
@@ -848,10 +910,20 @@ function JuntaPage({ locale }: { locale: Locale }) {
             target="_blank"
             rel="noreferrer"
             variant="black"
-            size="text-xs"
+            size="text-[0.58rem] sm:text-[0.62rem]"
+            className="!gap-1 !px-2 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-2.5 sm:!py-1.5 [&>span:last-child]:!text-xs"
           >
             {t(site.sobre.regulamentoLabel, locale)}
           </CutoutButton>
+        </div>
+        <p className="mt-8 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
+          <RichText>{t(site.ajudar.intro, locale)}</RichText>
+        </p>
+        <div className="mx-auto mt-3 w-full max-w-[220px] rotate-2 border-[3px] border-brand-black bg-brand-magenta halftone p-4 text-center text-white shadow-[6px_6px_0_0_#000]">
+          <span className="font-mono text-[10px] uppercase tracking-widest">MB WAY</span>
+          <div className="mt-1.5 font-marker text-xl tracking-wide sm:text-2xl">
+            {site.ajudar.mbwayNumber}
+          </div>
         </div>
       </div>
     </ZPage>
@@ -867,35 +939,39 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
         <h2 className="-rotate-1">
           <CutoutText size="text-lg sm:text-xl">{t(site.banda.kicker, locale)}</CutoutText>
         </h2>
-        <div className="mt-3 flex items-center gap-3">
-          <Polaroid
-            label={site.banda.name}
-            rotate="-rotate-2"
-            aspect="aspect-[4/5]"
-            className="w-32 shrink-0"
-          />
-          <h3>
-            <CutoutText size="text-2xl sm:text-3xl">{site.banda.name}</CutoutText>
-          </h3>
+        <div className="mt-3 flex items-start gap-4">
+          <div className="inline-block max-w-full shrink-0 -rotate-2">
+            <img
+              src={madameGPhoto}
+              alt=""
+              className="block w-56 object-contain sticker-shadow sm:w-64 md:w-52 lg:w-48"
+              loading="lazy"
+            />
+          </div>
+          <div className="banda-side-column min-w-0 pt-1">
+            <h3 className="font-poppins text-2xl font-semibold lowercase leading-none text-brand-black sm:text-3xl">
+              {site.banda.name}
+            </h3>
+            <p className="mt-1 font-hand text-sm leading-snug text-brand-magenta-ink/80">
+              {t(site.banda.photoBy, locale)}
+            </p>
+            <div className="banda-link-row">
+              {BANDA_LINK_ORDER.map((key) => (
+                <BandaLinkIcon
+                  key={key}
+                  icon={key}
+                  href={site.banda.links[key]}
+                  label={key}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="mt-4 border-l-4 border-brand-magenta pl-3 text-xs italic leading-relaxed sm:text-sm">
+        <p className="mt-8 border-l-4 border-brand-magenta pl-3 text-xs italic leading-relaxed sm:mt-10 sm:text-sm">
           “{t(site.banda.quote, locale)}”
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {Object.entries(site.banda.links).map(([name, url]) => (
-            <a
-              key={name}
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="border-2 border-brand-black bg-brand-pink-soft px-2 py-0.5 text-[10px] font-bold uppercase text-brand-magenta-ink transition hover:bg-brand-magenta hover:text-brand-paper"
-            >
-              {name}
-            </a>
-          ))}
-        </div>
-        <p className="mt-auto pt-3 font-hand text-xs text-brand-magenta-ink/70">
-          {site.banda.photoCredits}
+        <p className="banda-coming-soon mt-12 font-hand text-xs uppercase tracking-wide text-brand-magenta-ink/75 sm:mt-16 md:mt-20">
+          {t(site.banda.comingSoon, locale)}
         </p>
       </div>
     </ZPage>
@@ -904,6 +980,12 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
 
 function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   const c = site.concurso;
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  const revealComingSoon = () => {
+    setShowComingSoon(true);
+  };
+
   return (
     <ZPage bg="dark" sectionId={sectionId}>
       <div aria-hidden className="absolute inset-0 halftone opacity-20" />
@@ -916,14 +998,14 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
         <h3 className="mt-3">
           <CutoutText size="text-xl sm:text-2xl">{t(c.title, locale)}</CutoutText>
         </h3>
-        <p className="mt-3 font-serif-display text-xs italic leading-relaxed text-brand-pink/95 sm:text-sm">
-          {c.body[locale][0]}
-        </p>
-        <p className="mt-2 font-mono-zine text-[10px] uppercase tracking-widest text-brand-accent">
+        <p className="mt-3 font-mono-zine text-[10px] uppercase tracking-widest text-brand-accent">
           {t(c.deadline, locale)}
         </p>
-        <div className="mt-auto flex flex-col items-start gap-3 pt-4">
-          <Dialog>
+        <p className="mt-2 font-serif-display text-xs italic leading-relaxed text-brand-pink/95 sm:text-sm">
+          {c.body[locale][0]}
+        </p>
+        <div className="mt-auto flex flex-col items-start gap-3 pt-10">
+          <Dialog onOpenChange={(open) => { if (!open) setShowComingSoon(false); }}>
             <DialogTrigger asChild>
               <CutoutButton variant="accent" size="text-lg">
                 {t(c.ctaLabel, locale)}
@@ -952,20 +1034,28 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                     {t(c.deadline, locale)}
                   </p>
                   <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <CutoutButton href={c.formUrl} target="_blank" rel="noreferrer" variant="magenta">
+                    <CutoutButton onClick={revealComingSoon} variant="magenta">
                       {t(c.formLabel, locale)}
                     </CutoutButton>
                     {c.rulesUrl && (
-                      <a
-                        href={c.rulesUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={revealComingSoon}
                         className="font-hand text-lg underline decoration-brand-magenta decoration-2 underline-offset-4 hover:text-brand-magenta"
                       >
                         {t(c.rulesLabel, locale)} →
-                      </a>
+                      </button>
                     )}
                   </div>
+                  {showComingSoon && (
+                    <p
+                      className="concurso-coming-soon-notice mt-4 font-hand text-lg leading-snug text-brand-magenta-ink"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {t(c.comingSoonNotice, locale)}
+                    </p>
+                  )}
                 </div>
               </div>
             </DialogContent>
@@ -988,7 +1078,11 @@ const PARTNER_LOGO_SRC: Record<string, string> = {
   "hacker-school": hackerSchoolLogo,
 };
 
-function prepareContactIconSvg(svg: string, prefix: string) {
+function prepareContactIconSvg(
+  svg: string,
+  prefix: string,
+  options?: { strokeWidth?: string },
+) {
   let out = svg
     .replace(/\bid="([^"]+)"/g, `id="${prefix}-$1"`)
     .replace(/url\(#([^)]+)\)/g, `url(#${prefix}-$1)`)
@@ -1009,6 +1103,10 @@ function prepareContactIconSvg(svg: string, prefix: string) {
     next += ' width="100%" height="100%" overflow="visible" preserveAspectRatio="xMidYMid meet"';
     return `<svg${next}>`;
   });
+
+  if (options?.strokeWidth) {
+    out = out.replace(/\bstroke-width="[^"]*"/gi, `stroke-width="${options.strokeWidth}"`);
+  }
 
   return out;
 }
@@ -1570,6 +1668,13 @@ function ContactosPage({
   return (
     <ZPage bg="paper" sectionId={sectionId} className="contactos-page">
       <div className="contactos-layout flex h-full min-h-full w-full flex-col items-center justify-center text-center">
+        <div className="contactos-hint" aria-hidden="true">
+          <span className="contactos-hint-text">{t(c.hint, locale)}</span>
+          <span
+            className="contactos-hint-arrow"
+            dangerouslySetInnerHTML={{ __html: arrowDrawingSvg }}
+          />
+        </div>
         <div className="contactos-icon-column" role="toolbar" aria-label={t(c.kicker, locale)}>
           {c.channels.map((channel) => (
             <ContactChannelIcon
@@ -1645,38 +1750,51 @@ const CONTACT_ICON_SVGS: Record<string, string> = {
   instagram: instaIconSvg,
   whatsapp: whatsappIconSvg,
   discord: discordIconSvg,
+  spotify: spotifyIconSvg,
+  youtube: youtubeIconSvg,
 };
 
-function ContactChannelIcon({
-  icon,
-  label,
-  active,
-  onSelect,
-}: {
-  icon: string;
-  label: string;
-  active: boolean;
-  onSelect: () => void;
-}) {
+const BANDA_LINK_ORDER = ["instagram", "spotify", "youtube", "discord"] as const;
+
+function isStrokeDrawPath(path: SVGPathElement) {
+  const stroke = path.getAttribute("stroke");
+  if (!stroke || stroke.toLowerCase() === "none") return false;
+  const fill = path.getAttribute("fill");
+  return !fill || fill.toLowerCase() === "none";
+}
+
+function useStrokeIconAnimation(
+  icon: string,
+  rawSvg: string,
+  idPrefix: string,
+  options?: { strokeWidth?: string; strokesOnly?: boolean },
+) {
   const svgHostRef = useRef<HTMLSpanElement>(null);
   const strokeRunRef = useRef(0);
-  const rawSvg = CONTACT_ICON_SVGS[icon] ?? "";
+  const strokeWidth = options?.strokeWidth;
+  const strokesOnly = options?.strokesOnly ?? false;
   const svgMarkup = useMemo(
-    () => prepareContactIconSvg(rawSvg, `contact-${icon}`),
-    [icon, rawSvg],
+    () => prepareContactIconSvg(rawSvg, idPrefix, { strokeWidth }),
+    [idPrefix, rawSvg, strokeWidth],
   );
 
-  const resetPaths = useCallback(() => {
+  const collectPaths = useCallback(() => {
     const host = svgHostRef.current;
-    if (!host) return;
-    host.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+    if (!host) return [] as SVGPathElement[];
+    return Array.from(host.querySelectorAll<SVGPathElement>("path")).filter((path) => {
+      if (path.getTotalLength() <= 0) return false;
+      return strokesOnly ? isStrokeDrawPath(path) : true;
+    });
+  }, [strokesOnly]);
+
+  const resetPaths = useCallback(() => {
+    collectPaths().forEach((path) => {
       const length = path.getTotalLength();
-      if (length <= 0) return;
       path.style.transition = "none";
       path.style.strokeDasharray = `${length}`;
       path.style.strokeDashoffset = "0";
     });
-  }, []);
+  }, [collectPaths]);
 
   const stopStroke = useCallback(() => {
     strokeRunRef.current += 1;
@@ -1692,10 +1810,7 @@ function ContactChannelIcon({
     if (!host) return;
 
     const runId = ++strokeRunRef.current;
-
-    const paths = Array.from(host.querySelectorAll<SVGPathElement>("path")).filter(
-      (path) => path.getTotalLength() > 0,
-    );
+    const paths = collectPaths();
     if (paths.length === 0) return;
 
     const maxLength = Math.max(...paths.map((path) => path.getTotalLength()));
@@ -1718,11 +1833,32 @@ function ContactChannelIcon({
         });
       });
     });
-  }, [icon]);
+  }, [collectPaths, icon]);
 
   useEffect(() => {
     requestAnimationFrame(() => requestAnimationFrame(setupPaths));
   }, [svgMarkup, setupPaths]);
+
+  return { svgHostRef, svgMarkup, replayStroke, stopStroke };
+}
+
+function ContactChannelIcon({
+  icon,
+  label,
+  active,
+  onSelect,
+}: {
+  icon: string;
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const rawSvg = CONTACT_ICON_SVGS[icon] ?? "";
+  const { svgHostRef, svgMarkup, replayStroke, stopStroke } = useStrokeIconAnimation(
+    icon,
+    rawSvg,
+    `contact-${icon}`,
+  );
 
   return (
     <button
@@ -1741,6 +1877,152 @@ function ContactChannelIcon({
         dangerouslySetInnerHTML={{ __html: svgMarkup }}
       />
     </button>
+  );
+}
+
+function BandaLinkIcon({
+  icon,
+  label,
+  href,
+}: {
+  icon: (typeof BANDA_LINK_ORDER)[number];
+  label: string;
+  href: string;
+}) {
+  const rawSvg = CONTACT_ICON_SVGS[icon] ?? "";
+  const { svgHostRef, svgMarkup, replayStroke, stopStroke } = useStrokeIconAnimation(
+    icon,
+    rawSvg,
+    `banda-${icon}`,
+    { strokeWidth: "3.2" },
+  );
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={`banda-link-icon banda-link-icon--${icon}`}
+      aria-label={label}
+      onMouseEnter={replayStroke}
+      onMouseLeave={stopStroke}
+    >
+      <span
+        ref={svgHostRef}
+        className="banda-link-icon-graphic pointer-events-none"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+    </a>
+  );
+}
+
+function StrokeArt({
+  name,
+  rawSvg,
+  className = "",
+  label,
+  strokeWidth,
+}: {
+  name: string;
+  rawSvg: string;
+  className?: string;
+  label: string;
+  strokeWidth?: string;
+}) {
+  const { svgHostRef, svgMarkup, replayStroke, stopStroke } = useStrokeIconAnimation(
+    name,
+    rawSvg,
+    `origem-${name}`,
+    { strokesOnly: true, strokeWidth },
+  );
+
+  return (
+    <span
+      className={`origem-stroke-art origem-stroke-art--${name} ${className}`}
+      role="img"
+      aria-label={label}
+      onMouseEnter={replayStroke}
+      onMouseLeave={stopStroke}
+      onMouseDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+    >
+      <span
+        ref={svgHostRef}
+        className="origem-stroke-art-graphic pointer-events-none"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      />
+    </span>
+  );
+}
+
+function OrigemArtLine({
+  name,
+  rawSvg,
+  label,
+  color,
+  imageFirst = false,
+  art,
+}: {
+  name: string;
+  rawSvg?: string;
+  label: string;
+  color: string;
+  imageFirst?: boolean;
+  art?: React.ReactNode;
+}) {
+  const graphic =
+    art ??
+    (rawSvg ? (
+      <StrokeArt
+        name={name}
+        rawSvg={rawSvg}
+        label={label}
+        className={`origem-art-inline origem-art-inline--${name}`}
+      />
+    ) : null);
+  const text = (
+    <span className="origem-art-line-label" style={{ color }}>
+      {label}
+    </span>
+  );
+
+  return (
+    <p className={`origem-art-line origem-art-line--${name}`}>
+      {imageFirst ? (
+        <>
+          {graphic}
+          {text}
+        </>
+      ) : (
+        <>
+          {text}
+          {graphic}
+        </>
+      )}
+    </p>
+  );
+}
+
+function OrigemMixerStack({ locale }: { locale: Locale }) {
+  return (
+    <span className="origem-mixer-stack" aria-hidden="true">
+      <StrokeArt
+        name="mixer"
+        rawSvg={mixerDrawingSvg}
+        label={t(site.sobre.origem.lineMixer, locale)}
+        className="origem-art-inline origem-art-inline--mixer"
+      />
+      {/* Sibling (not under mixer) so mixer hover z-index doesn't pull JBL above vizinhos */}
+      <StrokeArt
+        name="jbl"
+        rawSvg={jblDrawingSvg}
+        label={t(site.sobre.origem.lineSetup, locale)}
+        className="origem-art-inline origem-art-inline--jbl origem-art-inline--jbl-overlay"
+        strokeWidth="2.2"
+      />
+    </span>
   );
 }
 
@@ -1802,89 +2084,69 @@ function SobrePhotoPage({ locale }: { locale: Locale }) {
       <WashiTape variant="yellow" className="right-8 top-4 h-4 w-24 rotate-6" />
       <div className="magazine-index-page flex h-full flex-col">
         <h2 className="mb-4 -rotate-1">
-          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "sobre" : "about"}</CutoutText>
+          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "Porquê?" : "Why?"}</CutoutText>
         </h2>
-        <Polaroid
-          label={locale === "pt" ? "ensaio na rua" : "street rehearsal"}
-          src="/street-rehearsal.jpg"
-          aspect="aspect-[16/10]"
-          rotate="-rotate-1"
-          className="about-photo-card w-full"
-        />
-        <div className="mt-5 grid gap-3 text-[14px] leading-relaxed">
-          <ScrapPaper color="pink" rotate="rotate-1" className="about-lead">
-            {locale === "pt"
-              ? "Antes da 641, ensaiava-se onde dava: na rua, com cabos no chão, instrumentos às costas e vontade a mais para ficar em silêncio."
-              : "Before 641, rehearsals happened wherever they could: on the street, with cables on the ground, instruments on shoulders and too much will to stay quiet."}
-          </ScrapPaper>
+        <div className="mb-5 grid gap-3 text-[14px] leading-relaxed">
           <p>
-            <RichText>
-              {locale === "pt"
-                ? "A associação nasce para transformar essa energia improvisada num lugar acessível, técnico e aberto a quem está a começar."
-                : "The association turns that improvised energy into an accessible, supported place for people who are just starting out."}
-            </RichText>
+            {locale === "pt"
+              ? "Ensaiar na rua é divertido. Excepto claro, quando nos mandam calar."
+              : "Rehearsing on the street is fun. Except, of course, when they tell us to shut up."}
+          </p>
+          <p>
+            {locale === "pt"
+              ? "Foi assim que começámos. Tínhamos tudo para o sucesso: sonhos, um nome, instrumentos. Só que depois percebemos que nos faltava o mais importante: um espaço para ensaiar."
+              : "That's how we started. We had everything for success: dreams, a name, instruments. Then we realised we were missing the most important thing: a place to rehearse."}
           </p>
         </div>
+        <Polaroid
+          label=""
+          src={`${import.meta.env.BASE_URL}street-rehearsal.jpg`}
+          aspect="aspect-[16/10]"
+          rotate="-rotate-1"
+          className="about-photo-card mx-auto w-[82%] max-w-[340px]"
+        />
       </div>
     </ZPage>
   );
 }
 
 function SobreOriginPage({ locale }: { locale: Locale }) {
-  const blocks = locale === "pt"
-    ? [
-        {
-          title: "O problema",
-          body: "Há bandas novas, instrumentos e vontade. O que costuma faltar é o mais simples e mais caro: um espaço para ensaiar.",
-        },
-        {
-          title: "A rua",
-          body: "Sem garagens nem salas acessíveis, a rua serviu de sala de ensaio improvisada. Divertido, sim. Sustentável, nem por isso.",
-        },
-        {
-          title: "A resposta",
-          body: "A 641 existe para que ninguém em Oeiras perca música por não ter onde experimentar, errar, repetir e crescer.",
-        },
-      ]
-    : [
-        {
-          title: "The problem",
-          body: "There are new bands, instruments and ambition. What is usually missing is the simplest and most expensive thing: a rehearsal room.",
-        },
-        {
-          title: "The street",
-          body: "With no garages or affordable rooms, the street became an improvised rehearsal space. Fun, yes. Sustainable, not really.",
-        },
-        {
-          title: "The answer",
-          body: "641 exists so nobody in Oeiras loses music because they have nowhere to try, fail, repeat and grow.",
-        },
-      ];
-
   return (
-    <ZPage bg="paper">
-      <WashiTape variant="yellow" className="left-8 top-3 h-4 w-24 -rotate-3" />
-      <StarSticker className="right-10 top-16" size={34} rotate={12} />
-      <div className="flex h-full flex-col">
-        <h2 className="mb-5 -rotate-1">
-          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "origem" : "origin"}</CutoutText>
-        </h2>
-        <div className="about-blocks">
-          {blocks.map((block, index) => (
-            <article key={block.title} className={`about-block ${index % 2 ? "about-block-alt" : ""}`}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <h3>{block.title}</h3>
-                <p>{block.body}</p>
-              </div>
-            </article>
-          ))}
+    <ZPage bg="paper" className="origem-page">
+      <div className="origem-page-layout">
+        <p className="origem-copy">{t(site.sobre.origem.p1, locale)}</p>
+
+        <StrokeArt
+          name="oeiras"
+          rawSvg={oeirasDrawingSvg}
+          label="Oeiras"
+          className="origem-art-oeiras"
+          strokeWidth="1.35"
+        />
+
+        <p className="origem-copy">{t(site.sobre.origem.p2, locale)}</p>
+
+        <div className="origem-art-lines">
+          <OrigemArtLine
+            name="mixer"
+            label={t(site.sobre.origem.lineMixer, locale)}
+            color="#FFFF00"
+            art={<OrigemMixerStack locale={locale} />}
+          />
+          <OrigemArtLine
+            name="lame-setup"
+            label={t(site.sobre.origem.lineSetup, locale)}
+            color="#D86ECC"
+          />
+          <OrigemArtLine
+            name="vizinhos"
+            rawSvg={vizinhosDrawingSvg}
+            label={t(site.sobre.origem.lineVizinhos, locale)}
+            color="#002060"
+          />
         </div>
-        <div className="mt-auto pt-4">
-          <ScrapPaper color="pink" rotate="-rotate-1" className="text-sm">
-            {t(site.sobre.highlight, locale)}
-          </ScrapPaper>
-        </div>
+
+        <p className="origem-copy">{t(site.sobre.origem.p3, locale)}</p>
       </div>
     </ZPage>
   );
@@ -2019,7 +2281,13 @@ function MagazineIndex() {
         ?.querySelectorAll<HTMLElement>("[data-drift-speed]")
         .forEach((track) => {
           const speed = Number(track.dataset.driftSpeed) || 0;
-          track.style.transform = `translate3d(${logoDriftOffset.current * speed}px, 0, 0)`;
+          const tile = track.querySelector<HTMLElement>(".site-logo-drift-tile");
+          const tileWidth = tile?.offsetWidth ?? track.scrollWidth / 2;
+          if (tileWidth <= 0) return;
+          // Wrap so the track loops instead of drifting forever off-content.
+          const raw = logoDriftOffset.current * speed;
+          const offset = ((raw % tileWidth) + tileWidth) % tileWidth;
+          track.style.transform = `translate3d(${-offset}px, 0, 0)`;
         });
 
       // Ignore further page flips while an animation is playing
@@ -2076,45 +2344,23 @@ function MagazineIndex() {
     const pagesBeforeContactos: MagazinePage[] = [
       {
         key: "sobre",
-        label: locale === "pt" ? "Sobre" : "About",
+        label: locale === "pt" ? "Porquê?" : "Why?",
         content: <SobrePhotoPage locale={locale} />,
       },
       {
         key: "origem",
-        label: locale === "pt" ? "Origem" : "Origin",
+        label: "",
         content: <SobreOriginPage locale={locale} />,
       },
       {
-        key: "porque-b",
-        label: locale === "pt" ? "Razões" : "Reasons",
-        content: <SobreB locale={locale} />,
-      },
-      {
-        key: "servicos",
-        label: locale === "pt" ? "Fazemos" : "Services",
-        content: <ServicesPage locale={locale} />,
-      },
-      {
-        key: "noticias",
-        label: t(site.nav.noticias, locale),
-        content: (
-          <NewsPage
-            locale={locale}
-            items={site.news}
-            title={locale === "pt" ? "notícias" : "news"}
-            sectionId="noticias"
-          />
-        ),
-      },
-      {
-        key: "ajudar",
-        label: locale === "pt" ? "Ajudar" : "Support",
-        content: <AjudarPage locale={locale} sectionId="junta" />,
+        key: "o-que",
+        label: locale === "pt" ? "O quê?" : "What?",
+        content: <OQuePage locale={locale} />,
       },
       {
         key: "junta",
-        label: locale === "pt" ? "Junta-te" : "Join us",
-        content: <JuntaPage locale={locale} />,
+        label: locale === "pt" ? "Junta-te!" : "Join us!",
+        content: <JuntaPage locale={locale} sectionId="junta" />,
       },
       {
         key: "banda",
@@ -2125,6 +2371,17 @@ function MagazineIndex() {
         key: "concurso",
         label: locale === "pt" ? "Concurso" : "Contest",
         content: <ConcursoPage locale={locale} sectionId="concurso" />,
+      },
+      {
+        key: "noticias",
+        label: t(site.nav.noticias, locale),
+        content: (
+          <NewsPage
+            locale={locale}
+            title={locale === "pt" ? "notícias" : "news"}
+            sectionId="noticias"
+          />
+        ),
       },
       {
         key: "parceiros",
@@ -2192,28 +2449,125 @@ function MagazineIndex() {
     [magazinePages],
   );
 
-  // In landscape, page-flip reports the spread's leading page, not always the
-  // exact visible sheet. Include the adjacent index so the draw sheet disables
-  // the library's large global hover corners whenever it is visible.
+  const origemPageIndex = useMemo(
+    () => magazinePages.findIndex((page) => page.key === "origem"),
+    [magazinePages],
+  );
+
+  // The flip library controls corner previews per book, not per sheet. When the
+  // drawing/contactos spread is open, switch that global setting according to
+  // the sheet under the pointer so only contactos keeps the corner animation.
   useEffect(() => {
     const flip = bookRef.current?.pageFlip?.();
     if (!flip?.getSettings) return;
 
     const settings = flip.getSettings() as { showPageCorners?: boolean };
-    const onDrawPage =
+    const drawPageVisible =
+      drawPageIndex >= 0 && currentPage === drawPageIndex && usePortrait;
+    const drawSpreadVisible =
       drawPageIndex >= 0 &&
-      (currentPage === drawPageIndex ||
+      (drawPageVisible ||
         (!usePortrait && Math.abs(currentPage - drawPageIndex) <= 1));
-    settings.showPageCorners = !onDrawPage;
 
-    if (onDrawPage) {
+    const stopCornerPreview = () => {
       try {
         flip.userStop?.({ x: -1, y: -1 }, true);
       } catch {
         // ignore if flip API isn't ready
       }
+    };
+
+    if (!drawSpreadVisible) {
+      settings.showPageCorners = true;
+      return;
     }
+
+    settings.showPageCorners = false;
+    stopCornerPreview();
+
+    if (usePortrait) return;
+
+    const book = document.querySelector<HTMLElement>(".magazine-book");
+    if (!book) return;
+
+    const scopeCornersToSheet = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      const overContactos = Boolean(target?.closest("#contactos"));
+      const overDrawing = Boolean(target?.closest("#blank-contactos-pad"));
+      if (!overContactos && !overDrawing) return;
+
+      if (settings.showPageCorners === overContactos) return;
+      settings.showPageCorners = overContactos;
+      if (overDrawing) stopCornerPreview();
+    };
+
+    book.addEventListener("pointerover", scopeCornersToSheet, true);
+    book.addEventListener("pointermove", scopeCornersToSheet, true);
+
+    return () => {
+      book.removeEventListener("pointerover", scopeCornersToSheet, true);
+      book.removeEventListener("pointermove", scopeCornersToSheet, true);
+      settings.showPageCorners = true;
+    };
   }, [currentPage, drawPageIndex, usePortrait]);
+
+  // Origem has illustrations near the bottom-right; shrink the library's corner
+  // hit radius (default diagonal/5) so vizinhos doesn't trigger fold_corner.
+  useEffect(() => {
+    const flip = bookRef.current?.pageFlip?.() as
+      | {
+          getFlipController?: () => {
+            isPointOnCorners?: (pos: { x: number; y: number }) => boolean;
+          };
+          getBoundsRect?: () => {
+            pageWidth: number;
+            height: number;
+            width: number;
+          };
+          getRender?: () => {
+            convertToBook: (pos: { x: number; y: number }) => {
+              x: number;
+              y: number;
+            };
+          };
+        }
+      | null
+      | undefined;
+    const controller = flip?.getFlipController?.();
+    if (!controller?.isPointOnCorners || !flip?.getBoundsRect || !flip?.getRender) {
+      return;
+    }
+
+    const origemVisible =
+      origemPageIndex >= 0 &&
+      (currentPage === origemPageIndex ||
+        (!usePortrait && Math.abs(currentPage - origemPageIndex) <= 1));
+
+    if (!origemVisible) return;
+
+    const original = controller.isPointOnCorners.bind(controller);
+    controller.isPointOnCorners = (globalPos: { x: number; y: number }) => {
+      const rect = flip.getBoundsRect!();
+      const bookPos = flip.getRender!().convertToBook(globalPos);
+      // Default library radius is diagonal/5; use /12 on origem.
+      const operatingDistance =
+        Math.sqrt(rect.pageWidth ** 2 + rect.height ** 2) / 12;
+      return (
+        bookPos.x > 0 &&
+        bookPos.y > 0 &&
+        bookPos.x < rect.width &&
+        bookPos.y < rect.height &&
+        (bookPos.x < operatingDistance ||
+          bookPos.x > rect.width - operatingDistance) &&
+        (bookPos.y < operatingDistance ||
+          bookPos.y > rect.height - operatingDistance)
+      );
+    };
+
+    return () => {
+      controller.isPointOnCorners = original;
+    };
+  }, [currentPage, origemPageIndex, usePortrait]);
 
   useEffect(() => {
     const handleBookHashLink = (event: MouseEvent) => {
@@ -2327,7 +2681,7 @@ function _Index() {
     { key: "cover", label: locale === "pt" ? "Início" : "Home", sectionId: "inicio" },
     { key: "porque", label: locale === "pt" ? "Porquê" : "Why", sectionId: "porque" },
     { key: "noticias", label: t(site.nav.noticias, locale), sectionId: "noticias" },
-    { key: "junta", label: locale === "pt" ? "Junta-te" : "Join us", sectionId: "junta" },
+    { key: "junta", label: locale === "pt" ? "Junta-te!" : "Join us!", sectionId: "junta" },
     { key: "banda", label: t(site.nav.banda, locale), sectionId: "banda" },
     { key: "concurso", label: locale === "pt" ? "concurso" : "contest", sectionId: "concurso" },
     { key: "parceiros", label: t(site.nav.parceiros, locale), sectionId: "parceiros" },
@@ -2340,16 +2694,13 @@ function _Index() {
       <main>
         <Cover locale={locale} sectionId="inicio" />
         <SobreA locale={locale} sectionId="porque" />
-        <SobreB locale={locale} />
-        <ServicesPage locale={locale} />
+        <OQuePage locale={locale} />
         <NewsPage
           locale={locale}
-          items={site.news}
           title={locale === "pt" ? "notícias" : "news"}
           sectionId="noticias"
         />
-        <AjudarPage locale={locale} sectionId="junta" />
-        <JuntaPage locale={locale} />
+        <JuntaPage locale={locale} sectionId="junta" />
         <BandaPage locale={locale} sectionId="banda" />
         <ConcursoPage locale={locale} sectionId="concurso" />
         <ParceirosPage locale={locale} sectionId="parceiros" />

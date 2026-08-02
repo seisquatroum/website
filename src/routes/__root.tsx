@@ -62,7 +62,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Try again
           </button>
           <a
-            href="/"
+            href={import.meta.env.BASE_URL}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Associação 641 — Música colaborativa em Oeiras" },
+      { title: "Associação 641" },
       { name: "description", content: "Associação 641 é um espaço colaborativo de salas de ensaio em Oeiras, dedicado a apoiar a nova música portuguesa." },
       { name: "author", content: "Associação 641" },
-      { property: "og:title", content: "Associação 641 — Música colaborativa em Oeiras" },
+      { property: "og:title", content: "Associação 641" },
       { property: "og:description", content: "Salas de ensaio, apoio à gravação e comunidade para bandas emergentes em Portugal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -91,12 +91,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: `${import.meta.env.BASE_URL}favicon.png`, type: "image/png" },
+      { rel: "apple-touch-icon", href: `${import.meta.env.BASE_URL}favicon.png` },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;700&family=Kalam:wght@400;700&family=Shadows+Into+Light&family=Special+Elite&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Serif+Display:ital@0;1&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Archivo+Black&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;700&family=Kalam:wght@400;700&family=Shadows+Into+Light&family=Special+Elite&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Serif+Display:ital@0;1&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Archivo+Black&family=Poppins:wght@500;600;700&display=swap",
       },
     ],
   }),
