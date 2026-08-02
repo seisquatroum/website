@@ -66,3 +66,5 @@ GITHUB_PAGES=true npm run build:pages
 - [ ] Substituir títulos pelas cenas do canvas (o que acham? vou fazer um branch e mostrar)
 - [ ] Alterar pagina dos parceiros para aparecerem maiores e preencherem melhor a página
 - [ ] Textos iniciais um pouco maiores para se ler melhor ( e potencialmente mudar a fonte?)
+- [ ] Redirecionar: link para oeiras no mapa, link mb way, etc
+- [ ] logo inicial meter na parte de tras ( e o desde 2025 tmb?) e meter o logo de receita ou vice versa ( meter o logo papel de receita na parte de trás) 
