@@ -7,7 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const githubPages = process.env.GITHUB_PAGES === "true";
-const base = githubPages ? "/analogue-archive-hub/" : "/";
+const base = githubPages ? "/website/" : "/";
 
 export default defineConfig({
   vite: {
