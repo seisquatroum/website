@@ -7,7 +7,8 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const githubPages = process.env.GITHUB_PAGES === "true";
-const base = githubPages ? "/website/" : "/";
+// Custom domain (641.pt) serves from site root — do not use the repo name as base.
+const base = "/";
 
 export default defineConfig({
   vite: {

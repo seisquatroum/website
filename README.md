@@ -4,7 +4,7 @@ Site da Associação 641: estética de revista analógica / flipbook, notícias 
 
 Built with [TanStack Start](https://tanstack.com/start) + Vite. Originally scaffolded with [Lovable](https://lovable.dev).
 
-**Live site (GitHub Pages):** https://seisquatroum.github.io/website/
+**Live site:** https://641.pt/
 
 **Repo:** https://github.com/seisquatroum/website
 
@@ -23,7 +23,7 @@ npm run dev
 
 Push to `main` triggers [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
 
-- Build uses `GITHUB_PAGES=true` → base path `/website/`, static SPA shell in `dist/client`
+- Build uses `GITHUB_PAGES=true` → base path `/` (custom domain `641.pt`), static SPA shell in `dist/client`
 - Workflow copies `index.html` → `404.html` for client-side routing fallback
 - Repo Settings → Pages → Source must be **GitHub Actions**
 
