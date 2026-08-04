@@ -471,12 +471,20 @@
   z-index: 1;
 }
 
+.magazine-markers-mobile-top {
+  display: none;
+}
+
+.magazine-markers-main {
+  display: contents;
+}
+
 .magazine-markers {
   position: relative;
   z-index: 1;
   display: flex;
   width: 100%;
-  margin-left: calc(-28px - var(--marker-page-gap));
+  margin-left: calc(-12px - var(--marker-page-gap));
   height: var(--magazine-spread-h);
   max-height: calc(100svh - 8px);
   min-height: 0;
@@ -616,6 +624,7 @@
 }
 
 .magazine-lang-stack {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -633,7 +642,9 @@
 }
 
 .magazine-flip-hint-external {
-  position: static;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
   z-index: 40;
   transform: rotate(-4deg);
   color: var(--color-brand-accent);
@@ -698,7 +709,7 @@
 
 @media (min-width: 981px) {
   .magazine-book-wrap {
-    --magazine-page-w: min(880px, calc(100vw - 156px), calc((100svh - 8px) * 1040 / 720));
+    --magazine-page-w: var(--magazine-spread-w);
     aspect-ratio: 1040 / 720;
   }
 }
@@ -706,20 +717,21 @@
 @media (min-width: 981px) and (max-width: 1180px), (min-width: 981px) and (max-height: 720px) {
   .magazine-stage {
     --marker-page-gap: 6px;
+    --magazine-spread-w: min(
+      820px,
+      calc(100vw - 126px),
+      calc((100svh - 12px) * 1040 / 720)
+    );
     grid-template-columns: minmax(0, auto) 102px;
     padding: 6px 8px;
   }
 
   .magazine-book-wrap {
-    --magazine-page-w: min(
-      820px,
-      calc(100vw - 126px),
-      calc((100svh - 12px) * 1040 / 720)
-    );
+    --magazine-page-w: var(--magazine-spread-w);
   }
 
   .magazine-markers {
-    margin-left: calc(-24px - var(--marker-page-gap));
+    margin-left: calc(-8px - var(--marker-page-gap));
     gap: 6px;
   }
 
@@ -838,7 +850,7 @@
   flex: 1;
   flex-direction: column;
   overflow: hidden;
-  padding: clamp(10px, 1.6vh, 16px) clamp(12px, 2.4vw, 18px) clamp(24px, 3vh, 32px);
+  padding: clamp(24px, 4vh, 40px) clamp(12px, 2.4vw, 18px) clamp(24px, 3vh, 32px);
 }
 
 .magazine-sheet .zine-page [class*="min-h-"] {
@@ -855,12 +867,12 @@
 /* Keep headings responsive inside the fixed magazine sheet. Large fixed offsets
    make pages feel misplaced or clipped on shorter screens. */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-  padding-top: clamp(0.75rem, 3vh, 2rem);
-  margin-bottom: clamp(0.6rem, 1.8vh, 1.35rem);
+  padding-top: clamp(1.35rem, 5vh, 3.4rem);
+  margin-bottom: clamp(1.2rem, 3vh, 2.2rem);
 }
 
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-  margin-top: clamp(0.4rem, 1.5vh, 1.4rem);
+  margin-top: clamp(1rem, 2.6vh, 2rem);
 }
 
 .magazine-sheet .contactos-page .contactos-layout {
@@ -2221,19 +2233,19 @@
 
 @media (max-height: 760px) {
   .magazine-sheet .zine-page > .zine-page-inner {
-    padding-top: 9px;
+    padding-top: 18px;
     padding-right: 12px;
     padding-left: 12px;
     padding-bottom: 24px;
   }
 
   .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-    padding-top: 0.6rem;
-    margin-bottom: 0.55rem;
+    padding-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-    margin-top: 0.55rem;
+    margin-top: 0.9rem;
   }
 
   .about-photo-card {
@@ -2264,22 +2276,44 @@
 @media (max-width: 980px), (pointer: coarse), (hover: none) {
   .magazine-stage {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, auto) auto;
+    grid-template-rows: auto minmax(0, auto) auto;
     align-content: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .magazine-markers-mobile-top {
+    display: block;
+    width: min(100%, 680px);
+    align-self: end;
+    justify-self: center;
+  }
+
+  .magazine-markers-mobile-top .magazine-markers {
+    display: block;
+    width: 100%;
+  }
+
+  .magazine-markers-mobile-top .magazine-marker-list {
+    justify-content: center;
+    padding-block: 2px 3px;
+  }
+
+  .magazine-markers-mobile-top .magazine-lang-stack {
+    display: none;
   }
 
   .magazine-book-wrap {
     --magazine-page-w: min(
       440px,
       calc(100vw - 20px),
-      calc((100svh - 86px) * 520 / 720)
+      calc((100svh - 132px) * 520 / 720)
     );
-    max-height: calc(100svh - 86px);
+    max-height: calc(100svh - 132px);
     margin-top: 0;
     justify-self: center;
+    touch-action: pan-y;
   }
 
   .magazine-page-tap-zone {
@@ -2334,6 +2368,7 @@
     mask-image: none;
     -webkit-mask-image: none;
     scroll-snap-type: x proximity;
+    justify-content: center;
   }
 
   .magazine-marker {
@@ -2402,16 +2437,16 @@
   }
 
   .magazine-sheet .zine-page > .zine-page-inner {
-    padding: 8px 10px 24px;
+    padding: 16px 10px 24px;
   }
 
   .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-    padding-top: 0.45rem;
-    margin-bottom: 0.45rem;
+    padding-top: 0.9rem;
+    margin-bottom: 0.9rem;
   }
 
   .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-    margin-top: 0.45rem;
+    margin-top: 0.8rem;
   }
 
   .about-photo-card {
@@ -2495,9 +2530,9 @@
     --magazine-page-w: min(
       480px,
       calc(100vw - 24px),
-      calc((100svh - 70px) * 520 / 720)
+      calc((100svh - 108px) * 520 / 720)
     );
-    max-height: calc(100svh - 70px);
+    max-height: calc(100svh - 108px);
   }
 
   .magazine-markers {

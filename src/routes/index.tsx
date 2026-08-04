@@ -1747,13 +1747,11 @@ function DrawMagazinePage({
         <button
           type="button"
           className="draw-page-flip-zone draw-page-flip-zone--bl"
-          aria-label={locale === "pt" ? "página anterior" : "previous page"}
           onMouseDown={(event) => triggerFlip(event, "prev", "bottom")}
         />
         <button
           type="button"
           className="draw-page-flip-zone draw-page-flip-zone--br"
-          aria-label={locale === "pt" ? "página seguinte" : "next page"}
           onMouseDown={(event) => triggerFlip(event, "next", "bottom")}
         />
         <div className="draw-page-canvas-wrap" ref={canvasWrapRef}>
@@ -2416,6 +2414,12 @@ function MagazineIndex() {
   const bookRef = useRef<FlipBookHandle | null>(null);
   const bookWrapRef = useRef<HTMLDivElement | null>(null);
   const compactTurnLocked = useRef(false);
+  const compactSwipeRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    time: number;
+  } | null>(null);
   const wheelLocked = useRef(false);
   const wheelRemainder = useRef(0);
   const logoDriftRef = useRef<HTMLDivElement | null>(null);
@@ -2552,40 +2556,78 @@ function MagazineIndex() {
     bookRef.current?.pageFlip().flipNext(corner);
   }, []);
 
-  const handleCompactBookPointer = useCallback(
+  const isCompactSwipeTarget = useCallback(
+    (target: HTMLElement | null) =>
+      !target?.closest(
+        [
+          "a",
+          "button",
+          "input",
+          "textarea",
+          "select",
+          "[role='button']",
+          "[role='link']",
+          ".news-camera",
+          ".draw-page-layout",
+          ".contactos-page",
+        ].join(","),
+      ),
+    [],
+  );
+
+  const handleCompactBookPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       if (!window.matchMedia(COMPACT_BOOK_MEDIA_QUERY).matches) return;
 
       const target = event.target as HTMLElement | null;
-      if (
-        target?.closest(
-          [
-            "a",
-            "button",
-            "input",
-            "textarea",
-            "select",
-            "[role='button']",
-            "[role='link']",
-            ".news-camera",
-            ".draw-page-layout",
-            ".contactos-page",
-          ].join(","),
-        )
-      ) {
+      if (!isCompactSwipeTarget(target)) {
+        compactSwipeRef.current = null;
         return;
       }
 
       const rect = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - rect.left;
-      if (x < 0 || x > rect.width) return;
+      const y = event.clientY - rect.top;
+      if (x < 0 || x > rect.width || y < 0 || y > rect.height) return;
+
+      compactSwipeRef.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        time: window.performance.now(),
+      };
+    },
+    [isCompactSwipeTarget],
+  );
+
+  const handleCompactBookPointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const swipe = compactSwipeRef.current;
+      compactSwipeRef.current = null;
+
+      if (!swipe || swipe.pointerId !== event.pointerId) return;
+      if (!window.matchMedia(COMPACT_BOOK_MEDIA_QUERY).matches) return;
+
+      const dx = event.clientX - swipe.x;
+      const dy = event.clientY - swipe.y;
+      const elapsed = window.performance.now() - swipe.time;
+      const isHorizontalSwipe =
+        Math.abs(dx) >= 44 &&
+        Math.abs(dx) > Math.abs(dy) * 1.2 &&
+        elapsed < 900;
+
+      if (!isHorizontalSwipe) return;
 
       event.preventDefault();
       event.stopPropagation();
-      turnCompactPage(x < rect.width / 2 ? -1 : 1);
+      turnCompactPage(dx < 0 ? 1 : -1);
     },
     [turnCompactPage],
   );
+
+  const handleCompactBookPointerCancel = useCallback(() => {
+    compactSwipeRef.current = null;
+  }, []);
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLElement>) => {
@@ -2774,6 +2816,10 @@ function MagazineIndex() {
     [magazinePages],
   );
 
+  const mobileMarkerSplitIndex = Math.ceil(markerItems.length / 2);
+  const mobileTopMarkerItems = markerItems.slice(0, mobileMarkerSplitIndex);
+  const mobileBottomMarkerItems = markerItems.slice(mobileMarkerSplitIndex);
+
   const drawPageIndex = useMemo(
     () => magazinePages.findIndex((page) => page.key === "blank-contactos-pad"),
     [magazinePages],
@@ -2925,33 +2971,20 @@ function MagazineIndex() {
         className={`magazine-stage ${isFlipping ? "is-flipping" : ""}`}
         onWheel={handleWheel}
       >
+        <div className="magazine-markers-mobile-top">
+          <MagazineMarkers
+            items={mobileTopMarkerItems}
+            onNavigate={(item) => flipTo(item.page)}
+            activeKey={magazinePages[currentPage]?.key}
+          />
+        </div>
         <div
           ref={bookWrapRef}
           className="magazine-book-wrap"
-          onPointerDownCapture={handleCompactBookPointer}
+          onPointerDownCapture={handleCompactBookPointerDown}
+          onPointerUpCapture={handleCompactBookPointerUp}
+          onPointerCancel={handleCompactBookPointerCancel}
         >
-          <button
-            type="button"
-            className="magazine-page-tap-zone magazine-page-tap-zone--prev"
-            aria-label={locale === "pt" ? "página anterior" : "previous page"}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              turnCompactPage(-1);
-            }}
-            onClick={(event) => event.preventDefault()}
-          />
-          <button
-            type="button"
-            className="magazine-page-tap-zone magazine-page-tap-zone--next"
-            aria-label={locale === "pt" ? "página seguinte" : "next page"}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              turnCompactPage(1);
-            }}
-            onClick={(event) => event.preventDefault()}
-          />
           {showFlipHint && (
             <span className="magazine-flip-hint-desktop" aria-hidden="true">
               {locale === "pt" ? "* folheia-me -> *" : "* flip me -> *"}
@@ -3017,13 +3050,15 @@ function MagazineIndex() {
             ))}
           </HTMLFlipBook>
         </div>
-        <MagazineMarkers
-          items={markerItems}
-          onNavigate={(item) => flipTo(item.page)}
-          activeKey={magazinePages[currentPage]?.key}
-          showFlipHint={showFlipHint}
-          flipHintLabel={locale === "pt" ? "* folheia-me *" : "* flip me *"}
-        />
+        <div className="magazine-markers-main">
+          <MagazineMarkers
+            items={usePortrait ? mobileBottomMarkerItems : markerItems}
+            onNavigate={(item) => flipTo(item.page)}
+            activeKey={magazinePages[currentPage]?.key}
+            showFlipHint={showFlipHint}
+            flipHintLabel={locale === "pt" ? "* folheia-me *" : "* flip me *"}
+          />
+        </div>
       </main>
     </div>
   );
