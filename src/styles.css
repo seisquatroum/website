@@ -428,7 +428,7 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background-color: #c41958;
     color: var(--color-foreground);
     overflow: hidden;
   }
@@ -436,20 +436,35 @@
 
 .magazine-stage {
   --marker-page-gap: clamp(6px, 1vw, 14px);
-  --magazine-spread-w: min(880px, calc(100vw - 156px), calc((100svh - 8px) * 1040 / 720));
-  --magazine-spread-h: calc(var(--magazine-spread-w) * 720 / 1040);
+  --magazine-book-w: 320px;
+  --magazine-book-h: 443px;
+  --magazine-spread-h: var(--magazine-book-h);
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, auto) 118px;
   align-items: center;
   justify-content: center;
   gap: var(--marker-page-gap);
   min-height: 100svh;
   max-height: 100svh;
   overflow: hidden;
-  padding: 4px 6px 4px 10px;
+  padding: 8px 10px;
   background: transparent;
+}
+
+/* Side gutters (pillarbox) — vertical marker rail on the right. */
+.magazine-stage[data-markers="sides"] {
+  grid-template-columns: minmax(0, auto) 118px;
+  padding: 4px 6px 4px 10px;
+}
+
+/* Top/bottom bands (letterbox) — marker strips above/below the book. */
+.magazine-stage[data-markers="bands"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, auto) auto;
+  align-content: center;
+  gap: 6px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
 }
 
 .magazine-stage::before {
@@ -605,13 +620,23 @@
   opacity: 0.75;
 }
 
-.magazine-marker:hover,
 .magazine-marker.is-active {
   color: var(--color-brand-paper);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.14)),
     var(--color-brand-magenta);
   transform: translateX(14px) rotate(-1deg);
+}
+
+/* Avoid sticky :hover on touch keeping a second marker "lit". */
+@media (hover: hover) and (pointer: fine) {
+  .magazine-marker:hover {
+    color: var(--color-brand-paper);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.14)),
+      var(--color-brand-magenta);
+    transform: translateX(14px) rotate(-1deg);
+  }
 }
 
 .magazine-lang {
@@ -660,46 +685,70 @@
   display: none;
 }
 
-@media (min-width: 981px) {
-  .magazine-flip-hint-external {
-    display: none;
-  }
-
-  .magazine-flip-hint-desktop {
-    display: block;
-    position: absolute;
-    /* Sit on the empty left page of the open-book frame (cover is on the right) */
-    left: 25%;
-    bottom: 22%;
-    z-index: 40;
-    transform: translateX(-50%) rotate(-5deg);
-    color: var(--color-brand-accent);
-    font-family: var(--font-hand);
-    font-size: 1.35rem;
-    line-height: 1;
-    white-space: nowrap;
-    pointer-events: none;
-    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
-  }
+/* Spread (= 2 pages) uses the in-book cover hint; portrait uses the external one. */
+.magazine-stage[data-book-mode="spread"] .magazine-flip-hint-external {
+  display: none;
 }
 
-@media (max-width: 980px), (pointer: coarse), (hover: none) {
-  .magazine-flip-hint-external {
-    font-size: 0.85rem;
-  }
+.magazine-stage[data-book-mode="spread"] .magazine-flip-hint-desktop {
+  display: block;
+  position: absolute;
+  /* Sit on the empty left page of the open-book frame (cover is on the right) */
+  left: 25%;
+  bottom: 22%;
+  z-index: 40;
+  transform: translateX(-50%) rotate(-5deg);
+  color: var(--color-brand-accent);
+  font-family: var(--font-hand);
+  font-size: 1.35rem;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.magazine-stage[data-markers="bands"] .magazine-flip-hint-external {
+  font-size: 0.85rem;
 }
 
 .magazine-book-wrap {
   /* Hard covers in page-flip idle at top:rect.top but flip at top:0.
-     Keep the flip parent exactly page-sized so rect.top stays 0. */
-  --magazine-page-w: min(440px, calc(100vw - 136px), calc((100svh - 8px) * 520 / 720));
+     Keep the flip parent exactly page-sized so rect.top stays 0.
+     Container lives HERE (always has width) — page-flip sheets are often
+     display:none / 0×0, so cqw on .magazine-sheet-face never resolved. */
+  container-type: inline-size;
+  container-name: magazine-book;
+  /* Design canvas width; whole page content is laid out at this size then scaled.
+     scale() needs a unitless number → length/length (cqw / px). */
+  --mp-design-w: 440px;
+  /* Portrait book = one page wide; spread overrides via data-book-mode. */
+  --mp-scale: calc(100cqw / var(--mp-design-w));
+  /* 1 page-width unit for residual cqw helpers (padding, etc.). */
+  --mp-u: 1cqw;
+  /* Token scale still useful for chrome that isn't inside the scaled canvas. */
+  --mp-xs: clamp(5px, calc(2.15 * var(--mp-u)), 10px);
+  --mp-sm: clamp(6px, calc(2.7 * var(--mp-u)), 13px);
+  --mp-base: clamp(7px, calc(3.2 * var(--mp-u)), 15px);
+  --mp-lg: clamp(8px, calc(4 * var(--mp-u)), 18px);
+  --mp-xl: clamp(9px, calc(4.9 * var(--mp-u)), 22px);
+  --mp-2xl: clamp(10px, calc(5.9 * var(--mp-u)), 28px);
+  --mp-3xl: clamp(11px, calc(7.2 * var(--mp-u)), 34px);
+  --mp-4xl: clamp(12px, calc(8.6 * var(--mp-u)), 40px);
+  --mp-5xl: clamp(13px, calc(10 * var(--mp-u)), 48px);
+  --mp-pad-x: clamp(4px, calc(3.6 * var(--mp-u)), 18px);
+  --mp-pad-y: clamp(6px, calc(5.5 * var(--mp-u)), 40px);
+  --mp-gap: clamp(2px, calc(1.4 * var(--mp-u)), 0.75rem);
+  --mp-space-1: calc(1.2 * var(--mp-u));
+  --mp-space-2: calc(2.4 * var(--mp-u));
+  --mp-space-3: calc(3.6 * var(--mp-u));
+  --mp-space-4: calc(4.8 * var(--mp-u));
   position: relative;
   z-index: 120;
   box-sizing: border-box;
-  width: var(--magazine-page-w);
-  aspect-ratio: 520 / 720;
-  height: auto;
-  max-height: calc(100svh - 8px);
+  width: var(--magazine-book-w);
+  height: var(--magazine-book-h);
+  max-width: 100%;
+  max-height: 100%;
   min-height: 0;
   justify-self: center;
   align-self: center;
@@ -707,60 +756,47 @@
   will-change: filter;
 }
 
-@media (min-width: 981px) {
-  .magazine-book-wrap {
-    --magazine-page-w: var(--magazine-spread-w);
-    aspect-ratio: 1040 / 720;
-  }
+.magazine-stage[data-book-mode="spread"] .magazine-book-wrap {
+  /* Spread is two pages wide — each sheet ≈ half the book. */
+  --mp-u: 0.5cqw;
+  --mp-scale: calc(50cqw / var(--mp-design-w));
 }
 
-@media (min-width: 981px) and (max-width: 1180px), (min-width: 981px) and (max-height: 720px) {
-  .magazine-stage {
-    --marker-page-gap: 6px;
-    --magazine-spread-w: min(
-      820px,
-      calc(100vw - 126px),
-      calc((100svh - 12px) * 1040 / 720)
-    );
-    grid-template-columns: minmax(0, auto) 102px;
-    padding: 6px 8px;
-  }
+.magazine-stage[data-markers="sides"] .magazine-markers {
+  margin-left: calc(-12px - var(--marker-page-gap));
+  height: var(--magazine-book-h);
+  max-height: var(--magazine-book-h);
+}
 
-  .magazine-book-wrap {
-    --magazine-page-w: var(--magazine-spread-w);
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] {
+  --marker-page-gap: 6px;
+}
 
-  .magazine-markers {
-    margin-left: calc(-8px - var(--marker-page-gap));
-    gap: 6px;
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] .magazine-marker {
+  max-width: 96px;
+  min-height: 35px;
+  padding: 6px 7px 6px 30px;
+  font-size: 8px;
+  box-shadow:
+    inset 38px 0 14px rgba(0, 0, 0, 0.22),
+    4px 4px 0 rgba(0, 0, 0, 0.82);
+}
 
-  .magazine-marker {
-    max-width: 96px;
-    min-height: 35px;
-    padding: 6px 7px 6px 30px;
-    font-size: 8px;
-    box-shadow:
-      inset 38px 0 14px rgba(0, 0, 0, 0.22),
-      4px 4px 0 rgba(0, 0, 0, 0.82);
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] .magazine-marker::before {
+  left: 24px;
+}
 
-  .magazine-marker::before {
-    left: 24px;
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] .magazine-marker::after {
+  width: 24px;
+}
 
-  .magazine-marker::after {
-    width: 24px;
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] .magazine-lang {
+  transform: scale(0.88);
+  transform-origin: center bottom;
+}
 
-  .magazine-lang {
-    transform: scale(0.88);
-    transform-origin: center bottom;
-  }
-
-  .magazine-lang-stack {
-    margin-left: 28px;
-  }
+.magazine-stage[data-markers="sides"][data-book-mode="spread"] .magazine-lang-stack {
+  margin-left: 28px;
 }
 
 .magazine-book.stf__parent {
@@ -808,6 +844,102 @@
   contain: layout paint style;
   backface-visibility: hidden;
   transform: translateZ(0);
+  font-size: var(--mp-base);
+}
+
+/* Lay out page content at a fixed design size, then scale to the live sheet.
+   This keeps text+images in exact proportion and sidesteps browser min-font-size. */
+.magazine-sheet-scale {
+  box-sizing: border-box;
+  width: var(--mp-design-w);
+  height: calc(var(--mp-design-w) * 720 / 520);
+  transform: scale(var(--mp-scale));
+  transform-origin: top left;
+  /* Freeze spacing/type to the 440px design size. Live shrinking is ONLY
+     --mp-scale — otherwise cqw tokens + scale() double-shrink the text. */
+  --mp-u: 4.4px;
+  --mp-xs: 10px;
+  --mp-sm: 13px;
+  --mp-base: 14px;
+  --mp-lg: 18px;
+  --mp-xl: 22px;
+  --mp-2xl: 26px;
+  --mp-3xl: 32px;
+  --mp-4xl: 36px;
+  --mp-5xl: 44px;
+  --mp-pad-x: 16px;
+  --mp-pad-y: 28px;
+  font-size: 14px;
+}
+
+/* Semantic type scale (use these on cutouts — not Tailwind sm:/md: sizes). */
+.magazine-book-wrap :is(.mp-xs) { font-size: var(--mp-xs) !important; }
+.magazine-book-wrap :is(.mp-sm) { font-size: var(--mp-sm) !important; }
+.magazine-book-wrap :is(.mp-base) { font-size: var(--mp-base) !important; }
+.magazine-book-wrap :is(.mp-lg) { font-size: var(--mp-lg) !important; }
+.magazine-book-wrap :is(.mp-xl) { font-size: var(--mp-xl) !important; }
+.magazine-book-wrap :is(.mp-2xl) { font-size: var(--mp-2xl) !important; }
+.magazine-book-wrap :is(.mp-3xl) { font-size: var(--mp-3xl) !important; }
+.magazine-book-wrap :is(.mp-4xl) { font-size: var(--mp-4xl) !important; }
+.magazine-book-wrap :is(.mp-5xl) { font-size: var(--mp-5xl) !important; }
+
+/* Body Tailwind sizes → em of the page base (no viewport breakpoints). */
+.magazine-book-wrap :is(
+  .text-\[9px\],
+  .text-\[10px\],
+  .text-\[0\.58rem\],
+  .text-\[0\.62rem\],
+  .text-xs,
+  .sm\:text-xs,
+  .sm\:text-\[0\.62rem\],
+  .sm\:text-\[0\.58rem\]
+) {
+  font-size: 0.85em !important;
+}
+.magazine-book-wrap :is(
+  .text-\[14px\],
+  .text-sm,
+  .sm\:text-sm,
+  .text-base,
+  .sm\:text-base
+) {
+  font-size: 1em !important;
+}
+.magazine-book-wrap :is(.text-lg, .sm\:text-lg) {
+  font-size: 1.15em !important;
+}
+.magazine-book-wrap :is(.text-xl, .sm\:text-xl) {
+  font-size: 1.3em !important;
+}
+.magazine-book-wrap :is(.text-2xl, .sm\:text-2xl) {
+  font-size: var(--mp-2xl) !important;
+}
+.magazine-book-wrap :is(.text-3xl, .sm\:text-3xl) {
+  font-size: var(--mp-3xl) !important;
+}
+.magazine-book-wrap :is(.text-4xl, .sm\:text-4xl, .md\:text-4xl) {
+  font-size: var(--mp-4xl) !important;
+}
+/* md:text-5xl must NOT win over smaller tiers — map to 3xl page title scale */
+.magazine-book-wrap :is(.text-5xl, .md\:text-5xl) {
+  font-size: var(--mp-3xl) !important;
+}
+
+/* Cutout letter padding/gaps track the letter size, not the root rem */
+.magazine-book-wrap :is(.px-2, .sm\:px-2) {
+  padding-left: 0.35em !important;
+  padding-right: 0.35em !important;
+}
+.magazine-book-wrap :is(.px-2\.5, .sm\:px-2\.5, .sm\:px-3) {
+  padding-left: 0.42em !important;
+  padding-right: 0.42em !important;
+}
+.magazine-book-wrap :is(.py-0\.5, .py-1, .py-1\.5, .sm\:py-1\.5) {
+  padding-top: 0.18em !important;
+  padding-bottom: 0.18em !important;
+}
+.magazine-book-wrap :is(.w-1\.5, .sm\:w-2) {
+  width: 0.35em !important;
 }
 
 .magazine-stage.is-flipping .magazine-book-wrap {
@@ -850,7 +982,7 @@
   flex: 1;
   flex-direction: column;
   overflow: hidden;
-  padding: clamp(24px, 4vh, 40px) clamp(12px, 2.4vw, 18px) clamp(24px, 3vh, 32px);
+  padding: var(--mp-pad-y) var(--mp-pad-x) clamp(20px, calc(5 * var(--mp-u)), 32px);
 }
 
 .magazine-sheet .zine-page [class*="min-h-"] {
@@ -867,16 +999,16 @@
 /* Keep headings responsive inside the fixed magazine sheet. Large fixed offsets
    make pages feel misplaced or clipped on shorter screens. */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-  padding-top: clamp(1.35rem, 5vh, 3.4rem);
-  margin-bottom: clamp(1.2rem, 3vh, 2.2rem);
+  padding-top: clamp(4px, calc(6 * var(--mp-u)), 3.4rem);
+  margin-bottom: clamp(4px, calc(4.5 * var(--mp-u)), 2.2rem);
 }
 
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-  margin-top: clamp(1rem, 2.6vh, 2rem);
+  margin-top: clamp(3px, calc(3.8 * var(--mp-u)), 2rem);
 }
 
 .magazine-sheet .contactos-page .contactos-layout {
-  padding-top: 1.75rem;
+  padding-top: calc(4 * var(--mp-u));
 }
 
 .magazine-sheet-hard .zine-page > .zine-page-inner {
@@ -895,15 +1027,15 @@
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
-  padding: 14px 16px 32px;
+  padding: calc(3.2 * var(--mp-u)) calc(3.6 * var(--mp-u)) calc(7.3 * var(--mp-u));
   text-align: center;
 }
 
 .magazine-back-cover-layout {
   align-items: center;
   justify-content: flex-end;
-  padding-inline: clamp(16px, 3vw, 24px);
-  padding-bottom: clamp(36px, 7vh, 56px);
+  padding-inline: clamp(12px, calc(4.5 * var(--mp-u)), 24px);
+  padding-bottom: clamp(28px, calc(10 * var(--mp-u)), 56px);
 }
 
 .magazine-back-cover-credits {
@@ -911,7 +1043,7 @@
   max-width: 92%;
   color: var(--color-brand-pink-soft);
   font-family: "Caveat", var(--font-hand);
-  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+  font-size: clamp(8px, calc(4.2 * var(--mp-u)), 1.15rem);
   font-weight: 400;
   line-height: 1.35;
   opacity: 0.82;
@@ -936,29 +1068,23 @@
 
 .cover-tagline-line {
   flex: 0 0 auto;
-  margin: 0 auto 6px;
+  margin: 0 auto calc(1.4 * var(--mp-u));
   color: var(--color-brand-pink-soft);
   font-family: var(--font-mono-zine);
-  font-size: 1rem;
+  font-size: clamp(7px, calc(3.6 * var(--mp-u)), 1.2rem);
   line-height: 1;
   letter-spacing: 0.28em;
   text-align: center;
   text-transform: uppercase;
 }
 
-@media (min-width: 640px) {
-  .cover-tagline-line {
-    font-size: 1.2rem;
-  }
-}
-
 .cover-digits {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(96%, 400px);
-  height: clamp(200px, 34vh, 280px);
-  margin: 6px 0 2px;
+  width: min(96%, calc(91 * var(--mp-u)));
+  height: clamp(140px, calc(55 * var(--mp-u)), 280px);
+  margin: calc(1.4 * var(--mp-u)) 0 calc(0.5 * var(--mp-u));
 }
 
 .cover-digit {
@@ -972,43 +1098,79 @@
 
 .cover-digit-6 {
   width: 92%;
-  max-height: 96px;
+  max-height: calc(22 * var(--mp-u));
   z-index: 1;
-  transform: rotate(-1.5deg) translateY(-18px);
+  transform: rotate(-1.5deg) translateY(calc(-4 * var(--mp-u)));
 }
 
 .cover-digit-4 {
   width: 88%;
-  max-height: 110px;
+  max-height: calc(25 * var(--mp-u));
   z-index: 2;
-  transform: rotate(1.8deg) translateY(8px);
+  transform: rotate(1.8deg) translateY(calc(1.8 * var(--mp-u)));
 }
 
+/* one1.png is mostly black on black — lighten knocks the digit out on the
+   dark cover (worse after the scale() isolation on .magazine-sheet-scale). */
 .cover-digit-1 {
   width: 58%;
-  max-height: 150px;
+  max-height: calc(34 * var(--mp-u));
   z-index: 3;
-  transform: rotate(-2.2deg) translateY(58px);
+  transform: rotate(-2.2deg) translateY(calc(13 * var(--mp-u)));
+  mix-blend-mode: normal;
+  /* Soften the asset's solid black plate into the cover */
+  filter:
+    drop-shadow(0 2px 0 rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.35));
 }
 
+/* Viewport-sized clip frame — keeps the magenta field full-bleed. */
 .site-logo-drift {
   position: fixed;
   inset: 0;
   z-index: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  gap: 12px;
   overflow: hidden;
   pointer-events: none;
   opacity: 0.14;
-  transform: rotate(-6deg) scale(1.08);
+  /* Fade the last few px so logos intersecting the screen edge don't look sliced */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
+}
+
+/* Rotated wallpaper lives in here, larger than the frame so edges aren't clipped. */
+.site-logo-drift-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 170vmax;
+  height: 170vmax;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(6px, 1.2vmin, 12px);
+  padding-block: 2vmax;
+  transform: translate(-50%, -50%) rotate(-6deg) scale(1.2);
 }
 
 .site-logo-drift-row {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 160%;
   margin-left: -30%;
+  flex: 0 0 auto;
+  line-height: 0;
 }
 
 .site-logo-drift-track {
@@ -1059,12 +1221,12 @@
 
 .magazine-index-link {
   position: absolute;
-  bottom: 18px;
-  left: 18px;
+  bottom: calc(4 * var(--mp-u));
+  left: calc(4 * var(--mp-u));
   z-index: 80;
   color: var(--color-brand-magenta);
   font-family: var(--font-hand);
-  font-size: 18px;
+  font-size: clamp(14px, calc(4.1 * var(--mp-u)), 18px);
   line-height: 1;
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -1092,7 +1254,7 @@
 .contactos-hint {
   position: absolute;
   top: 58%;
-  left: clamp(1.5rem, 8%, 5rem);
+  left: clamp(1.2rem, 8%, 5rem);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -1101,7 +1263,7 @@
   transform: translateY(-50%) rotate(-6deg);
   color: #0a0507;
   font-family: var(--font-hand);
-  font-size: clamp(0.72rem, 1.9vw, 0.95rem);
+  font-size: clamp(0.7rem, calc(3.4 * var(--mp-u)), 0.95rem);
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -1110,9 +1272,9 @@
 
 .contactos-hint-arrow {
   display: block;
-  width: clamp(1.7rem, 5.5vw, 2.35rem);
+  width: clamp(1.5rem, calc(5.5 * var(--mp-u)), 2.35rem);
   height: auto;
-  margin-left: clamp(4rem, 17vw, 4rem);
+  margin-left: clamp(2.5rem, calc(17 * var(--mp-u)), 4rem);
   color: #0a0507;
   transform: rotate(90deg) scaleY(-1);
 }
@@ -1129,7 +1291,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: clamp(0.65rem, calc(3.6 * var(--mp-u)), 1rem);
   width: 100%;
 }
 
@@ -1137,8 +1299,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: clamp(56px, calc(18 * var(--mp-u)), 80px);
+  height: clamp(56px, calc(18 * var(--mp-u)), 80px);
   padding: 5px;
   border: none;
   background: transparent;
@@ -1158,13 +1320,13 @@
 }
 
 .contact-channel-icon--instagram {
-  width: 72px;
-  height: 72px;
+  width: clamp(50px, calc(16.4 * var(--mp-u)), 72px);
+  height: clamp(50px, calc(16.4 * var(--mp-u)), 72px);
 }
 
 .contact-channel-icon--discord {
-  width: 88px;
-  height: 88px;
+  width: clamp(60px, calc(20 * var(--mp-u)), 88px);
+  height: clamp(60px, calc(20 * var(--mp-u)), 88px);
 }
 
 .contact-channel-icon-graphic {
@@ -1193,6 +1355,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* Design-canvas sizes only — viewport sm/md breakpoints were pushing
+   "Madame G" into the spread gutter at ~642×466. */
+.banda-hero-row {
+  padding-right: calc(6 * var(--mp-u));
+}
+
+.banda-photo {
+  width: calc(48 * var(--mp-u));
+  max-width: 100%;
+}
+
+.banda-name {
+  font-size: var(--mp-2xl);
+  line-height: 1;
 }
 
 .banda-link-row {
@@ -1301,7 +1479,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.55rem;
-  width: min(17rem, calc(100% - 1.5rem));
+  width: min(calc(62 * var(--mp-u)), calc(100% - 1.5rem));
   max-width: calc(100% - 1.5rem);
   padding: 0.85rem 1rem;
   border: 2px solid var(--color-brand-magenta);
@@ -1354,7 +1532,7 @@
 .contactos-detail-value {
   margin: 0;
   font-family: var(--font-hand);
-  font-size: 1rem;
+  font-size: var(--mp-base);
   line-height: 1.25;
   color: var(--color-brand-black);
   word-break: break-word;
@@ -1385,7 +1563,7 @@
   background: var(--color-brand-accent);
   color: var(--color-brand-black);
   font-family: var(--font-marker);
-  font-size: 0.7rem;
+  font-size: var(--mp-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1421,21 +1599,21 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 0.55rem;
+  gap: clamp(0.4rem, calc(2 * var(--mp-u)), 0.55rem);
   outline: none;
   /* leave room for absolute .magazine-page-number */
-  padding-bottom: 1.75rem;
+  padding-bottom: calc(4 * var(--mp-u));
 }
 
 .news-camera-stage {
   /* Keep the box = painted camera (no letterbox gutters), so % overlays
      stay aligned on mobile and desktop. Avoid depending on parent width
      during page-flip (it can settle after the animation and nudge overlays). */
-  --news-camera-max-h: min(36vh, 240px);
+  --news-camera-max-h: min(calc(55 * var(--mp-u)), 240px);
   --news-camera-vb-w: 2139;
   --news-camera-vb-h: 1298;
   position: relative;
-  width: min(26rem, calc(var(--news-camera-max-h) * var(--news-camera-vb-w) / var(--news-camera-vb-h)));
+  width: min(calc(90 * var(--mp-u)), calc(var(--news-camera-max-h) * var(--news-camera-vb-w) / var(--news-camera-vb-h)));
   max-width: 100%;
   aspect-ratio: var(--news-camera-vb-w) / var(--news-camera-vb-h);
   height: auto;
@@ -1473,7 +1651,7 @@
   background: transparent;
   color: #39ff14;
   font-family: var(--font-mono-zine), "Courier New", monospace;
-  font-size: clamp(0.62rem, 1.7vw, 0.78rem);
+  font-size: clamp(0.55rem, calc(2.8 * var(--mp-u)), 0.78rem);
   letter-spacing: 0.14em;
   text-transform: none;
   line-height: 1;
@@ -1566,11 +1744,11 @@
 .news-camera-caption {
   display: flex;
   flex-direction: column;
-  max-width: 26rem;
+  max-width: calc(90 * var(--mp-u));
   margin-inline: auto;
   width: 100%;
-  height: 7.55rem;
-  padding: 0.55rem 0.8rem 0.6rem;
+  height: clamp(5.5rem, calc(28 * var(--mp-u)), 7.55rem);
+  padding: calc(2 * var(--mp-u)) calc(2.8 * var(--mp-u)) calc(2.2 * var(--mp-u));
   border: 2.5px solid var(--color-brand-black);
   background: var(--color-brand-paper);
   color: var(--color-brand-black);
@@ -1582,7 +1760,7 @@
 .news-camera-caption-tag {
   flex-shrink: 0;
   font-family: var(--font-mono-zine);
-  font-size: 0.55rem;
+  font-size: var(--mp-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-brand-magenta);
@@ -1593,7 +1771,7 @@
   flex-shrink: 0;
   margin-top: 0.1rem;
   font-family: var(--font-serif-display);
-  font-size: clamp(0.85rem, 2vw, 0.98rem);
+  font-size: clamp(0.78rem, calc(3.4 * var(--mp-u)), 0.98rem);
   font-weight: 900;
   font-style: italic;
   line-height: 1.12;
@@ -1607,9 +1785,9 @@
 .news-camera-caption-body {
   flex: 1 1 auto;
   min-height: 0;
-  margin-top: 0.45rem;
+  margin-top: calc(1.6 * var(--mp-u));
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: var(--mp-sm);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -1630,7 +1808,7 @@
   gap: 0.25rem;
   margin-top: 0;
   font-family: var(--font-marker);
-  font-size: 0.62rem;
+  font-size: var(--mp-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1640,8 +1818,8 @@
 }
 
 .news-item-link svg {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.7em;
+  height: 0.7em;
 }
 
 .parceiros-page-layout {
@@ -1655,17 +1833,17 @@
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
-  gap: clamp(1.1rem, 4.5vw, 2rem);
+  gap: clamp(1rem, calc(7 * var(--mp-u)), 2rem);
   width: 100%;
 }
 
 .parceiros-outro {
-  margin-top: clamp(3rem, 15vh, 6rem);
+  margin-top: clamp(2rem, calc(22 * var(--mp-u)), 6rem);
   padding-top: 0;
-  padding-bottom: clamp(0.35rem, 1.5vh, 0.75rem);
+  padding-bottom: clamp(0.3rem, calc(1.8 * var(--mp-u)), 0.75rem);
   color: var(--color-brand-pink-soft);
   font-family: "Caveat", var(--font-hand);
-  font-size: clamp(1rem, 2.6vw, 1.25rem);
+  font-size: clamp(0.9rem, calc(4.5 * var(--mp-u)), 1.25rem);
   line-height: 1.35;
   text-align: center;
 }
@@ -1674,8 +1852,8 @@
   position: relative;
   display: block;
   flex: 0 0 auto;
-  width: clamp(2.35rem, 15vw, 4rem);
-  max-width: clamp(2.35rem, 15vw, 4rem);
+  width: clamp(2.1rem, calc(14 * var(--mp-u)), 4rem);
+  max-width: clamp(2.1rem, calc(14 * var(--mp-u)), 4rem);
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: visible;
@@ -1746,14 +1924,14 @@
 
 .draw-page-clear {
   position: absolute;
-  bottom: clamp(1.2rem, 3.8vh, 1.65rem);
+  bottom: clamp(1rem, calc(5.5 * var(--mp-u)), 1.65rem);
   left: 50%;
   z-index: 7;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: clamp(28px, calc(7.7 * var(--mp-u)), 34px);
+  height: clamp(28px, calc(7.7 * var(--mp-u)), 34px);
   padding: 0;
   border: none;
   border-radius: 999px;
@@ -1831,8 +2009,8 @@
 .draw-page-canvas-wrap {
   position: absolute;
   z-index: 3;
-  inset: clamp(2.15rem, 7vh, 2.75rem) clamp(0.65rem, 2.5vw, 0.85rem)
-    clamp(2.75rem, 9vh, 3.35rem);
+  inset: clamp(1.6rem, calc(10 * var(--mp-u)), 2.75rem) clamp(0.5rem, calc(3 * var(--mp-u)), 0.85rem)
+    clamp(2rem, calc(12 * var(--mp-u)), 3.35rem);
   overflow: hidden;
   pointer-events: auto;
 }
@@ -1868,12 +2046,12 @@
 
 .magazine-page-number {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
+  right: calc(4 * var(--mp-u));
+  bottom: calc(4 * var(--mp-u));
   z-index: 80;
   color: rgba(10, 5, 7, 0.62);
   font-family: var(--font-mono-zine);
-  font-size: 11px;
+  font-size: clamp(9px, calc(2.5 * var(--mp-u)), 11px);
 }
 
 .magazine-sheet-hard .magazine-page-number {
@@ -1908,7 +2086,7 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  gap: clamp(0.35rem, 1.3vh, 0.65rem);
+  gap: clamp(0.3rem, calc(1.8 * var(--mp-u)), 0.65rem);
   overflow: hidden;
 }
 
@@ -1929,7 +2107,7 @@
 }
 
 .oque-polaroid {
-  width: min(100%, 12rem);
+  width: min(100%, calc(48 * var(--mp-u)));
   z-index: 30;
 }
 
@@ -1968,7 +2146,7 @@
   text-align: center;
   color: #fff;
   font-family: var(--font-hand);
-  font-size: 0.72rem;
+  font-size: clamp(0.58rem, calc(2.9 * var(--mp-u)), 0.72rem);
   line-height: 1.2;
   opacity: 0;
   transform: translateY(4px);
@@ -1990,21 +2168,21 @@
   text-align: center;
   color: var(--color-brand-black);
   font-family: var(--font-marker);
-  font-size: clamp(0.5rem, 1.35vh, 0.62rem);
+  font-size: clamp(0.48rem, calc(2.2 * var(--mp-u)), 0.62rem);
   letter-spacing: 0.04em;
   line-height: 1.15;
   text-transform: uppercase;
 }
 
 .magazine-sheet .oque-page.zine-page > .zine-page-inner {
-  padding-top: 1rem;
-  padding-bottom: 1.5rem;
+  padding-top: calc(3.6 * var(--mp-u));
+  padding-bottom: calc(5.5 * var(--mp-u));
 }
 
 .origem-page-layout {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.25rem, 1.2vh, 0.55rem);
+  gap: clamp(0.2rem, calc(1.5 * var(--mp-u)), 0.55rem);
   min-height: 0;
   flex: 1;
   overflow: hidden;
@@ -2012,7 +2190,7 @@
 
 .origem-copy {
   margin: 0;
-  font-size: clamp(10px, 1.55vh, 14px);
+  font-size: var(--mp-sm);
   line-height: 1.36;
 }
 
@@ -2044,7 +2222,7 @@
 }
 
 .origem-art-oeiras {
-  width: min(46%, 9rem);
+  width: min(46%, calc(36 * var(--mp-u)));
   margin-inline: auto;
   aspect-ratio: 2371 / 1647;
 }
@@ -2061,7 +2239,7 @@
 .origem-art-lines {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.05rem, 0.7vh, 0.2rem);
+  gap: clamp(0.05rem, calc(0.9 * var(--mp-u)), 0.2rem);
   width: 100%;
   margin-top: -0.15rem;
 }
@@ -2074,12 +2252,12 @@
   gap: 0.35rem 0.45rem;
   min-width: 0;
   margin: 0;
-  font-size: clamp(10px, 1.55vh, 14px);
+  font-size: var(--mp-sm);
   line-height: 1.3;
 }
 
 .origem-art-line--lame-setup {
-  margin-top: clamp(0.25rem, 2vh, 1.15rem);
+  margin-top: clamp(0.2rem, calc(3 * var(--mp-u)), 1.15rem);
 }
 
 .origem-art-line-label {
@@ -2103,7 +2281,7 @@
   position: relative;
   flex: 0 0 auto;
   display: inline-block;
-  width: min(37%, 8.5rem);
+  width: min(37%, calc(34 * var(--mp-u)));
   aspect-ratio: 1820 / 1050;
   line-height: 0;
   /* no z-index: keep mixer/jbl/vizinhos in one stacking context */
@@ -2123,7 +2301,7 @@
 }
 
 .origem-art-inline--jbl {
-  width: min(28%, 5.8rem);
+  width: min(28%, calc(23 * var(--mp-u)));
   aspect-ratio: 1482 / 1495;
 }
 
@@ -2146,9 +2324,9 @@
 .origem-art-inline--vizinhos {
   position: relative;
   z-index: 3;
-  width: min(30%, 6.4rem);
+  width: min(30%, calc(26 * var(--mp-u)));
   aspect-ratio: 2197 / 1888;
-  margin-top: clamp(-1.35rem, -2vh, -0.5rem);
+  margin-top: clamp(-1.2rem, calc(-4.5 * var(--mp-u)), -0.5rem);
 }
 
 .origem-art-inline--vizinhos:hover {
@@ -2158,7 +2336,7 @@
 .origem-art-line--vizinhos {
   position: relative;
   z-index: 3;
-  margin-top: clamp(-0.35rem, -0.8vh, -0.05rem);
+  margin-top: clamp(-0.3rem, calc(-1.2 * var(--mp-u)), -0.05rem);
 }
 
 .origem-art-line--vizinhos:hover {
@@ -2171,28 +2349,28 @@
 }
 
 .magazine-sheet .origem-page.zine-page > .zine-page-inner {
-  padding-top: 1.1rem;
-  padding-bottom: 1.6rem;
+  padding-top: calc(4 * var(--mp-u));
+  padding-bottom: calc(5.8 * var(--mp-u));
 }
 
 .about-lead {
-  font-size: 13px;
+  font-size: var(--mp-sm);
   line-height: 1.45;
 }
 
 .about-blocks {
   display: grid;
-  gap: 12px;
+  gap: clamp(8px, calc(2.7 * var(--mp-u)), 12px);
 }
 
 .about-block {
   display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 12px;
+  grid-template-columns: clamp(28px, calc(7.7 * var(--mp-u)), 34px) 1fr;
+  gap: clamp(8px, calc(2.7 * var(--mp-u)), 12px);
   align-items: start;
   border: 3px solid var(--color-brand-black);
   background: var(--color-brand-pink);
-  padding: 12px 14px 13px;
+  padding: clamp(8px, calc(2.7 * var(--mp-u)), 12px) clamp(10px, calc(3.2 * var(--mp-u)), 14px) clamp(9px, calc(3 * var(--mp-u)), 13px);
   box-shadow: 5px 6px 0 var(--color-brand-black);
   transform: rotate(-0.7deg);
 }
@@ -2204,20 +2382,20 @@
 
 .about-block > span {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: clamp(26px, calc(7.3 * var(--mp-u)), 32px);
+  height: clamp(26px, calc(7.3 * var(--mp-u)), 32px);
   place-items: center;
   border: 2px solid var(--color-brand-black);
   background: var(--color-brand-accent);
   font-family: var(--font-mono-zine);
-  font-size: 11px;
+  font-size: var(--mp-xs);
   font-weight: 800;
 }
 
 .about-block h3 {
   margin: 0 0 4px;
   font-family: var(--font-serif-display);
-  font-size: 18px;
+  font-size: var(--mp-lg);
   font-style: italic;
   font-weight: 900;
   line-height: 1;
@@ -2227,333 +2405,221 @@
 .about-block p {
   margin: 0;
   font-family: var(--font-mono-zine);
-  font-size: 12px;
+  font-size: var(--mp-sm);
   line-height: 1.45;
 }
 
 @media (max-height: 760px) {
-  .magazine-sheet .zine-page > .zine-page-inner {
-    padding-top: 18px;
-    padding-right: 12px;
-    padding-left: 12px;
-    padding-bottom: 24px;
-  }
-
-  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-    padding-top: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-    margin-top: 0.9rem;
-  }
-
   .about-photo-card {
-    max-width: min(78%, 300px);
+    max-width: min(78%, calc(68 * var(--mp-u)));
   }
 
   .magazine-index-page h2 {
-    margin-top: 8px;
+    margin-top: calc(1.8 * var(--mp-u));
   }
 
   .magazine-index-list {
-    margin-top: 14px;
-    gap: 5px;
+    margin-top: calc(3.2 * var(--mp-u));
+    gap: calc(1.1 * var(--mp-u));
   }
 
   .magazine-index-item {
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: calc(1.1 * var(--mp-u));
+    padding-bottom: calc(1.1 * var(--mp-u));
     border-width: 2px;
     box-shadow: 3px 3px 0 0 #000;
   }
 
   .magazine-index-item > span:first-child {
-    font-size: 12px;
+    font-size: var(--mp-sm);
   }
 }
 
-@media (max-width: 980px), (pointer: coarse), (hover: none) {
-  .magazine-stage {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, auto) auto;
-    align-content: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-  }
+.magazine-stage[data-markers="bands"] .magazine-markers-mobile-top {
+  display: block;
+  width: min(100%, var(--magazine-book-w), 680px);
+  align-self: end;
+  justify-self: center;
+}
 
-  .magazine-markers-mobile-top {
-    display: block;
-    width: min(100%, 680px);
-    align-self: end;
-    justify-self: center;
-  }
+.magazine-stage[data-markers="bands"] .magazine-markers-mobile-top .magazine-markers {
+  display: block;
+  width: 100%;
+}
 
-  .magazine-markers-mobile-top .magazine-markers {
-    display: block;
-    width: 100%;
-  }
+.magazine-stage[data-markers="bands"] .magazine-markers-mobile-top .magazine-marker-list {
+  justify-content: center;
+  padding-block: 2px 3px;
+}
 
-  .magazine-markers-mobile-top .magazine-marker-list {
-    justify-content: center;
-    padding-block: 2px 3px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-markers-mobile-top .magazine-lang-stack {
+  display: none;
+}
 
-  .magazine-markers-mobile-top .magazine-lang-stack {
-    display: none;
-  }
+.magazine-stage[data-markers="bands"] .magazine-book-wrap {
+  margin-top: 0;
+  justify-self: center;
+  touch-action: pan-y;
+}
 
-  .magazine-book-wrap {
-    --magazine-page-w: min(
-      440px,
-      calc(100vw - 20px),
-      calc((100svh - 132px) * 520 / 720)
-    );
-    max-height: calc(100svh - 132px);
-    margin-top: 0;
-    justify-self: center;
-    touch-action: pan-y;
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-page-tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 220;
+  display: block;
+  width: 34%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  touch-action: manipulation;
+}
 
-  .magazine-page-tap-zone {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 220;
-    display: block;
-    width: 34%;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    touch-action: manipulation;
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-page-tap-zone--prev {
+  left: 0;
+}
 
-  .magazine-page-tap-zone--prev {
-    left: 0;
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-page-tap-zone--next {
+  right: 0;
+}
 
-  .magazine-page-tap-zone--next {
-    right: 0;
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-page-tap-zone:focus-visible {
+  outline: 2px solid var(--color-brand-accent);
+  outline-offset: -6px;
+}
 
-  .magazine-page-tap-zone:focus-visible {
-    outline: 2px solid var(--color-brand-accent);
-    outline-offset: -6px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-markers {
+  z-index: 24;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  height: auto;
+  max-height: none;
+  margin-left: 0;
+  width: min(100%, var(--magazine-book-w), 680px);
+  align-self: center;
+  justify-self: center;
+  align-items: end;
+}
 
-  .magazine-markers {
-    z-index: 24;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    height: auto;
-    max-height: none;
-    margin-left: 0;
-    width: min(100%, 680px);
-    align-self: center;
-    justify-self: center;
-    align-items: end;
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker-list {
+  flex-direction: row;
+  flex: 0 1 auto;
+  max-height: none;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 7px;
+  align-items: flex-end;
+  mask-image: none;
+  -webkit-mask-image: none;
+  scroll-snap-type: x proximity;
+  justify-content: center;
+}
 
-  .magazine-marker-list {
-    flex-direction: row;
-    flex: 0 1 auto;
-    max-height: none;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 4px 4px 7px;
-    align-items: flex-end;
-    mask-image: none;
-    -webkit-mask-image: none;
-    scroll-snap-type: x proximity;
-    justify-content: center;
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker {
+  flex: 0 0 clamp(58px, 13vw, 104px);
+  max-width: 104px;
+  min-height: 34px;
+  padding: 6px 7px 6px 22px;
+  border-left-width: 2px;
+  font-size: clamp(6.4px, 1.45vw, 8.2px);
+  line-height: 1.05;
+  box-shadow:
+    inset 30px 0 12px rgba(0, 0, 0, 0.22),
+    3px 3px 0 rgba(0, 0, 0, 0.82);
+  scroll-snap-align: center;
+  transform: translateY(0) rotate(-0.8deg);
+}
 
-  .magazine-marker {
-    flex: 0 0 clamp(58px, 13vw, 104px);
-    max-width: 104px;
-    min-height: 34px;
-    padding: 6px 7px 6px 22px;
-    border-left-width: 2px;
-    font-size: clamp(6.4px, 1.45vw, 8.2px);
-    line-height: 1.05;
-    box-shadow:
-      inset 30px 0 12px rgba(0, 0, 0, 0.22),
-      3px 3px 0 rgba(0, 0, 0, 0.82);
-    scroll-snap-align: center;
-    transform: translateY(0) rotate(-0.8deg);
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker::before {
+  left: 17px;
+}
 
-  .magazine-marker::before {
-    left: 17px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker::after {
+  left: 2px;
+  top: 3px;
+  bottom: 3px;
+  width: 18px;
+}
 
-  .magazine-marker::after {
-    left: 2px;
-    top: 3px;
-    bottom: 3px;
-    width: 18px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker:nth-child(2n),
+.magazine-stage[data-markers="bands"] .magazine-marker:nth-child(3n),
+.magazine-stage[data-markers="bands"] .magazine-marker:nth-child(5n) {
+  transform: translateY(0) rotate(0.7deg);
+}
 
-  .magazine-marker:nth-child(2n),
-  .magazine-marker:nth-child(3n),
-  .magazine-marker:nth-child(5n) {
-    transform: translateY(0) rotate(0.7deg);
-  }
+.magazine-stage[data-markers="bands"] .magazine-marker.is-active {
+  transform: translateY(-4px) rotate(-0.8deg);
+}
 
-  .magazine-marker:hover,
-  .magazine-marker.is-active {
+@media (hover: hover) and (pointer: fine) {
+  .magazine-stage[data-markers="bands"] .magazine-marker:hover {
     transform: translateY(-4px) rotate(-0.8deg);
   }
-
-  .magazine-lang-stack {
-    align-self: end;
-    gap: 4px;
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: 0;
-  }
-
-  .magazine-lang {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    padding: 2px;
-    margin-top: 0;
-    transform: scale(0.82);
-    transform-origin: center bottom;
-  }
-
-  .magazine-lang button {
-    justify-content: center;
-    padding-inline: 4px;
-  }
-
-  .magazine-book .stf__wrapper,
-  .magazine-book .stf__block {
-    height: 100% !important;
-  }
-
-  .magazine-sheet .zine-page > .zine-page-inner {
-    padding: 16px 10px 24px;
-  }
-
-  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-    padding-top: 0.9rem;
-    margin-bottom: 0.9rem;
-  }
-
-  .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) + * {
-    margin-top: 0.8rem;
-  }
-
-  .about-photo-card {
-    width: min(82%, 270px) !important;
-  }
-
-  .origem-copy,
-  .origem-art-line {
-    font-size: clamp(9px, 2.55vw, 12px);
-  }
-
-  .magazine-index-page h2 {
-    margin-top: 8px;
-  }
-
-  .magazine-index-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: 12px;
-    gap: 8px 7px;
-  }
-
-  .magazine-index-item {
-    border-width: 2px;
-    min-height: 38px;
-    gap: 4px;
-    padding: 5px 7px;
-    box-shadow: 3px 3px 0 0 #000;
-  }
-
-  .magazine-index-item > span:first-child {
-    font-size: 10px;
-    line-height: 1.05;
-  }
-
-  .magazine-index-item > span:last-child {
-    align-self: end;
-    font-size: 9px;
-  }
-
-  .contact-channel-icon {
-    width: 68px;
-    height: 68px;
-  }
-
-  .contact-channel-icon--instagram {
-    width: 62px;
-    height: 62px;
-  }
-
-  .contact-channel-icon--discord {
-    width: 74px;
-    height: 74px;
-  }
-
-  .contactos-icon-column {
-    gap: 0.75rem;
-  }
-
-  .contactos-popup {
-    width: min(15rem, calc(100% - 1rem));
-  }
-
-  .contactos-popup .contactos-detail-value {
-    margin-top: 1.65rem;
-  }
-
-  .contactos-detail-value {
-    font-size: 0.9rem;
-  }
-
 }
 
-@media (max-width: 980px) and (hover: hover) and (pointer: fine) and (orientation: landscape) {
-  .magazine-stage {
-    gap: 6px;
-    padding-block: 6px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-lang-stack {
+  align-self: end;
+  gap: 4px;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+}
 
-  .magazine-book-wrap {
-    --magazine-page-w: min(
-      480px,
-      calc(100vw - 24px),
-      calc((100svh - 108px) * 520 / 720)
-    );
-    max-height: calc(100svh - 108px);
-  }
+.magazine-stage[data-markers="bands"] .magazine-lang {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px;
+  margin-top: 0;
+  transform: scale(0.82);
+  transform-origin: center bottom;
+}
 
-  .magazine-markers {
-    width: min(var(--magazine-page-w), calc(100vw - 24px));
-    gap: 5px;
-  }
+.magazine-stage[data-markers="bands"] .magazine-lang button {
+  justify-content: center;
+  padding-inline: 4px;
+}
 
-  .magazine-marker-list {
-    gap: 5px;
-    padding-block: 2px 4px;
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-book .stf__wrapper,
+.magazine-stage[data-book-mode="portrait"] .magazine-book .stf__block {
+  height: 100% !important;
+}
 
-  .magazine-marker {
-    flex-basis: clamp(56px, 10vw, 96px);
-    max-width: 96px;
-    min-height: 31px;
-    padding-block: 5px;
-    font-size: clamp(6px, 1vw, 7.6px);
-  }
+.magazine-stage[data-book-mode="portrait"] .about-photo-card {
+  width: min(82%, calc(68 * var(--mp-u))) !important;
+}
 
-  .magazine-lang {
-    transform: scale(0.74);
-  }
+.magazine-stage[data-book-mode="portrait"] .magazine-index-page h2 {
+  margin-top: calc(1.8 * var(--mp-u));
+}
+
+.magazine-stage[data-book-mode="portrait"] .magazine-index-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: calc(2.7 * var(--mp-u));
+  gap: calc(1.8 * var(--mp-u)) calc(1.6 * var(--mp-u));
+}
+
+.magazine-stage[data-book-mode="portrait"] .magazine-index-item {
+  border-width: 2px;
+  min-height: clamp(32px, calc(8.6 * var(--mp-u)), 38px);
+  gap: calc(0.9 * var(--mp-u));
+  padding: calc(1.1 * var(--mp-u)) calc(1.6 * var(--mp-u));
+  box-shadow: 3px 3px 0 0 #000;
+}
+
+.magazine-stage[data-book-mode="portrait"] .magazine-index-item > span:first-child {
+  font-size: var(--mp-xs);
+  line-height: 1.05;
+}
+
+.magazine-stage[data-book-mode="portrait"] .magazine-index-item > span:last-child {
+  align-self: end;
+  font-size: var(--mp-xs);
+}
+
+.magazine-stage[data-book-mode="portrait"] .contactos-popup .contactos-detail-value {
+  margin-top: 1.65rem;
 }

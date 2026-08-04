@@ -4,15 +4,17 @@ Site da Associação 641: estética de revista analógica / flipbook, notícias 
 
 Built with [TanStack Start](https://tanstack.com/start) + Vite. Originally scaffolded with [Lovable](https://lovable.dev).
 
-**Live site (GitHub Pages):** https://mr-arpg.github.io/analogue-archive-hub/
+**Live site (GitHub Pages):** https://seisquatroum.github.io/website/
+
+**Repo:** https://github.com/seisquatroum/website
 
 ## Development
 
 Need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone https://github.com/mr-arpg/analogue-archive-hub.git
-cd analogue-archive-hub
+git clone https://github.com/seisquatroum/website.git
+cd website
 npm i
 npm run dev
 ```
@@ -21,7 +23,7 @@ npm run dev
 
 Push to `main` triggers [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
 
-- Build uses `GITHUB_PAGES=true` → base path `/analogue-archive-hub/`, static SPA shell in `dist/client`
+- Build uses `GITHUB_PAGES=true` → base path `/website/`, static SPA shell in `dist/client`
 - Workflow copies `index.html` → `404.html` for client-side routing fallback
 - Repo Settings → Pages → Source must be **GitHub Actions**
 

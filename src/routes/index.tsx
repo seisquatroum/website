@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
 import {
   forwardRef,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -14,6 +15,11 @@ import { ChevronLeft, ChevronRight, Copy, ExternalLink, Trash2, X } from "lucide
 import { site, t, type Locale } from "@/content/site";
 import { getNews } from "@/content/news/loadNews";
 import { useI18n } from "@/lib/i18n";
+import {
+  chooseBookMode,
+  sameMagazineSpread,
+  type MarkerAxis,
+} from "@/lib/magazineLayout";
 import { SiteNav, type NavItem } from "@/components/SiteNav";
 import logoWhiteAsset from "@/assets/641-logo-white.png";
 import sixDigitAsset from "@/assets/six6.png";
@@ -123,7 +129,7 @@ function hash(str: string) {
 function CutoutText({
   children,
   className = "",
-  size = "text-3xl sm:text-4xl md:text-5xl",
+  size = "mp-3xl",
   gap = "gap-0",
 }: {
   children: string;
@@ -216,7 +222,7 @@ const CutoutButton = forwardRef<HTMLElement, CutoutButtonProps>(function CutoutB
     rel,
     variant = "accent",
     className = "",
-    size = "text-lg sm:text-xl",
+    size = "mp-lg",
     ...rest
   },
   ref,
@@ -530,49 +536,49 @@ function SiteLogoDrift({
 }: {
   driftRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const rows = [
-    { dir: "left" as const, speed: 1, size: "h-10" },
-    { dir: "right" as const, speed: 0.82, size: "h-8" },
-    { dir: "left" as const, speed: 1.18, size: "h-12" },
-    { dir: "right" as const, speed: 0.74, size: "h-7" },
-    { dir: "left" as const, speed: 0.95, size: "h-9" },
-    { dir: "right" as const, speed: 1.08, size: "h-11" },
-    { dir: "left" as const, speed: 0.88, size: "h-8" },
-    { dir: "right" as const, speed: 1.12, size: "h-10" },
-  ];
+  // Dense enough that short landscape viewports still show full logos
+  // (sparse space-evenly rows looked "cut" at the screen edges).
+  const sizes = ["h-7", "h-8", "h-9", "h-10", "h-11", "h-8", "h-12", "h-9"] as const;
+  const rows = Array.from({ length: 22 }, (_, i) => ({
+    dir: (i % 2 === 0 ? "left" : "right") as "left" | "right",
+    speed: 0.72 + ((i * 17) % 50) / 100,
+    size: sizes[i % sizes.length],
+  }));
   // Two identical tiles — each carries its own trailing gap so the seam matches.
   // A repeat tile must be wider than the 160vw row; otherwise translating it
   // by almost one tile width exposes empty space on the right.
   const logosPerTile = 30;
 
   return (
-    <div ref={driftRef} className="site-logo-drift" aria-hidden="true">
-      {rows.map((row, i) => {
-        const tile = (copy: number) => (
-          <div key={copy} className="site-logo-drift-tile">
-            {Array.from({ length: logosPerTile }, (_, j) => (
-              <img
-                key={j}
-                src={logoWhiteAsset}
-                alt=""
-                className={`site-logo-drift-item ${row.size}`}
-              />
-            ))}
-          </div>
-        );
-
-        return (
-          <div key={i} className={`site-logo-drift-row site-logo-drift-${row.dir}`}>
-            <div
-              className="site-logo-drift-track"
-              data-drift-speed={row.speed * (row.dir === "left" ? 1 : -1)}
-            >
-              {tile(0)}
-              {tile(1)}
+    <div className="site-logo-drift" aria-hidden="true">
+      <div ref={driftRef} className="site-logo-drift-inner">
+        {rows.map((row, i) => {
+          const tile = (copy: number) => (
+            <div key={copy} className="site-logo-drift-tile">
+              {Array.from({ length: logosPerTile }, (_, j) => (
+                <img
+                  key={j}
+                  src={logoWhiteAsset}
+                  alt=""
+                  className={`site-logo-drift-item ${row.size}`}
+                />
+              ))}
             </div>
-          </div>
-        );
-      })}
+          );
+
+          return (
+            <div key={i} className={`site-logo-drift-row site-logo-drift-${row.dir}`}>
+              <div
+                className="site-logo-drift-track"
+                data-drift-speed={row.speed * (row.dir === "left" ? 1 : -1)}
+              >
+                {tile(0)}
+                {tile(1)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -587,7 +593,7 @@ function Cover({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
       <div className="magazine-cover-layout">
         <div className="cover-hero-cluster">
           <h1 className="cover-title leading-[1]">
-            <CutoutText size="text-2xl sm:text-3xl">
+            <CutoutText size="mp-2xl">
               {t(site.hero.title, locale)}
             </CutoutText>
           </h1>
@@ -609,7 +615,7 @@ function SobreA({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
       <WashiTape variant="yellow" className="right-8 top-4 h-4 w-24 rotate-6" />
       <div className="flex flex-col">
         <h2 className="mb-3 -rotate-1">
-          <CutoutText size="text-2xl sm:text-3xl">
+          <CutoutText size="mp-2xl">
             {t(site.sobre.kicker, locale)}
           </CutoutText>
         </h2>
@@ -676,7 +682,7 @@ function OQuePage({ locale }: { locale: Locale }) {
       <WashiTape variant="yellow" className="left-8 top-2 h-4 w-24 -rotate-3" />
       <div className="oque-page-layout">
         <h3 className="oque-page-title -rotate-1">
-          <CutoutText size="text-xl sm:text-2xl">
+          <CutoutText size="mp-xl">
             {t(site.oQue.title, locale)}
           </CutoutText>
         </h3>
@@ -797,7 +803,7 @@ function NewsPage({
       <div className="flex min-h-0 flex-1 flex-col">
         {title && (
           <h2 className="mb-2 shrink-0 -rotate-1">
-            <CutoutText size="text-xl sm:text-2xl">{title}</CutoutText>
+            <CutoutText size="mp-xl">{title}</CutoutText>
           </h2>
         )}
 
@@ -1071,7 +1077,7 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
       <WashiTape variant="yellow" className="right-6 top-2 h-4 w-24 rotate-6" />
       <div className="flex flex-col">
         <h3 className="-rotate-1">
-          <CutoutText size="text-xl sm:text-2xl">
+          <CutoutText size="mp-xl">
             {locale === "pt" ? "Junta-te!" : "Join us!"}
           </CutoutText>
         </h3>
@@ -1084,7 +1090,7 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
           <CutoutButton
             href="#contactos"
             variant="accent"
-            size="text-[0.62rem] sm:text-xs"
+            size="mp-xs"
             className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
           >
             {locale === "pt" ? "FALA CONNOSCO" : "GET IN TOUCH"}
@@ -1094,7 +1100,7 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
             target="_blank"
             rel="noreferrer"
             variant="black"
-            size="text-[0.58rem] sm:text-[0.62rem]"
+            size="mp-xs"
             className="!gap-1 !px-2 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-2.5 sm:!py-1.5 [&>span:last-child]:!text-xs"
           >
             {t(site.sobre.regulamentoLabel, locale)}
@@ -1121,19 +1127,19 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
       <WashiTape variant="yellow" className="-top-2 right-8 h-5 w-24 rotate-6" />
       <div className="flex flex-col">
         <h2 className="-rotate-1">
-          <CutoutText size="text-lg sm:text-xl">{t(site.banda.kicker, locale)}</CutoutText>
+          <CutoutText size="mp-lg">{t(site.banda.kicker, locale)}</CutoutText>
         </h2>
-        <div className="mt-3 flex items-start gap-4">
+        <div className="banda-hero-row mt-3 flex items-start gap-3">
           <div className="inline-block max-w-full shrink-0 -rotate-2">
             <img
               src={madameGPhoto}
               alt=""
-              className="block w-56 object-contain sticker-shadow sm:w-64 md:w-52 lg:w-48"
+              className="banda-photo block object-contain sticker-shadow"
               loading="lazy"
             />
           </div>
           <div className="banda-side-column min-w-0 pt-1">
-            <h3 className="font-poppins text-2xl font-semibold lowercase leading-none text-brand-black sm:text-3xl">
+            <h3 className="banda-name font-poppins font-semibold lowercase text-brand-black">
               {site.banda.name}
             </h3>
             <p className="mt-1 font-hand text-sm leading-snug text-brand-magenta-ink/80">
@@ -1180,7 +1186,7 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
           {t(c.kicker, locale)}
         </span>
         <h3 className="mt-3">
-          <CutoutText size="text-xl sm:text-2xl">{t(c.title, locale)}</CutoutText>
+          <CutoutText size="mp-xl">{t(c.title, locale)}</CutoutText>
         </h3>
         <p className="mt-3 font-mono-zine text-[10px] uppercase tracking-widest text-brand-accent">
           {t(c.deadline, locale)}
@@ -1191,7 +1197,7 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
         <div className="mt-auto flex flex-col items-start gap-3 pt-10">
           <Dialog onOpenChange={(open) => { if (!open) setShowComingSoon(false); }}>
             <DialogTrigger asChild>
-              <CutoutButton variant="accent" size="text-lg">
+              <CutoutButton variant="accent" size="mp-lg">
                 {t(c.ctaLabel, locale)}
               </CutoutButton>
             </DialogTrigger>
@@ -1205,7 +1211,7 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                     </span>
                     <DialogTitle asChild>
                       <h4 className="mt-3 text-left">
-                        <CutoutText size="text-2xl sm:text-3xl">{t(c.title, locale)}</CutoutText>
+                        <CutoutText size="mp-2xl">{t(c.title, locale)}</CutoutText>
                       </h4>
                     </DialogTitle>
                   </DialogHeader>
@@ -1405,7 +1411,7 @@ function ParceirosPage({ locale, sectionId }: { locale: Locale; sectionId?: stri
     <ZPage bg="magenta" sectionId={sectionId} className="parceiros-page">
       <div className="parceiros-page-layout flex h-full min-h-0 flex-col">
         <h2 className="mb-4 -rotate-1">
-          <CutoutText size="text-xl sm:text-2xl">
+          <CutoutText size="mp-xl">
             {t(site.parceiros.kicker, locale)}
           </CutoutText>
         </h2>
@@ -1503,12 +1509,12 @@ function DrawMagazinePage({
     if (!wrap || !canvas) return;
 
     const sync = () => {
-      const rect = wrap.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
+      // Layout size (pre CSS transform) — parent .magazine-sheet-scale uses scale().
+      const width = Math.floor(wrap.clientWidth);
+      const height = Math.floor(wrap.clientHeight);
+      if (width <= 0 || height <= 0) return;
 
       const dpr = window.devicePixelRatio || 1;
-      const width = Math.floor(rect.width);
-      const height = Math.floor(rect.height);
 
       if (
         logicalSizeRef.current.width === width &&
@@ -1525,8 +1531,9 @@ function DrawMagazinePage({
       logicalSizeRef.current = { width, height };
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      // Keep CSS size at 100% of wrap so parent scale() is applied once.
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -1562,24 +1569,26 @@ function DrawMagazinePage({
 
     const pointFrom = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
+      // Map screen coords through CSS transform scale into layout/canvas space.
+      const scaleX = canvas.clientWidth / Math.max(rect.width, 0.001);
+      const scaleY = canvas.clientHeight / Math.max(rect.height, 0.001);
       return {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
       };
     };
 
     const bootIfNeeded = () => {
       if (canvas.width > 0 && canvas.height > 0) return getDrawContext();
-      const rect = wrap.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return null;
+      const width = Math.floor(wrap.clientWidth);
+      const height = Math.floor(wrap.clientHeight);
+      if (width <= 0 || height <= 0) return null;
       const dpr = window.devicePixelRatio || 1;
-      const width = Math.floor(rect.width);
-      const height = Math.floor(rect.height);
       logicalSizeRef.current = { width, height };
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2235,9 +2244,6 @@ type MagazineMarkerItem = NavItem & {
   keys: string[];
 };
 
-const COMPACT_BOOK_MEDIA_QUERY =
-  "(max-width: 980px), (pointer: coarse), (hover: none)";
-
 const MagazineSheet = forwardRef<
   HTMLDivElement,
   {
@@ -2255,7 +2261,9 @@ const MagazineSheet = forwardRef<
       data-density={hard ? "hard" : "soft"}
     >
       <div className="magazine-sheet-face">
-        {children}
+        {/* Fixed design canvas (440×~610) scaled to the live sheet — keeps
+            type/images in proportion and beats browser min font-size. */}
+        <div className="magazine-sheet-scale">{children}</div>
         {footer && <span className="magazine-page-number">{footer}</span>}
       </div>
     </div>
@@ -2269,7 +2277,7 @@ function SobrePhotoPage({ locale }: { locale: Locale }) {
       <WashiTape variant="yellow" className="right-8 top-4 h-4 w-24 rotate-6" />
       <div className="magazine-index-page flex h-full flex-col">
         <h2 className="mb-4 -rotate-1">
-          <CutoutText size="text-2xl sm:text-3xl">{locale === "pt" ? "Porquê?" : "Why?"}</CutoutText>
+          <CutoutText size="mp-2xl">{locale === "pt" ? "Porquê?" : "Why?"}</CutoutText>
         </h2>
         <div className="mb-5 grid gap-3 text-[14px] leading-relaxed">
           <p>
@@ -2386,7 +2394,11 @@ function MagazineMarkers({
             <button
               key={item.key}
               type="button"
-              onClick={() => onNavigate(item)}
+              onClick={(event) => {
+                onNavigate(item);
+                // Drop sticky :hover/focus on touch so only .is-active paints.
+                event.currentTarget.blur();
+              }}
               ref={isActive ? activeMarkerRef : undefined}
               className={`magazine-marker ${isActive ? "is-active" : ""}`}
               aria-current={isActive ? "page" : undefined}
@@ -2413,6 +2425,7 @@ function MagazineIndex() {
   const { locale } = useI18n();
   const bookRef = useRef<FlipBookHandle | null>(null);
   const bookWrapRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLElement | null>(null);
   const compactTurnLocked = useRef(false);
   const compactSwipeRef = useRef<{
     pointerId: number;
@@ -2426,45 +2439,150 @@ function MagazineIndex() {
   const logoDriftOffset = useRef(0);
   const logoDriftFrame = useRef<number | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [activeMarkerKey, setActiveMarkerKey] = useState("cover");
+  const pinnedMarkerPageRef = useRef<number | null>(null);
+  const applyPageChangeRef = useRef<(page: number) => void>(() => {});
   const [showFlipHint, setShowFlipHint] = useState(true);
   const [isFlipping, setIsFlipping] = useState(false);
   const [usePortrait, setUsePortrait] = useState(true);
+  const [markerAxis, setMarkerAxis] = useState<MarkerAxis>("bands");
+  const [bookSize, setBookSize] = useState({ w: 320, h: 443 });
   const flipDurationMs = usePortrait ? 440 : 720;
   const bookLayoutKey = `${locale}-${usePortrait ? "portrait" : "spread"}`;
+  const markersOnBands = markerAxis === "bands";
+  const layoutPortraitRef = useRef(usePortrait);
+  const layoutMarkerRef = useRef(markerAxis);
+  const layoutSizeRef = useRef(bookSize);
+  const syncRafRef = useRef<number | null>(null);
+  const flipUpdateTimerRef = useRef<number | null>(null);
+  const measureGeometryRef = useRef<() => void>(() => {});
+  const FLIP_UPDATE_DEBOUNCE_MS = 160;
 
   const refreshBookLayout = useCallback(() => {
     window.requestAnimationFrame(() => {
-      bookRef.current?.pageFlip().update();
-      window.setTimeout(() => {
-        bookRef.current?.pageFlip().update();
-      }, 80);
+      try {
+        bookRef.current?.pageFlip()?.update();
+      } catch {
+        /* ignore */
+      }
+    });
+  }, []);
+
+  const scheduleFlipUpdate = useCallback(() => {
+    if (flipUpdateTimerRef.current !== null) {
+      window.clearTimeout(flipUpdateTimerRef.current);
+    }
+    flipUpdateTimerRef.current = window.setTimeout(() => {
+      flipUpdateTimerRef.current = null;
+      refreshBookLayout();
+    }, FLIP_UPDATE_DEBOUNCE_MS);
+  }, [refreshBookLayout]);
+
+  const measureAndApplyGeometry = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const styles = window.getComputedStyle(stage);
+    const padX =
+      (parseFloat(styles.paddingLeft) || 0) +
+      (parseFloat(styles.paddingRight) || 0);
+    const padY =
+      (parseFloat(styles.paddingTop) || 0) +
+      (parseFloat(styles.paddingBottom) || 0);
+    // Prefer visualViewport/inner — stage 100svh can lag on orientation change.
+    const vv = window.visualViewport;
+    const viewportW = vv?.width ?? window.innerWidth;
+    const viewportH = vv?.height ?? window.innerHeight;
+    const vw = Math.max(1, viewportW - padX);
+    const vh = Math.max(1, viewportH - padY);
+    const layout = chooseBookMode(vw, vh);
+    const nextPortrait = !layout.useSpread;
+    const nextW = Math.round(layout.fit.width * 100) / 100;
+    const nextH = Math.round(layout.fit.height * 100) / 100;
+
+    const prevPortrait = layoutPortraitRef.current;
+    const prevMarkers = layoutMarkerRef.current;
+    const prevSize = layoutSizeRef.current;
+    const modeChanged = prevPortrait !== nextPortrait;
+    const markersChanged = prevMarkers !== layout.markerAxis;
+    const sizeChanged =
+      Math.abs(prevSize.w - nextW) >= 0.5 || Math.abs(prevSize.h - nextH) >= 0.5;
+    const largeJump =
+      sizeChanged &&
+      (Math.abs(prevSize.w - nextW) > Math.max(40, prevSize.w * 0.12) ||
+        Math.abs(prevSize.h - nextH) > Math.max(40, prevSize.h * 0.12));
+
+    // Cheap path: CSS custom properties every frame (no page-flip).
+    if (sizeChanged) {
+      stage.style.setProperty("--magazine-book-w", `${nextW}px`);
+      stage.style.setProperty("--magazine-book-h", `${nextH}px`);
+      layoutSizeRef.current = { w: nextW, h: nextH };
+      setBookSize({ w: nextW, h: nextH });
+    }
+
+    // Mode / marker chrome — only when geometry decision changes.
+    if (modeChanged) {
+      layoutPortraitRef.current = nextPortrait;
+      setUsePortrait(nextPortrait);
+    }
+    if (markersChanged) {
+      layoutMarkerRef.current = layout.markerAxis;
+      setMarkerAxis(layout.markerAxis);
+      // Stage border-box often stays 100svh — ResizeObserver won't see the
+      // padding/grid change. Remeasure once after styles apply.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          measureGeometryRef.current();
+        });
+      });
+    }
+
+    // Expensive path: skip no-ops. Large jumps (rotate) update flip immediately;
+    // small drag resizes debounce so we don't thrash page-flip.
+    // Mode remount (bookLayoutKey) already rebuilds the flipbook.
+    if ((sizeChanged || markersChanged) && !modeChanged) {
+      if (largeJump) {
+        refreshBookLayout();
+      }
+      scheduleFlipUpdate();
+    }
+  }, [refreshBookLayout, scheduleFlipUpdate]);
+
+  measureGeometryRef.current = measureAndApplyGeometry;
+
+  const requestGeometrySync = useCallback(() => {
+    if (syncRafRef.current !== null) return;
+    syncRafRef.current = window.requestAnimationFrame(() => {
+      syncRafRef.current = null;
+      measureGeometryRef.current();
     });
   }, []);
 
   useEffect(() => {
-    const media = window.matchMedia(COMPACT_BOOK_MEDIA_QUERY);
-    const syncLayout = () => {
-      setUsePortrait(media.matches);
-      refreshBookLayout();
-    };
+    const stage = stageRef.current;
+    if (!stage) return;
 
-    syncLayout();
-    media.addEventListener("change", syncLayout);
-    return () => media.removeEventListener("change", syncLayout);
-  }, [refreshBookLayout]);
-
-  useEffect(() => {
-    const wrap = bookWrapRef.current;
-    if (!wrap) return;
-
-    const observer = new ResizeObserver(refreshBookLayout);
-    observer.observe(wrap);
-    window.addEventListener("resize", refreshBookLayout);
+    measureAndApplyGeometry();
+    const observer = new ResizeObserver(requestGeometrySync);
+    observer.observe(stage);
+    window.addEventListener("resize", requestGeometrySync);
+    window.addEventListener("orientationchange", requestGeometrySync);
+    window.visualViewport?.addEventListener("resize", requestGeometrySync);
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", refreshBookLayout);
+      window.removeEventListener("resize", requestGeometrySync);
+      window.removeEventListener("orientationchange", requestGeometrySync);
+      window.visualViewport?.removeEventListener("resize", requestGeometrySync);
+      if (syncRafRef.current !== null) {
+        window.cancelAnimationFrame(syncRafRef.current);
+        syncRafRef.current = null;
+      }
+      if (flipUpdateTimerRef.current !== null) {
+        window.clearTimeout(flipUpdateTimerRef.current);
+        flipUpdateTimerRef.current = null;
+      }
     };
-  }, [refreshBookLayout]);
+  }, [measureAndApplyGeometry, requestGeometrySync]);
 
   const flipTo = useCallback((page: number) => {
     // flip() only advances one spread; turnToPage jumps directly (markers + in-book hash links)
@@ -2531,7 +2649,7 @@ function MagazineIndex() {
 
         pageFlip.turnToPage?.(fallbackPage);
         pageFlip.update?.();
-        setCurrentPage(fallbackPage);
+        applyPageChangeRef.current(fallbackPage);
       }, Math.min(260, flipDurationMs - 80));
 
       window.setTimeout(() => {
@@ -2539,7 +2657,7 @@ function MagazineIndex() {
         pageFlip?.update();
         const landedPage = pageFlip?.getCurrentPageIndex?.();
         if (typeof landedPage === "number") {
-          setCurrentPage(landedPage);
+          applyPageChangeRef.current(landedPage);
         }
         compactTurnLocked.current = false;
         setIsFlipping(false);
@@ -2577,7 +2695,7 @@ function MagazineIndex() {
 
   const handleCompactBookPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!window.matchMedia(COMPACT_BOOK_MEDIA_QUERY).matches) return;
+      if (!usePortrait) return;
 
       const target = event.target as HTMLElement | null;
       if (!isCompactSwipeTarget(target)) {
@@ -2597,7 +2715,7 @@ function MagazineIndex() {
         time: window.performance.now(),
       };
     },
-    [isCompactSwipeTarget],
+    [isCompactSwipeTarget, usePortrait],
   );
 
   const handleCompactBookPointerUp = useCallback(
@@ -2606,7 +2724,7 @@ function MagazineIndex() {
       compactSwipeRef.current = null;
 
       if (!swipe || swipe.pointerId !== event.pointerId) return;
-      if (!window.matchMedia(COMPACT_BOOK_MEDIA_QUERY).matches) return;
+      if (!usePortrait) return;
 
       const dx = event.clientX - swipe.x;
       const dy = event.clientY - swipe.y;
@@ -2622,7 +2740,7 @@ function MagazineIndex() {
       event.stopPropagation();
       turnCompactPage(dx < 0 ? 1 : -1);
     },
-    [turnCompactPage],
+    [turnCompactPage, usePortrait],
   );
 
   const handleCompactBookPointerCancel = useCallback(() => {
@@ -2816,6 +2934,33 @@ function MagazineIndex() {
     [magazinePages],
   );
 
+  const applyPageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      setShowFlipHint(page === 0);
+      const pinned = pinnedMarkerPageRef.current;
+      if (
+        pinned !== null &&
+        sameMagazineSpread(pinned, page, layoutPortraitRef.current)
+      ) {
+        return;
+      }
+      pinnedMarkerPageRef.current = null;
+      setActiveMarkerKey(magazinePages[page]?.key ?? "cover");
+    },
+    [magazinePages],
+  );
+  applyPageChangeRef.current = applyPageChange;
+
+  const navigateMarker = useCallback(
+    (item: MagazineMarkerItem) => {
+      pinnedMarkerPageRef.current = item.page;
+      setActiveMarkerKey(item.sectionId);
+      flipTo(item.page);
+    },
+    [flipTo],
+  );
+
   const mobileMarkerSplitIndex = Math.ceil(markerItems.length / 2);
   const mobileTopMarkerItems = markerItems.slice(0, mobileMarkerSplitIndex);
   const mobileBottomMarkerItems = markerItems.slice(mobileMarkerSplitIndex);
@@ -2957,6 +3102,8 @@ function MagazineIndex() {
       if (pageIndex < 0) return;
 
       event.preventDefault();
+      pinnedMarkerPageRef.current = pageIndex;
+      setActiveMarkerKey(magazinePages[pageIndex]?.key ?? "cover");
       flipTo(pageIndex);
     };
 
@@ -2965,18 +3112,29 @@ function MagazineIndex() {
   }, [flipTo, magazinePages]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
+    <div className="relative min-h-screen bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
       <SiteLogoDrift driftRef={logoDriftRef} />
       <main
+        ref={stageRef}
         className={`magazine-stage ${isFlipping ? "is-flipping" : ""}`}
+        data-book-mode={usePortrait ? "portrait" : "spread"}
+        data-markers={markerAxis}
+        style={
+          {
+            "--magazine-book-w": `${bookSize.w}px`,
+            "--magazine-book-h": `${bookSize.h}px`,
+          } as CSSProperties
+        }
         onWheel={handleWheel}
       >
         <div className="magazine-markers-mobile-top">
-          <MagazineMarkers
-            items={mobileTopMarkerItems}
-            onNavigate={(item) => flipTo(item.page)}
-            activeKey={magazinePages[currentPage]?.key}
-          />
+          {markersOnBands && (
+            <MagazineMarkers
+              items={mobileTopMarkerItems}
+              onNavigate={navigateMarker}
+              activeKey={activeMarkerKey}
+            />
+          )}
         </div>
         <div
           ref={bookWrapRef}
@@ -2985,7 +3143,7 @@ function MagazineIndex() {
           onPointerUpCapture={handleCompactBookPointerUp}
           onPointerCancel={handleCompactBookPointerCancel}
         >
-          {showFlipHint && (
+          {showFlipHint && !usePortrait && (
             <span className="magazine-flip-hint-desktop" aria-hidden="true">
               {locale === "pt" ? "* folheia-me -> *" : "* flip me -> *"}
             </span>
@@ -2999,9 +3157,16 @@ function MagazineIndex() {
             size="stretch"
             width={520}
             height={720}
-            minWidth={285}
-            maxWidth={440}
-            minHeight={380}
+            /* page-flip only enters portrait when parentWidth < minWidth*2
+               (usePortrait means "allow", not "force"). Raise the threshold
+               in compact mode so a ~400px wrap stays one-page; keep it low
+               in spread mode so an ~880px wrap stays two-page. Element
+               min-width/height are overridden in CSS (min-width: 0 !important). */
+            minWidth={usePortrait ? 600 : 100}
+            /* Allow pages larger than the 440px design canvas — live size comes
+               from the geometry contain fit; sheet-scale handles type. */
+            maxWidth={1200}
+            minHeight={120}
             maxHeight={2000}
             drawShadow={!usePortrait}
             flippingTime={flipDurationMs}
@@ -3018,9 +3183,7 @@ function MagazineIndex() {
             disableFlipByClick
             onChangeState={handleFlipStateChange}
             onFlip={(event) => {
-              const page = Number(event.data) || 0;
-              setCurrentPage(page);
-              setShowFlipHint(page === 0);
+              applyPageChange(Number(event.data) || 0);
             }}
           >
             {magazinePages.map((page, index) => (
@@ -3052,10 +3215,10 @@ function MagazineIndex() {
         </div>
         <div className="magazine-markers-main">
           <MagazineMarkers
-            items={usePortrait ? mobileBottomMarkerItems : markerItems}
-            onNavigate={(item) => flipTo(item.page)}
-            activeKey={magazinePages[currentPage]?.key}
-            showFlipHint={showFlipHint}
+            items={markersOnBands ? mobileBottomMarkerItems : markerItems}
+            onNavigate={navigateMarker}
+            activeKey={activeMarkerKey}
+            showFlipHint={showFlipHint && usePortrait}
             flipHintLabel={locale === "pt" ? "* folheia-me *" : "* flip me *"}
           />
         </div>
