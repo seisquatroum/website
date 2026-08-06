@@ -18,33 +18,33 @@ O presente regulamento estabelece as normas do concurso (Open Call) destinado à
 
 ### **Artigo 2.º — Número de Vagas e Lista de Suplentes**
 
-> 1. O presente Open Call destina-se à seleção de **3 (três)** Bandas Residentes.  
-> 2. Para além das bandas selecionadas, será constituída uma lista ordenada de suplentes, por ordem de classificação final, composta pelas restantes candidaturas consideradas elegíveis.  
-> 3. Em caso de desistência, exclusão ou perda da qualidade de Banda Residente, a Direção poderá convidar a primeira banda disponível da lista de suplentes para ocupar a vaga.  
-> 4. A lista de suplentes mantém-se válida até à abertura do Open Call seguinte, salvo deliberação em contrário da Direção.
+1. O presente Open Call destina-se à seleção de **3 (três)** Bandas Residentes.
+2. Para além das bandas selecionadas, será constituída uma lista ordenada de suplentes, por ordem de classificação final, composta pelas restantes candidaturas consideradas elegíveis.
+3. Em caso de desistência, exclusão ou perda da qualidade de Banda Residente, a Direção poderá convidar a primeira banda disponível da lista de suplentes para ocupar a vaga.
+4. A lista de suplentes mantém-se válida até à abertura do Open Call seguinte, salvo deliberação em contrário da Direção.
 
 ### **Artigo 3.º — Destinatários e Elegibilidade**
 
-> * Podem concorrer bandas ou projetos musicais emergentes de qualquer género musical.  
-> * O concurso é aberto ao público em geral. A candidatura não exige a qualidade prévia de sócio da Associação 641\.  
-> * Pelo menos **50% da constituição do projeto musical deve ter ligação comprovada ao concelho de Oeiras** (residência, trabalho ou estudo). No caso de bandas com um número ímpar de elementos, o valor é arredondado para o número inteiro imediatamente inferior (ex: numa banda de 3 pessoas, apenas 1 necessita de cumprir este critério).  
-> * Em caso de seleção, todos os membros do projeto passam automaticamente a integrar a Associação 641 na qualidade de Associados Executivos, ficando **isentos do pagamento da quota anual de 5€**.
+- Podem concorrer bandas ou projetos musicais emergentes de qualquer género musical.
+- O concurso é aberto ao público em geral. A candidatura não exige a qualidade prévia de sócio da Associação 641.
+- Pelo menos **50% da constituição do projeto musical deve ter ligação comprovada ao concelho de Oeiras** (residência, trabalho ou estudo). No caso de bandas com um número ímpar de elementos, o valor é arredondado para o número inteiro imediatamente inferior (ex: numa banda de 3 pessoas, apenas 1 necessita de cumprir este critério).
+- Em caso de seleção, todos os membros do projeto passam automaticamente a integrar a Associação 641 na qualidade de Associados Executivos, ficando **isentos do pagamento da quota anual de 5€**.
 
 ### **Artigo 4.º — Participação de Menores de Idade**
 
-> * A banda ou projeto concorrente pode ser constituída integralmente por membros menores de idade, desde que tenham **16 ou mais anos**.  
-> * É estritamente obrigatório que a candidatura indique **um Representante responsável maior de 18 anos**. Este representante pode ser um dos músicos ou um elemento externo (encarregado de educação, tutor ou adulto autorizado).  
-> * O Representante maior de idade será o interlocutor oficial da Associação 641 para todos os assuntos administrativos, sendo o subscritor de documentos e o responsável legal pelas obrigações financeiras e responsabilidade civil perante o espaço e equipamentos.  
-> * Para todos os elementos entre os 16 e os 17 anos, deverá ser apresentada, no momento da candidatura, uma declaração de autorização assinada pelo respetivo encarregado de educação, permitindo a participação no Open Call e a utilização da Sala de Ensaio.
+- A banda ou projeto concorrente pode ser constituída integralmente por membros menores de idade, desde que tenham **16 ou mais anos**.
+- É estritamente obrigatório que a candidatura indique **um Representante responsável maior de 18 anos**. Este representante pode ser um dos músicos ou um elemento externo (encarregado de educação, tutor ou adulto autorizado).
+- O Representante maior de idade será o interlocutor oficial da Associação 641 para todos os assuntos administrativos, sendo o subscritor de documentos e o responsável legal pelas obrigações financeiras e responsabilidade civil perante o espaço e equipamentos.
+- Para todos os elementos entre os 16 e os 17 anos, deverá ser apresentada, no momento da candidatura, uma declaração de autorização assinada pelo respetivo encarregado de educação, permitindo a participação no Open Call e a utilização da Sala de Ensaio.
 
 ## **Capítulo II — Processo de Candidatura**
 
 ### **Artigo 5.º — Instrução e Prazos**
 
-> 1. Todas as fases do concurso, datas limite de submissão, comunicação de resultados e formulários oficiais de inscrição encontram-se disponíveis e atualizados no website oficial: [**www.641.pt/opencall**](https://641.pt/opencall).  
-> 2. A candidatura deve incluir a identificação do projeto, os contactos do representante responsável, uma breve biografia e motivação, uma descrição das principais influências musicais do projeto e do tipo de música que pretende desenvolver, a proposta de contrapartida, bem como um portefólio com gravações áudio e/ou vídeo, ou ligações para redes sociais, quando existam.  
-> 3. As gravações apresentadas têm caráter meramente demonstrativo e não necessitam de qualidade profissional, podendo consistir, por exemplo, em ensaios, gravações informais ou registos efetuados com telemóvel. O objetivo é permitir à Associação conhecer a identidade artística, as influências e o potencial do projeto, e não avaliar a qualidade técnica da produção.  
-> 4. A proposta de contrapartida consiste numa iniciativa que o projeto se compromete a desenvolver em benefício da Associação 641 e da comunidade local, durante o período da residência artística. 
+1. Todas as fases do concurso, datas limite de submissão, comunicação de resultados e formulários oficiais de inscrição encontram-se disponíveis e atualizados no website oficial: [**www.641.pt/opencall**](https://641.pt/opencall).
+2. A candidatura deve incluir a identificação do projeto, os contactos do representante responsável, uma breve biografia e motivação, uma descrição das principais influências musicais do projeto e do tipo de música que pretende desenvolver, a proposta de contrapartida, bem como um portefólio com gravações áudio e/ou vídeo, ou ligações para redes sociais, quando existam.
+3. As gravações apresentadas têm caráter meramente demonstrativo e não necessitam de qualidade profissional, podendo consistir, por exemplo, em ensaios, gravações informais ou registos efetuados com telemóvel. O objetivo é permitir à Associação conhecer a identidade artística, as influências e o potencial do projeto, e não avaliar a qualidade técnica da produção.
+4. A proposta de contrapartida consiste numa iniciativa que o projeto se compromete a desenvolver em benefício da Associação 641 e da comunidade local, durante o período da residência artística.
 
 ## **Capítulo III — Avaliação e Seleção**
 
@@ -62,15 +62,15 @@ As candidaturas serão avaliadas de 0 a 10 valores, de acordo com a seguinte mat
 
 ### **Artigo 7.º — Júri e Comissão de Avaliação**
 
-> * A seleção será efetuada por uma Comissão de Avaliação composta por membros dos Órgãos Sociais e Direção da Associação 641\.   
-> * O Júri do presente Open Call é composto por 5 (cinco) elementos:  
-  * Beatriz Duarte \[Direção\]  
-  * Filipe Vaz \[Direção\]  
-  * Matilde Batista \[Mesa da Assembleia Geral\]  
-  * Miguel Lameiras \[Mesa da Assembleia Geral\]  
-  * Vasco Tinoco \[Mesa da Assembleia Geral\]  
-> * Em caso de conflito de interesses (ex: um membro do júri ter ligações familiares diretas, profissionais ou de produção musical com um dos candidatos), o referido membro abster-se-á de avaliar essa candidatura específica.  
-> * As decisões do júri são soberanas, devidamente fundamentadas na grelha de avaliação, não havendo lugar a recurso.
+- A seleção será efetuada por uma Comissão de Avaliação composta por membros dos Órgãos Sociais e Direção da Associação 641.
+- O Júri do presente Open Call é composto por 5 (cinco) elementos:
+  - Beatriz Duarte [Direção]
+  - Filipe Vaz [Direção]
+  - Matilde Batista [Mesa da Assembleia Geral]
+  - Miguel Lameiras [Mesa da Assembleia Geral]
+  - Vasco Tinoco [Mesa da Assembleia Geral]
+- Em caso de conflito de interesses (ex: um membro do júri ter ligações familiares diretas, profissionais ou de produção musical com um dos candidatos), o referido membro abster-se-á de avaliar essa candidatura específica.
+- As decisões do júri são soberanas, devidamente fundamentadas na grelha de avaliação, não havendo lugar a recurso.
 
 ## **Capítulo IV — Modelo Cooperativo, Direitos e Deveres**
 
@@ -78,36 +78,36 @@ As candidaturas serão avaliadas de 0 a 10 valores, de acordo com a seguinte mat
 
 As Bandas Residentes selecionadas terão direito a:
 
-> * Acesso calendarizado e regular à sala de ensaio e ao Laboratório de Inovação Musical.  
-> * Utilização do hardware do espólio (computadores, interfaces áudio, componentes MIDI).  
-> * Apoio logístico, de produção e mixagem exclusivos, no âmbito dos recursos disponíveis.  
-> * Acesso prioritário a workshops técnicos e artísticos organizados pela Associação.  
-> * Suporte logístico para o lançamento de um single/EP (gravação e promoção digital).  
-> * Promoção de um concerto público especial de apresentação.
+- Acesso calendarizado e regular à sala de ensaio e ao Laboratório de Inovação Musical.
+- Utilização do hardware do espólio (computadores, interfaces áudio, componentes MIDI).
+- Apoio logístico, de produção e mixagem exclusivos, no âmbito dos recursos disponíveis.
+- Acesso prioritário a workshops técnicos e artísticos organizados pela Associação.
+- Suporte logístico para o lançamento de um single/EP (gravação e promoção digital).
+- Promoção de um concerto público especial de apresentação.
 
 ### **Artigo 9.º — Contribuição de Sustentabilidade e Reembolso**
 
 O modelo da Associação 641 não tem fins lucrativos, exigindo apenas a partilha de parte dos custos reais da infraestrutura.
 
-> * Cada Banda Residente contribui com **40€ (quarenta euros) por membro ativo ao ano** para o fundo de sustentabilidade.  
->   *Exemplo: Uma banda de 4 membros contribui com 160€ por ano.* O pagamento pode ser faseado semestralmente.  
-> * **Mecanismo de Reembolso (Reembolso a 50%):** Ao cumprirem os seus compromissos anuais e cooperativos, a Associação 641 reembolsará metade do valor pago. O não cumprimento injustificado destas condições implica a perda integral do direito ao Reembolso. A avaliação é feita pela Direção no final do ano de residência, podendo a banda apresentar os seus devidos comprovativos antes da decisão final.
+- Cada Banda Residente contribui com **40€ (quarenta euros) por membro ativo ao ano** para o fundo de sustentabilidade.
+  - *Exemplo: Uma banda de 4 membros contribui com 160€ por ano.* O pagamento pode ser faseado semestralmente.
+- **Mecanismo de Reembolso (Reembolso a 50%):** Ao cumprirem os seus compromissos anuais e cooperativos, a Associação 641 reembolsará metade do valor pago. O não cumprimento injustificado destas condições implica a perda integral do direito ao Reembolso. A avaliação é feita pela Direção no final do ano de residência, podendo a banda apresentar os seus devidos comprovativos antes da decisão final.
 
 | Requisito de Reembolso | Detalhe |
 | :---- | :---- |
 | **Organização de 2 Eventos** | Organização ou co-organização de pelo menos 1 evento por semestre (ex: showcase, workshop, jam session, …). |
-| **Lançamento de Projeto** | Lançamento de um single ou EP com produção total ou parcial no espaço 641\. |
-| **Concerto Especial** | Realização de um concerto público de apresentação em parceria com a Associação 641\. |
+| **Lançamento de Projeto** | Lançamento de um single ou EP com produção total ou parcial no espaço 641. |
+| **Concerto Especial** | Realização de um concerto público de apresentação em parceria com a Associação 641. |
 | **Manutenção da Imagem Digital** | No mínimo 2 publicações por mês nas redes sociais a promover o espaço, trabalho da banda ou cobertura de eventos, alimentando ativamente a comunicação da Associação. |
 
 ### **Artigo 10.º — Deveres Logísticos e Cooperativos**
 
-As Bandas Residentes não são meras clientes de um serviço, assumindo deveres equitativos fundamentais para a manutenção da associação, destacando-se: 
+As Bandas Residentes não são meras clientes de um serviço, assumindo deveres equitativos fundamentais para a manutenção da associação, destacando-se:
 
-* Limpeza imediata da sala após o ensaio e participação solidária nas limpezas gerais mensais do espaço;   
-* Cumprimento rigoroso das regras de agendamento (avisar cancelamentos com antecedência) e máxima preservação de equipamentos partilhados;   
-* Contribuição para a manutenção da imagem digital da associação (geração de conteúdos, identificação da 641, divulgação da rede);   
-* Prestação de apoio logístico noutros eventos a decorrer na associação, existindo um sistema de rotatividade entre as bandas para garantir este auxílio à programação geral.
+- Limpeza imediata da sala após o ensaio e participação solidária nas limpezas gerais mensais do espaço;
+- Cumprimento rigoroso das regras de agendamento (avisar cancelamentos com antecedência) e máxima preservação de equipamentos partilhados;
+- Contribuição para a manutenção da imagem digital da associação (geração de conteúdos, identificação da 641, divulgação da rede);
+- Prestação de apoio logístico noutros eventos a decorrer na associação, existindo um sistema de rotatividade entre as bandas para garantir este auxílio à programação geral.
 
 ## **Capítulo V — Regras do Espaço e Incumprimento**
 
@@ -123,8 +123,8 @@ O incumprimento sistemático das regras de utilização do espaço, a falta de z
 
 ### **Artigo 13.º — RGPD e Casos Omissos**
 
-> * A Associação 641 garante que os dados submetidos serão utilizados exclusivamente para efeitos deste concurso e posterior gestão associativa, não sendo facultados a terceiros, em conformidade com o RGPD.  
-> * Qualquer situação omissa neste regulamento será analisada e decidida pela Direção da Associação 641\.
+- A Associação 641 garante que os dados submetidos serão utilizados exclusivamente para efeitos deste concurso e posterior gestão associativa, não sendo facultados a terceiros, em conformidade com o RGPD.
+- Qualquer situação omissa neste regulamento será analisada e decidida pela Direção da Associação 641.
 
 *Aprovado por:*  
 **Armando Gonçalves**  
