@@ -234,8 +234,8 @@ export const site = {
     // Botão dentro do popup — substitui "#" pelo Google Form / página do concurso
     formUrl: "#",
     formLabel: { pt: "CANDIDATAR AGORA", en: "APPLY NOW" },
-    // Link secundário (opcional) para regulamento do concurso
-    rulesUrl: "#",
+    // Link secundário — página com o markdown em src/content/opencall/
+    rulesUrl: "/opencall/regulamento",
     rulesLabel: { pt: "ver regulamento", en: "see rules" },
     comingSoonNotice: {
       pt: "Abriremos as candidaturas muito em breve!",

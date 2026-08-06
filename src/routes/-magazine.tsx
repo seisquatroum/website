@@ -1223,13 +1223,12 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                       {t(c.formLabel, locale)}
                     </CutoutButton>
                     {c.rulesUrl && (
-                      <button
-                        type="button"
-                        onClick={revealComingSoon}
+                      <a
+                        href={c.rulesUrl}
                         className="font-hand text-lg underline decoration-brand-magenta decoration-2 underline-offset-4 hover:text-brand-magenta"
                       >
                         {t(c.rulesLabel, locale)} →
-                      </button>
+                      </a>
                     )}
                   </div>
                   {showComingSoon && (
@@ -2416,20 +2415,36 @@ function MagazineMarkers({
   );
 }
 
-/** URL segment → magazine page key (shareable deep links). */
-export const MAGAZINE_SECTION_ALIASES: Record<string, string> = {
-  opencall: "concurso",
-  bandas: "banda",
-  banda: "banda",
-  noticias: "noticias",
-  contactos: "contactos",
-  parceiros: "parceiros",
-  "junta-te": "junta",
-  porque: "sobre",
-  "o-que": "o-que",
+/** URL segment → magazine page (+ optional locale for EN share links). */
+export type MagazineSectionAlias = {
+  pageKey: string;
+  /** Only set on English aliases — forces EN toggle on entry. */
+  locale?: Locale;
 };
 
-/** Preferred shareable path for a magazine page key. */
+export const MAGAZINE_SECTION_ALIASES: Record<string, MagazineSectionAlias> = {
+  // PT canonic
+  opencall: { pageKey: "concurso" },
+  bandas: { pageKey: "banda" },
+  noticias: { pageKey: "noticias" },
+  contactos: { pageKey: "contactos" },
+  parceiros: { pageKey: "parceiros" },
+  "junta-te": { pageKey: "junta" },
+  porque: { pageKey: "sobre" },
+  "o-que": { pageKey: "o-que" },
+  "desenha-me": { pageKey: "blank-contactos-pad" },
+  // EN aliases (same pages, English locale on entry)
+  "join-us": { pageKey: "junta", locale: "en" },
+  contacts: { pageKey: "contactos", locale: "en" },
+  partners: { pageKey: "parceiros", locale: "en" },
+  news: { pageKey: "noticias", locale: "en" },
+  bands: { pageKey: "banda", locale: "en" },
+  why: { pageKey: "sobre", locale: "en" },
+  what: { pageKey: "o-que", locale: "en" },
+  "draw-me": { pageKey: "blank-contactos-pad", locale: "en" },
+};
+
+/** Preferred shareable path (PT canonic) for a magazine page key. */
 export const MAGAZINE_PAGE_TO_PATH: Record<string, string> = {
   cover: "/",
   sobre: "/porque",
@@ -2441,9 +2456,12 @@ export const MAGAZINE_PAGE_TO_PATH: Record<string, string> = {
   noticias: "/noticias",
   parceiros: "/parceiros",
   contactos: "/contactos",
+  "blank-contactos-pad": "/desenha-me",
 };
 
-export function sectionFromPath(pathname: string): string | undefined {
+export function sectionFromPath(
+  pathname: string,
+): MagazineSectionAlias | undefined {
   const clean = pathname.replace(/\/+$/, "") || "/";
   if (clean === "/") return undefined;
   const segment = clean.replace(/^\//, "").toLowerCase();
@@ -3010,7 +3028,7 @@ export function MagazineIndex({
   useEffect(() => {
     if (!initialSection || initialSectionAppliedRef.current) return;
     const pageKey =
-      MAGAZINE_SECTION_ALIASES[initialSection.toLowerCase()] ??
+      MAGAZINE_SECTION_ALIASES[initialSection.toLowerCase()]?.pageKey ??
       initialSection.toLowerCase();
     const pageIndex = magazinePages.findIndex((page) => page.key === pageKey);
     if (pageIndex < 0) return;

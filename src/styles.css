@@ -2623,3 +2623,151 @@
 .magazine-stage[data-book-mode="portrait"] .contactos-popup .contactos-detail-value {
   margin-top: 1.65rem;
 }
+
+/* ---------- Open Call regulamento (markdown page) ---------- */
+.regulamento-page {
+  box-sizing: border-box;
+  padding: 1.25rem 1rem 3.5rem;
+  background:
+    radial-gradient(rgba(255, 255, 255, 0.05) 0.8px, transparent 1px),
+    #1a0510;
+  background-size: 48px 48px, auto;
+}
+
+.regulamento-page-header {
+  max-width: 42rem;
+  margin: 0 auto 1.5rem;
+}
+
+.regulamento-back {
+  display: inline-block;
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  color: var(--color-brand-accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.regulamento-back:hover {
+  color: var(--color-brand-pink);
+}
+
+.regulamento-kicker {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono-zine);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 196, 214, 0.65);
+}
+
+.regulamento-article {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+  border: 3px solid rgba(10, 5, 7, 0.9);
+  background: #f4ecd6;
+  color: #1a0510;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.55);
+}
+
+.regulamento-h1 {
+  margin: 0 0 1rem;
+  font-family: var(--font-serif-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 900;
+  line-height: 1.15;
+  color: #c41958;
+}
+
+.regulamento-h2 {
+  margin: 1.75rem 0 0.75rem;
+  font-family: var(--font-mono-zine);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b1038;
+}
+
+.regulamento-h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-family: var(--font-serif-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.regulamento-p,
+.regulamento-li {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.regulamento-p {
+  margin: 0.65rem 0;
+}
+
+.regulamento-a {
+  color: #c41958;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.regulamento-ul,
+.regulamento-ol {
+  margin: 0.5rem 0 0.75rem 1.1rem;
+  padding: 0;
+}
+
+.regulamento-li {
+  margin: 0.35rem 0;
+}
+
+.regulamento-blockquote {
+  margin: 0.75rem 0;
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  border-left: 4px solid #c41958;
+}
+
+.regulamento-blockquote p {
+  margin: 0.35rem 0;
+}
+
+.regulamento-table-wrap {
+  width: 100%;
+  margin: 0.85rem 0 1.1rem;
+  overflow-x: auto;
+}
+
+.regulamento-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.regulamento-table th,
+.regulamento-table td {
+  border: 1px solid rgba(26, 5, 16, 0.25);
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.regulamento-table th {
+  background: rgba(196, 25, 88, 0.12);
+  font-family: var(--font-mono-zine);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.regulamento-strong {
+  font-weight: 700;
+}
+
+.regulamento-footnote {
+  margin-top: 2rem;
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: rgba(26, 5, 16, 0.45);
+}

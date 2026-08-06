@@ -10,48 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZineRouteImport } from './routes/_zine'
-import { Route as ZineSectionRouteImport } from './routes/_zine/$section'
 import { Route as ZineIndexRouteImport } from './routes/_zine/index'
+import { Route as ZineSectionRouteImport } from './routes/_zine/$section'
+import { Route as OpencallRegulamentoRouteImport } from './routes/opencall/regulamento'
 
 const ZineRoute = ZineRouteImport.update({
   id: '/_zine',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ZineSectionRoute = ZineSectionRouteImport.update({
-  id: '/$section',
-  path: '/$section',
-  getParentRoute: () => ZineRoute,
 } as any)
 const ZineIndexRoute = ZineIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ZineRoute,
 } as any)
+const ZineSectionRoute = ZineSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => ZineRoute,
+} as any)
+const OpencallRegulamentoRoute = OpencallRegulamentoRouteImport.update({
+  id: '/opencall/regulamento',
+  path: '/opencall/regulamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ZineIndexRoute
   '/$section': typeof ZineSectionRoute
+  '/opencall/regulamento': typeof OpencallRegulamentoRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof ZineIndexRoute
   '/$section': typeof ZineSectionRoute
+  '/opencall/regulamento': typeof OpencallRegulamentoRoute
+  '/': typeof ZineIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_zine': typeof ZineRouteWithChildren
   '/_zine/$section': typeof ZineSectionRoute
+  '/opencall/regulamento': typeof OpencallRegulamentoRoute
   '/_zine/': typeof ZineIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$section'
+  fullPaths: '/' | '/$section' | '/opencall/regulamento'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$section'
-  id: '__root__' | '/_zine' | '/_zine/$section' | '/_zine/'
+  to: '/$section' | '/opencall/regulamento' | '/'
+  id:
+    | '__root__'
+    | '/_zine'
+    | '/_zine/$section'
+    | '/opencall/regulamento'
+    | '/_zine/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ZineRoute: typeof ZineRouteWithChildren
+  OpencallRegulamentoRoute: typeof OpencallRegulamentoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -63,6 +78,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_zine/': {
+      id: '/_zine/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof ZineIndexRouteImport
+      parentRoute: typeof ZineRoute
+    }
     '/_zine/$section': {
       id: '/_zine/$section'
       path: '/$section'
@@ -70,12 +92,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZineSectionRouteImport
       parentRoute: typeof ZineRoute
     }
-    '/_zine/': {
-      id: '/_zine/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof ZineIndexRouteImport
-      parentRoute: typeof ZineRoute
+    '/opencall/regulamento': {
+      id: '/opencall/regulamento'
+      path: '/opencall/regulamento'
+      fullPath: '/opencall/regulamento'
+      preLoaderRoute: typeof OpencallRegulamentoRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -94,6 +116,7 @@ const ZineRouteWithChildren = ZineRoute._addFileChildren(ZineRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   ZineRoute: ZineRouteWithChildren,
+  OpencallRegulamentoRoute: OpencallRegulamentoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,7 +4,8 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useI18n } from "@/lib/i18n";
 import {
   MagazineIndex,
   sectionFromPath,
@@ -16,10 +17,22 @@ export const Route = createFileRoute("/_zine")({
 
 function ZineLayout() {
   const navigate = useNavigate();
+  const { setLocale } = useI18n();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
-  const initialSection = sectionFromPath(pathname);
+  const routeInfo = sectionFromPath(pathname);
+  const initialSection = routeInfo?.pageKey;
+  const entryLocaleAppliedRef = useRef(false);
+
+  // English share URLs (join-us, contacts, …) flip the site to EN once on entry.
+  // PT canonic sync must not reset locale afterwards.
+  useEffect(() => {
+    if (entryLocaleAppliedRef.current) return;
+    if (!routeInfo?.locale) return;
+    setLocale(routeInfo.locale);
+    entryLocaleAppliedRef.current = true;
+  }, [routeInfo, setLocale]);
 
   const onSharePathChange = useCallback(
     (path: string) => {
