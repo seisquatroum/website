@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import HTMLFlipBook from "react-pageflip";
 import {
   forwardRef,
@@ -20,7 +19,7 @@ import {
   sameMagazineSpread,
   type MarkerAxis,
 } from "@/lib/magazineLayout";
-import { SiteNav, type NavItem } from "@/components/SiteNav";
+import { type NavItem } from "@/components/SiteNav";
 import logoWhiteAsset from "@/assets/641-logo-white.png";
 import sixDigitAsset from "@/assets/six6.png";
 import fourDigitAsset from "@/assets/four4.png";
@@ -57,10 +56,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-export const Route = createFileRoute("/")({
-  component: Index,
-});
 
 /* ------------------------------------------------------------------ *
  * CutoutText — renders each character as an individual magazine
@@ -2421,9 +2416,57 @@ function MagazineMarkers({
   );
 }
 
-function MagazineIndex() {
+/** URL segment → magazine page key (shareable deep links). */
+export const MAGAZINE_SECTION_ALIASES: Record<string, string> = {
+  concursos: "concurso",
+  concurso: "concurso",
+  bandas: "banda",
+  banda: "banda",
+  noticias: "noticias",
+  contactos: "contactos",
+  parceiros: "parceiros",
+  junta: "junta",
+  "junta-te": "junta",
+  porque: "sobre",
+  "o-que": "o-que",
+};
+
+/** Preferred shareable path for a magazine page key. */
+export const MAGAZINE_PAGE_TO_PATH: Record<string, string> = {
+  cover: "/",
+  sobre: "/porque",
+  origem: "/porque",
+  "o-que": "/o-que",
+  junta: "/junta",
+  banda: "/bandas",
+  concurso: "/concursos",
+  noticias: "/noticias",
+  parceiros: "/parceiros",
+  contactos: "/contactos",
+};
+
+export function sectionFromPath(pathname: string): string | undefined {
+  const clean = pathname.replace(/\/+$/, "") || "/";
+  if (clean === "/") return undefined;
+  const segment = clean.replace(/^\//, "").toLowerCase();
+  return MAGAZINE_SECTION_ALIASES[segment];
+}
+
+export function pathFromPageKey(pageKey: string): string | undefined {
+  return MAGAZINE_PAGE_TO_PATH[pageKey];
+}
+
+export function MagazineIndex({
+  initialSection,
+  onSharePathChange,
+}: {
+  initialSection?: string;
+  /** Keep the address bar in sync while flipping (replaceState, no remount). */
+  onSharePathChange?: (path: string) => void;
+} = {}) {
   const { locale } = useI18n();
   const bookRef = useRef<FlipBookHandle | null>(null);
+  const initialSectionAppliedRef = useRef(false);
   const bookWrapRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLElement | null>(null);
   const compactTurnLocked = useRef(false);
@@ -2772,7 +2815,7 @@ function MagazineIndex() {
       }
 
       // Ignore further page flips while an animation is playing
-      if (wheelLocked.current) return;
+      if (wheelLocked.current || compactTurnLocked.current) return;
 
       wheelRemainder.current += delta;
       // Trigger mid-scroll once intent is clear (not after a big backlog)
@@ -2783,7 +2826,11 @@ function MagazineIndex() {
       wheelLocked.current = true;
       setShowFlipHint(false);
 
-      if (direction > 0) {
+      // Portrait/compact: flipPrev/Next are unreliable (mouse events off +
+      // back-flip quirks). Use the same path as swipe, with turnToPage fallback.
+      if (usePortrait) {
+        turnCompactPage(direction > 0 ? 1 : -1);
+      } else if (direction > 0) {
         flipNext();
       } else {
         flipPrev();
@@ -2795,7 +2842,7 @@ function MagazineIndex() {
         wheelRemainder.current = 0;
       }, flipDurationMs + 100);
     },
-    [flipDurationMs, flipNext, flipPrev],
+    [flipDurationMs, flipNext, flipPrev, turnCompactPage, usePortrait],
   );
 
   const handleFlipStateChange = useCallback((event: { data?: unknown }) => {
@@ -2960,6 +3007,41 @@ function MagazineIndex() {
     },
     [flipTo],
   );
+
+  // Deep links (e.g. /concursos) open the matching magazine page once the book is ready.
+  useEffect(() => {
+    if (!initialSection || initialSectionAppliedRef.current) return;
+    const pageKey =
+      MAGAZINE_SECTION_ALIASES[initialSection.toLowerCase()] ??
+      initialSection.toLowerCase();
+    const pageIndex = magazinePages.findIndex((page) => page.key === pageKey);
+    if (pageIndex < 0) return;
+
+    initialSectionAppliedRef.current = true;
+    pinnedMarkerPageRef.current = pageIndex;
+    setActiveMarkerKey(pageKey);
+    setCurrentPage(pageIndex);
+    setShowFlipHint(pageIndex === 0);
+
+    const open = () => {
+      const flip = bookRef.current?.pageFlip?.();
+      if (!flip?.turnToPage) {
+        window.requestAnimationFrame(open);
+        return;
+      }
+      flip.turnToPage(pageIndex);
+      refreshBookLayout();
+    };
+    window.requestAnimationFrame(open);
+  }, [initialSection, magazinePages, refreshBookLayout]);
+
+  // Sync shareable URL to the active section without remounting the book.
+  useEffect(() => {
+    if (!onSharePathChange) return;
+    if (initialSection && !initialSectionAppliedRef.current) return;
+    const path = pathFromPageKey(activeMarkerKey);
+    if (path) onSharePathChange(path);
+  }, [activeMarkerKey, initialSection, onSharePathChange]);
 
   const mobileMarkerSplitIndex = Math.ceil(markerItems.length / 2);
   const mobileTopMarkerItems = markerItems.slice(0, mobileMarkerSplitIndex);
@@ -3227,43 +3309,3 @@ function MagazineIndex() {
   );
 }
 
-function Index() {
-  // placeholder — real body below
-  return <MagazineIndex />;
-}
-
-function _Index() {
-  const { locale } = useI18n();
-
-  const navItems: NavItem[] = [
-    { key: "cover", label: locale === "pt" ? "Início" : "Home", sectionId: "inicio" },
-    { key: "porque", label: locale === "pt" ? "Porquê" : "Why", sectionId: "porque" },
-    { key: "noticias", label: t(site.nav.noticias, locale), sectionId: "noticias" },
-    { key: "junta", label: locale === "pt" ? "Junta-te!" : "Join us!", sectionId: "junta" },
-    { key: "banda", label: t(site.nav.banda, locale), sectionId: "banda" },
-    { key: "concurso", label: locale === "pt" ? "concurso" : "contest", sectionId: "concurso" },
-    { key: "parceiros", label: t(site.nav.parceiros, locale), sectionId: "parceiros" },
-    { key: "contactos", label: t(site.nav.contactos, locale), sectionId: "contactos" },
-  ];
-
-  return (
-    <div className="relative min-h-screen bg-zine-dark font-sans text-brand-pink selection:bg-brand-magenta selection:text-white">
-      <SiteNav items={navItems} trailing={<LangToggle className="!px-0 !py-0" />} />
-      <main>
-        <Cover locale={locale} sectionId="inicio" />
-        <SobreA locale={locale} sectionId="porque" />
-        <OQuePage locale={locale} />
-        <NewsPage
-          locale={locale}
-          title={locale === "pt" ? "notícias" : "news"}
-          sectionId="noticias"
-        />
-        <JuntaPage locale={locale} sectionId="junta" />
-        <BandaPage locale={locale} sectionId="banda" />
-        <ConcursoPage locale={locale} sectionId="concurso" />
-        <ParceirosPage locale={locale} sectionId="parceiros" />
-        <ContactosPage locale={locale} sectionId="contactos" />
-      </main>
-    </div>
-  );
-}

@@ -9,50 +9,91 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as ZineRouteImport } from './routes/_zine'
+import { Route as ZineSectionRouteImport } from './routes/_zine/$section'
+import { Route as ZineIndexRouteImport } from './routes/_zine/index'
 
-const IndexRoute = IndexRouteImport.update({
+const ZineRoute = ZineRouteImport.update({
+  id: '/_zine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZineSectionRoute = ZineSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => ZineRoute,
+} as any)
+const ZineIndexRoute = ZineIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ZineRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof ZineIndexRoute
+  '/$section': typeof ZineSectionRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof ZineIndexRoute
+  '/$section': typeof ZineSectionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_zine': typeof ZineRouteWithChildren
+  '/_zine/$section': typeof ZineSectionRoute
+  '/_zine/': typeof ZineIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/$section'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$section'
+  id: '__root__' | '/_zine' | '/_zine/$section' | '/_zine/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  ZineRoute: typeof ZineRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_zine': {
+      id: '/_zine'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ZineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_zine/$section': {
+      id: '/_zine/$section'
+      path: '/$section'
+      fullPath: '/$section'
+      preLoaderRoute: typeof ZineSectionRouteImport
+      parentRoute: typeof ZineRoute
+    }
+    '/_zine/': {
+      id: '/_zine/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ZineIndexRouteImport
+      parentRoute: typeof ZineRoute
     }
   }
 }
 
+interface ZineRouteChildren {
+  ZineSectionRoute: typeof ZineSectionRoute
+  ZineIndexRoute: typeof ZineIndexRoute
+}
+
+const ZineRouteChildren: ZineRouteChildren = {
+  ZineSectionRoute: ZineSectionRoute,
+  ZineIndexRoute: ZineIndexRoute,
+}
+
+const ZineRouteWithChildren = ZineRoute._addFileChildren(ZineRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  ZineRoute: ZineRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
