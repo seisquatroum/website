@@ -3,7 +3,7 @@
 **Entidade Promotora:** Associação 641  
 **Local:** Fábrica da Pólvora de Barcarena, Portugal  
 **Data:** 7 de agosto de 2026  
-**Mais informações e prazos:** [www.641.pt](http://www.641.pt)
+**Mais informações e prazos:** [www.641.pt/opencall](https://641.pt/opencall)
 
 ## **Preâmbulo**
 
@@ -41,7 +41,7 @@ O presente regulamento estabelece as normas do concurso (Open Call) destinado à
 
 ### **Artigo 5.º — Instrução e Prazos**
 
-> 1. Todas as fases do concurso, datas limite de submissão, comunicação de resultados e formulários oficiais de inscrição encontram-se disponíveis e atualizados no website oficial: [**www.641.pt**](http://www.641.pt).  
+> 1. Todas as fases do concurso, datas limite de submissão, comunicação de resultados e formulários oficiais de inscrição encontram-se disponíveis e atualizados no website oficial: [**www.641.pt/opencall**](https://641.pt/opencall).  
 > 2. A candidatura deve incluir a identificação do projeto, os contactos do representante responsável, uma breve biografia e motivação, uma descrição das principais influências musicais do projeto e do tipo de música que pretende desenvolver, a proposta de contrapartida, bem como um portefólio com gravações áudio e/ou vídeo, ou ligações para redes sociais, quando existam.  
 > 3. As gravações apresentadas têm caráter meramente demonstrativo e não necessitam de qualidade profissional, podendo consistir, por exemplo, em ensaios, gravações informais ou registos efetuados com telemóvel. O objetivo é permitir à Associação conhecer a identidade artística, as influências e o potencial do projeto, e não avaliar a qualidade técnica da produção.  
 > 4. A proposta de contrapartida consiste numa iniciativa que o projeto se compromete a desenvolver em benefício da Associação 641 e da comunidade local, durante o período da residência artística. 
