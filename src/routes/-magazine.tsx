@@ -2418,14 +2418,12 @@ function MagazineMarkers({
 
 /** URL segment → magazine page key (shareable deep links). */
 export const MAGAZINE_SECTION_ALIASES: Record<string, string> = {
-  concursos: "concurso",
-  concurso: "concurso",
+  opencall: "concurso",
   bandas: "banda",
   banda: "banda",
   noticias: "noticias",
   contactos: "contactos",
   parceiros: "parceiros",
-  junta: "junta",
   "junta-te": "junta",
   porque: "sobre",
   "o-que": "o-que",
@@ -2439,7 +2437,7 @@ export const MAGAZINE_PAGE_TO_PATH: Record<string, string> = {
   "o-que": "/o-que",
   junta: "/junta-te",
   banda: "/bandas",
-  concurso: "/concursos",
+  concurso: "/opencall",
   noticias: "/noticias",
   parceiros: "/parceiros",
   contactos: "/contactos",
@@ -2906,7 +2904,7 @@ export function MagazineIndex({
       },
       {
         key: "concurso",
-        label: locale === "pt" ? "Concurso" : "Contest",
+        label: "open call",
         content: <ConcursoPage locale={locale} sectionId="concurso" />,
       },
       {
@@ -3008,7 +3006,7 @@ export function MagazineIndex({
     [flipTo],
   );
 
-  // Deep links (e.g. /concursos) open the matching magazine page once the book is ready.
+  // Deep links (e.g. /opencall) open the matching magazine page once the book is ready.
   useEffect(() => {
     if (!initialSection || initialSectionAppliedRef.current) return;
     const pageKey =

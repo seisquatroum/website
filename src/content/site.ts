@@ -207,8 +207,8 @@ export const site = {
     ctaLabel: { pt: "FAZ BARULHO!", en: "MAKE NOISE!" },
     // Título do popup
     title: {
-      pt: "CONCURSO BANDAS RESIDENTES",
-      en: "RESIDENT BANDS CONTEST",
+      pt: "OPEN CALL BANDAS RESIDENTES",
+      en: "RESIDENT BANDS OPEN CALL",
     },
     // Kicker acima do título
     kicker: {
