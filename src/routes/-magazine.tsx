@@ -2437,7 +2437,7 @@ export const MAGAZINE_PAGE_TO_PATH: Record<string, string> = {
   sobre: "/porque",
   origem: "/porque",
   "o-que": "/o-que",
-  junta: "/junta",
+  junta: "/junta-te",
   banda: "/bandas",
   concurso: "/concursos",
   noticias: "/noticias",
