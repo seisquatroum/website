@@ -1124,8 +1124,8 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
         <h2 className="-rotate-1">
           <CutoutText size="mp-lg">{t(site.banda.kicker, locale)}</CutoutText>
         </h2>
-        <div className="banda-hero-row mt-3 flex items-start gap-3">
-          <div className="inline-block max-w-full shrink-0 -rotate-2">
+        <div className="banda-hero-row mt-3 flex items-stretch gap-3">
+          <div className="banda-photo-frame inline-block max-w-full shrink-0 -rotate-2">
             <img
               src={madameGPhoto}
               alt=""
@@ -1133,14 +1133,14 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
               loading="lazy"
             />
           </div>
-          <div className="banda-side-column min-w-0 pt-1">
+          <div className="banda-side-column min-w-0">
             <h3 className="banda-name font-poppins font-semibold lowercase text-brand-black">
               {site.banda.name}
             </h3>
-            <p className="mt-1 font-hand text-sm leading-snug text-brand-magenta-ink/80">
+            <p className="banda-photo-by mt-1 font-hand leading-snug text-brand-magenta-ink/80">
               {t(site.banda.photoBy, locale)}
             </p>
-            <div className="banda-link-row">
+            <div className="banda-link-row" aria-label="social">
               {BANDA_LINK_ORDER.map((key) => (
                 <BandaLinkIcon
                   key={key}
@@ -1165,6 +1165,7 @@ function BandaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
 
 function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
   const c = site.concurso;
+  const formReady = Boolean(c.formUrl && c.formUrl !== "#");
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   const revealComingSoon = () => {
@@ -1219,9 +1220,17 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                     {t(c.deadline, locale)}
                   </p>
                   <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <CutoutButton onClick={revealComingSoon} variant="magenta">
-                      {t(c.formLabel, locale)}
-                    </CutoutButton>
+                    {formReady ? (
+                      <a href={c.formUrl} target="_blank" rel="noreferrer">
+                        <CutoutButton variant="magenta">
+                          {t(c.formLabel, locale)}
+                        </CutoutButton>
+                      </a>
+                    ) : (
+                      <CutoutButton onClick={revealComingSoon} variant="magenta">
+                        {t(c.formLabel, locale)}
+                      </CutoutButton>
+                    )}
                     {c.rulesUrl && (
                       <a
                         href={c.rulesUrl}
@@ -1231,7 +1240,7 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                       </a>
                     )}
                   </div>
-                  {showComingSoon && (
+                  {!formReady && showComingSoon && (
                     <p
                       className="concurso-coming-soon-notice mt-4 font-hand text-lg leading-snug text-brand-magenta-ink"
                       role="status"
@@ -2506,7 +2515,8 @@ export function MagazineIndex({
   const [usePortrait, setUsePortrait] = useState(true);
   const [markerAxis, setMarkerAxis] = useState<MarkerAxis>("bands");
   const [bookSize, setBookSize] = useState({ w: 320, h: 443 });
-  const flipDurationMs = usePortrait ? 440 : 720;
+  // Same flip duration in portrait and spread — compact felt too snappy vs desktop.
+  const flipDurationMs = 720;
   const bookLayoutKey = `${locale}-${usePortrait ? "portrait" : "spread"}`;
   const markersOnBands = markerAxis === "bands";
   const layoutPortraitRef = useRef(usePortrait);
@@ -2792,12 +2802,24 @@ export function MagazineIndex({
         Math.abs(dx) >= 44 &&
         Math.abs(dx) > Math.abs(dy) * 1.2 &&
         elapsed < 900;
+      const isVerticalScroll =
+        Math.abs(dy) >= 44 &&
+        Math.abs(dy) > Math.abs(dx) * 1.2 &&
+        elapsed < 900;
 
-      if (!isHorizontalSwipe) return;
+      if (isHorizontalSwipe) {
+        event.preventDefault();
+        event.stopPropagation();
+        turnCompactPage(dx < 0 ? 1 : -1);
+        return;
+      }
 
-      event.preventDefault();
-      event.stopPropagation();
-      turnCompactPage(dx < 0 ? 1 : -1);
+      // Vertical scroll gesture → same as wheel (down = next, up = prev).
+      if (isVerticalScroll) {
+        event.preventDefault();
+        event.stopPropagation();
+        turnCompactPage(dy > 0 ? 1 : -1);
+      }
     },
     [turnCompactPage, usePortrait],
   );
@@ -2863,12 +2885,13 @@ export function MagazineIndex({
 
   const handleFlipStateChange = useCallback((event: { data?: unknown }) => {
     const state = String(event.data ?? "");
-    // Hide as soon as the page starts moving (fold / flip), not only when it lands
-    if (
-      state === "user_fold" ||
-      state === "fold_corner" ||
-      state === "flipping"
-    ) {
+    // Corner hover must NOT toggle is-flipping — that CSS was stripping book +
+    // decorative drop-shadows whenever fold_corner fired.
+    if (state === "user_fold" || state === "fold_corner") {
+      setShowFlipHint(false);
+      return;
+    }
+    if (state === "flipping") {
       setShowFlipHint(false);
       setIsFlipping(true);
       return;

@@ -736,7 +736,7 @@
   --mp-4xl: clamp(12px, calc(8.6 * var(--mp-u)), 40px);
   --mp-5xl: clamp(13px, calc(10 * var(--mp-u)), 48px);
   --mp-pad-x: clamp(4px, calc(3.6 * var(--mp-u)), 18px);
-  --mp-pad-y: clamp(6px, calc(5.5 * var(--mp-u)), 40px);
+  --mp-pad-y: clamp(14px, calc(9 * var(--mp-u)), 56px);
   --mp-gap: clamp(2px, calc(1.4 * var(--mp-u)), 0.75rem);
   --mp-space-1: calc(1.2 * var(--mp-u));
   --mp-space-2: calc(2.4 * var(--mp-u));
@@ -868,7 +868,7 @@
   --mp-4xl: 36px;
   --mp-5xl: 44px;
   --mp-pad-x: 16px;
-  --mp-pad-y: 28px;
+  --mp-pad-y: 44px;
   font-size: 14px;
 }
 
@@ -942,23 +942,10 @@
   width: 0.35em !important;
 }
 
+/* Keep book + decorative drop-shadows during flip/corner preview.
+   (Previously is-flipping stripped filters and shrank the wrap shadow.) */
 .magazine-stage.is-flipping .magazine-book-wrap {
-  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.42));
-}
-
-.magazine-stage.is-flipping .magazine-book :is(
-  .paper-tex,
-  .cover-digit,
-  .tape-strip,
-  [class*="washi-"],
-  .about-photo-card,
-  .polaroid-frame,
-  .origem-stroke-art,
-  .contact-channel-icon,
-  .parceiros-logo
-) {
-  filter: none !important;
-  transition: none !important;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.58));
 }
 
 .magazine-sheet .zine-page,
@@ -999,7 +986,7 @@
 /* Keep headings responsive inside the fixed magazine sheet. Large fixed offsets
    make pages feel misplaced or clipped on shorter screens. */
 .magazine-sheet .zine-page-inner :is(h1, h2, h3):has(> .inline-flex) {
-  padding-top: clamp(4px, calc(6 * var(--mp-u)), 3.4rem);
+  padding-top: clamp(18px, calc(12 * var(--mp-u)), 4.6rem);
   margin-bottom: clamp(4px, calc(4.5 * var(--mp-u)), 2.2rem);
 }
 
@@ -1355,12 +1342,17 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding-top: calc(10 * var(--mp-u));
 }
 
 /* Design-canvas sizes only — viewport sm/md breakpoints were pushing
    "Madame G" into the spread gutter at ~642×466. */
 .banda-hero-row {
   padding-right: calc(6 * var(--mp-u));
+}
+
+.banda-photo-frame {
+  position: relative;
 }
 
 .banda-photo {
@@ -1373,29 +1365,36 @@
   line-height: 1;
 }
 
+.banda-photo-by {
+  font-size: var(--mp-sm);
+  line-height: 1.25;
+}
+
 .banda-link-row {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
-}
-
-@media (min-width: 768px) {
-  .banda-link-row {
-    margin-top: 1.25rem;
-  }
+  justify-content: flex-start;
+  gap: 0.15rem;
+  width: max-content;
+  max-width: 100%;
+  margin-top: auto;
+  margin-bottom: calc(1 * var(--mp-u));
+  padding: 0;
+  transform: none;
+  pointer-events: auto;
 }
 
 .banda-link-icon {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 3px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border-radius: 6px;
   transition: transform 0.2s ease;
 }
 
@@ -1409,23 +1408,23 @@
 }
 
 .banda-link-icon--instagram {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 }
 
 .banda-link-icon--discord {
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
 }
 
 .banda-link-icon--spotify {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
 }
 
 .banda-link-icon--youtube {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
 }
 
 .banda-link-icon-graphic {

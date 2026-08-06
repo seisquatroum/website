@@ -212,8 +212,8 @@ export const site = {
     },
     // Kicker acima do título
     kicker: {
-      pt: "em breve...",
-      en: "coming soon...",
+      pt: "candidaturas abertas",
+      en: "applications open",
     },
     // Corpo (parágrafos, um por linha do array)
     body: {
@@ -228,11 +228,11 @@ export const site = {
     },
     // Prazo de candidatura
     deadline: {
-      pt: "prazo: 17 set 2026",
-      en: "deadline: 17 sep 2026",
+      pt: "prazo: 25 set 2026",
+      en: "deadline: 25 sep 2026",
     },
     // Botão dentro do popup — substitui "#" pelo Google Form / página do concurso
-    formUrl: "#",
+    formUrl: "https://forms.gle/HWWchYri1MPnhsnR7",
     formLabel: { pt: "CANDIDATAR AGORA", en: "APPLY NOW" },
     // Link secundário — página com o markdown em src/content/opencall/
     rulesUrl: "/opencall/regulamento",
