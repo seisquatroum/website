@@ -27,7 +27,7 @@ O presente regulamento estabelece as normas do concurso (Open Call) destinado à
 
 - Podem concorrer bandas ou projetos musicais emergentes de qualquer género musical.
 - O concurso é aberto ao público em geral. A candidatura não exige a qualidade prévia de sócio da Associação 641.
-- Pelo menos **50% da constituição do projeto musical deve ter ligação comprovada ao concelho de Oeiras** (residência, trabalho ou estudo). No caso de bandas com um número ímpar de elementos, o valor é arredondado para o número inteiro imediatamente inferior (ex: numa banda de 3 pessoas, apenas 1 necessita de cumprir este critério).
+- Pelo menos **50% da constituição do projeto musical deve ter ligação comprovada ao concelho de Oeiras** (residência, trabalho ou estudo). No caso de bandas com um número ímpar de elementos, o valor é arredondado para o número inteiro imediatamente inferior (ex: numa banda de 3 pessoas, apenas 1 necessita de cumprir este critério). Quando o projeto for constituído por um único elemento, esse elemento deve ter ligação comprovada ao concelho de Oeiras, não se aplicando o critério percentual.
 - Em caso de seleção, todos os membros do projeto passam automaticamente a integrar a Associação 641 na qualidade de Associados Executivos, ficando **isentos do pagamento da quota anual de 5€**.
 
 ### **Artigo 4.º — Participação de Menores de Idade**
