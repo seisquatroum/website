@@ -141,41 +141,18 @@ export const site = {
     ],
   },
 
-  // ---------- QUERO AJUDAR ----------
+  // ---------- JUNTA-TE / QUERO AJUDAR ----------
   ajudar: {
     kicker: { pt: "quero ajudar", en: "support us" },
-    intro: {
-      pt: "Também estamos a aceitar doações via **MBWay**. Qualquer ajuda conta.",
-      en: "We're also accepting donations via **MBWay**. Any help counts.",
+    body: {
+      pt: "Torna-te sócix, dá uma mão em eventos, oferece competências, equipamento ou espaço. Em troca, tens direito a preço de sócio em todos os workshops e acesso antecipado e prioritário aos eventos da 641.",
+      en: "Become a member, lend a hand at events, share skills, gear or space. In return, you get member pricing on every workshop and early, priority access to 641 events.",
     },
-    mbwayNumber: "910 075 383",
-    reasons: [
-      {
-        title: { pt: "Apoiar novos talentos", en: "Support new talent" },
-        body: {
-          pt: "Damos palco a quem está a começar.",
-          en: "We give a stage to those just starting out.",
-        },
-      },
-      {
-        title: { pt: "Acessibilidade", en: "Accessibility" },
-        body: {
-          pt: "Tornamos os ensaios acessíveis, quebrando barreiras de custos.",
-          en: "We keep rehearsals affordable, breaking down cost barriers.",
-        },
-      },
-      {
-        title: { pt: "Comunidade", en: "Community" },
-        body: {
-          pt: "Criamos um centro de partilha e colaboração entre músicos.",
-          en: "We build a hub for sharing and collaboration between musicians.",
-        },
-      },
-    ],
-    outro: {
-      pt: "…há muitas outras formas de poderes ajudar. Fala connosco.",
-      en: "…there are many other ways you can help. Talk to us.",
-    },
+    talkLabel: { pt: "FALA CONNOSCO", en: "GET IN TOUCH" },
+    talkHref: "#contactos",
+    // Substitui "#" pelo Google Form de adesão quando estiver pronto.
+    joinUrl: "#",
+    joinLabel: { pt: "QUERO SER SÓCIO!", en: "I WANT TO JOIN!" },
   },
 
   // ---------- BANDA RESIDENTE ----------
@@ -228,8 +205,8 @@ export const site = {
     },
     // Prazo de candidatura
     deadline: {
-      pt: "prazo: 25 set 2026",
-      en: "deadline: 25 sep 2026",
+      pt: "prazo: 17 out 2026",
+      en: "deadline: 17 oct 2026",
     },
     // Botão dentro do popup — substitui "#" pelo Google Form / página do concurso
     formUrl: "https://forms.gle/HWWchYri1MPnhsnR7",
@@ -287,11 +264,9 @@ export const site = {
     kicker: { pt: "contactos", en: "contact" },
     hint: { pt: "dá-nos um olá!", en: "say hello!" },
     email: "associacao641@gmail.com",
-    phone: "+351 910 075 383",
     city: "Fábrica da Pólvora de Barcarena",
     socials: {
       instagram: "https://www.instagram.com/seisquatroum/",
-      whatsapp: "https://wa.me/351910075383",
       discord: "https://discord.gg/cbrvUGB8GV",
     },
     channels: [
@@ -304,28 +279,12 @@ export const site = {
         cta: { pt: "enviar email", en: "send email" },
       },
       {
-        id: "phone",
-        icon: "phone",
-        label: { pt: "telefone", en: "phone" },
-        value: "+351 910 075 383",
-        href: "tel:+351910075383",
-        cta: { pt: "ligar", en: "call" },
-      },
-      {
         id: "instagram",
         icon: "instagram",
         label: { pt: "instagram", en: "instagram" },
         value: "@seisquatroum",
         href: "https://www.instagram.com/seisquatroum/",
         cta: { pt: "seguir", en: "follow" },
-      },
-      {
-        id: "whatsapp",
-        icon: "whatsapp",
-        label: { pt: "whatsapp", en: "whatsapp" },
-        value: "+351 910 075 383",
-        href: "https://wa.me/351910075383",
-        cta: { pt: "abrir", en: "open" },
       },
       {
         id: "discord",

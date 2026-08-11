@@ -25,10 +25,8 @@ import sixDigitAsset from "@/assets/six6.png";
 import fourDigitAsset from "@/assets/four4.png";
 import oneDigitAsset from "@/assets/one1.png";
 import emailIconSvg from "@/assets/email-icon.svg?raw";
-import phoneIconSvg from "@/assets/phone-icon.svg?raw";
 import locationIconSvg from "@/assets/location-icon.svg?raw";
 import instaIconSvg from "@/assets/insta-icon.svg?raw";
-import whatsappIconSvg from "@/assets/whatsapp-icon.svg?raw";
 import discordIconSvg from "@/assets/discord-icon.svg?raw";
 import spotifyIconSvg from "@/assets/spotify-logo.svg?raw";
 import youtubeIconSvg from "@/assets/youtube-icon.svg?raw";
@@ -1067,47 +1065,55 @@ function NewsPage({
 }
 
 function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }) {
+  const a = site.ajudar;
+  const joinReady = Boolean(a.joinUrl && a.joinUrl !== "#");
+
   return (
     <ZPage bg="magenta" sectionId={sectionId}>
       <WashiTape variant="yellow" className="right-6 top-2 h-4 w-24 rotate-6" />
-      <div className="flex flex-col">
+      <div className="junta-page-layout flex h-full min-h-0 flex-col">
         <h3 className="-rotate-1">
           <CutoutText size="mp-xl">
             {locale === "pt" ? "Junta-te!" : "Join us!"}
           </CutoutText>
         </h3>
-        <p className="mt-3 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
-          {locale === "pt"
-            ? "Torna-te sócix, dá uma mão em eventos, oferece competências, equipamento ou espaço."
-            : "Become a member, lend a hand at events, share skills, gear or space."}
+        <p className="mt-6 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
+          {t(a.body, locale)}
         </p>
-        <div className="mt-9 flex flex-col items-start gap-6">
-          <CutoutButton
-            href="#contactos"
-            variant="accent"
-            size="mp-xs"
-            className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
-          >
-            {locale === "pt" ? "FALA CONNOSCO" : "GET IN TOUCH"}
-          </CutoutButton>
-          <CutoutButton
-            href={site.sobre.regulamentoUrl}
-            target="_blank"
-            rel="noreferrer"
-            variant="black"
-            size="mp-xs"
-            className="!gap-1 !px-2 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-2.5 sm:!py-1.5 [&>span:last-child]:!text-xs"
-          >
-            {t(site.sobre.regulamentoLabel, locale)}
-          </CutoutButton>
-        </div>
-        <p className="mt-8 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
-          <RichText>{t(site.ajudar.intro, locale)}</RichText>
-        </p>
-        <div className="mx-auto mt-3 w-full max-w-[220px] rotate-2 border-[3px] border-brand-black bg-brand-magenta halftone p-4 text-center text-white shadow-[6px_6px_0_0_#000]">
-          <span className="font-mono text-[10px] uppercase tracking-widest">MB WAY</span>
-          <div className="mt-1.5 font-marker text-xl tracking-wide sm:text-2xl">
-            {site.ajudar.mbwayNumber}
+        <div className="junta-actions mt-5 flex min-h-0 flex-1 flex-col justify-between gap-2 pb-2">
+          <div className="junta-action junta-action--left">
+            <CutoutButton
+              href={a.talkHref}
+              variant="accent"
+              size="mp-xs"
+              className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
+            >
+              {t(a.talkLabel, locale)}
+            </CutoutButton>
+          </div>
+          <div className="junta-action junta-action--mid">
+            <CutoutButton
+              href={joinReady ? a.joinUrl : undefined}
+              target={joinReady ? "_blank" : undefined}
+              rel={joinReady ? "noreferrer" : undefined}
+              variant="magenta"
+              size="mp-xs"
+              className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
+            >
+              {t(a.joinLabel, locale)}
+            </CutoutButton>
+          </div>
+          <div className="junta-action junta-action--right">
+            <CutoutButton
+              href={site.sobre.regulamentoUrl}
+              target="_blank"
+              rel="noreferrer"
+              variant="black"
+              size="mp-xs"
+              className="!gap-1 !px-2 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-2.5 sm:!py-1.5 [&>span:last-child]:!text-xs"
+            >
+              {t(site.sobre.regulamentoLabel, locale)}
+            </CutoutButton>
           </div>
         </div>
       </div>
@@ -1306,7 +1312,6 @@ function prepareContactIconSvg(
 
 const CONTACT_STROKE_BASE_MS: Record<string, number> = {
   instagram: 5200,
-  phone: 5200,
   location: 4500,
 };
 const CONTACT_STROKE_DEFAULT_MS = 3800;
@@ -1784,7 +1789,7 @@ function DrawMagazinePage({
   );
 }
 
-const CONTACT_DIRECT_REDIRECT_IDS = new Set(["instagram", "whatsapp", "discord"]);
+const CONTACT_DIRECT_REDIRECT_IDS = new Set(["instagram", "discord"]);
 
 function ContactosPage({
   locale,
@@ -1939,10 +1944,8 @@ function ContactosPage({
 
 const CONTACT_ICON_SVGS: Record<string, string> = {
   email: emailIconSvg,
-  phone: phoneIconSvg,
   location: locationIconSvg,
   instagram: instaIconSvg,
-  whatsapp: whatsappIconSvg,
   discord: discordIconSvg,
   spotify: spotifyIconSvg,
   youtube: youtubeIconSvg,

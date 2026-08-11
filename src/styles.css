@@ -1338,6 +1338,26 @@
   stroke-dashoffset: 0;
 }
 
+.junta-actions {
+  width: 100%;
+}
+
+.junta-action--left {
+  align-self: flex-start;
+  margin-left: calc(1 * var(--mp-u));
+}
+
+.junta-action--mid {
+  align-self: center;
+  margin-right: calc(4 * var(--mp-u));
+}
+
+.junta-action--right {
+  align-self: flex-end;
+  margin-right: calc(2 * var(--mp-u));
+  margin-bottom: calc(1 * var(--mp-u));
+}
+
 .banda-side-column {
   display: flex;
   flex-direction: column;
@@ -2189,8 +2209,8 @@
 
 .origem-copy {
   margin: 0;
-  font-size: var(--mp-sm);
-  line-height: 1.36;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .origem-stroke-art {
