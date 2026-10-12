@@ -770,9 +770,32 @@ function NewsPage({
     count <= 5 ? 0 : Math.min(Math.max(index - 2, 0), count - 5);
   const menuItems = items.slice(menuStart, menuStart + 5);
 
+  const newsRootRef = useRef<HTMLDivElement | null>(null);
+
   const stopFlip = (event: React.SyntheticEvent) => {
     event.stopPropagation();
   };
+
+  // page-flip listens for mousedown/touchstart on the sheet; stop it here so
+  // "saber mais" and other news UI never start a corner fold.
+  useEffect(() => {
+    const root = newsRootRef.current;
+    if (!root) return;
+
+    const blockFlipStart = (event: Event) => {
+      event.stopPropagation();
+    };
+
+    root.addEventListener("mousedown", blockFlipStart);
+    root.addEventListener("touchstart", blockFlipStart, { passive: true });
+    root.addEventListener("pointerdown", blockFlipStart);
+
+    return () => {
+      root.removeEventListener("mousedown", blockFlipStart);
+      root.removeEventListener("touchstart", blockFlipStart);
+      root.removeEventListener("pointerdown", blockFlipStart);
+    };
+  }, []);
 
   const handleCameraStagePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null;
@@ -793,7 +816,7 @@ function NewsPage({
     <ZPage bg="dark" sectionId={sectionId}>
       <WashiTape variant="magenta" className="left-6 top-2 h-4 w-32 -rotate-3" />
       <StarSticker className="right-[8%] top-[6%]" size={36} rotate={16} />
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div ref={newsRootRef} className="flex min-h-0 flex-1 flex-col">
         {title && (
           <h2 className="mb-2 shrink-0 -rotate-1">
             <CutoutText size="mp-xl">{title}</CutoutText>
@@ -1044,8 +1067,10 @@ function NewsPage({
                     target="_blank"
                     rel="noreferrer"
                     className="news-item-link"
+                    onPointerDown={stopFlip}
                     onMouseDown={stopFlip}
                     onTouchStart={stopFlip}
+                    onClick={stopFlip}
                   >
                     {locale === "pt" ? "saber mais" : "learn more"}
                     <ExternalLink aria-hidden="true" />
@@ -1080,7 +1105,7 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
         <p className="mt-6 text-xs leading-relaxed text-brand-pink-soft/95 sm:text-sm">
           {t(a.body, locale)}
         </p>
-        <div className="junta-actions mt-5 flex min-h-0 flex-1 flex-col justify-between gap-2 pb-2">
+        <div className="junta-actions mt-5 flex min-h-0 flex-1 flex-col justify-between gap-2">
           <div className="junta-action junta-action--left">
             <CutoutButton
               href={a.talkHref}
@@ -3023,6 +3048,15 @@ export function MagazineIndex({
     [magazinePages],
   );
 
+  const newsPageIndex = useMemo(
+    () => magazinePages.findIndex((page) => page.key === "noticias"),
+    [magazinePages],
+  );
+  // Corner-fold fights the news UI ("saber mais"); disable mouse flip while that spread is open.
+  const disableMouseFlipForNews =
+    newsPageIndex >= 0 &&
+    sameMagazineSpread(currentPage, newsPageIndex, usePortrait);
+
   const applyPageChange = useCallback(
     (page: number) => {
       setCurrentPage(page);
@@ -3301,9 +3335,9 @@ export function MagazineIndex({
             showCover
             mobileScrollSupport
             clickEventForward
-            useMouseEvents={!usePortrait}
+            useMouseEvents={!usePortrait && !disableMouseFlipForNews}
             swipeDistance={24}
-            showPageCorners
+            showPageCorners={!disableMouseFlipForNews}
             disableFlipByClick
             onChangeState={handleFlipStateChange}
             onFlip={(event) => {

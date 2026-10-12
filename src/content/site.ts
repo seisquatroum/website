@@ -150,8 +150,7 @@ export const site = {
     },
     talkLabel: { pt: "FALA CONNOSCO", en: "GET IN TOUCH" },
     talkHref: "#contactos",
-    // Substitui "#" pelo Google Form de adesão quando estiver pronto.
-    joinUrl: "#",
+    joinUrl: "https://forms.gle/HAEVw1eyw5C7a6z78",
     joinLabel: { pt: "QUERO SER SÓCIO!", en: "I WANT TO JOIN!" },
   },
 

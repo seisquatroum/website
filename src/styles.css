@@ -1340,6 +1340,7 @@
 
 .junta-actions {
   width: 100%;
+  padding-bottom: calc(10 * var(--mp-u));
 }
 
 .junta-action--left {
@@ -1355,7 +1356,7 @@
 .junta-action--right {
   align-self: flex-end;
   margin-right: calc(2 * var(--mp-u));
-  margin-bottom: calc(1 * var(--mp-u));
+  margin-bottom: calc(6 * var(--mp-u));
 }
 
 .banda-side-column {
