@@ -204,8 +204,8 @@ export const site = {
     },
     // Prazo de candidatura
     deadline: {
-      pt: "prazo: 17 out 2026",
-      en: "deadline: 17 oct 2026",
+      pt: "PRAZO ALARGADO · até 13 nov 2026",
+      en: "DEADLINE EXTENDED · until 13 nov 2026",
     },
     // Botão dentro do popup — substitui "#" pelo Google Form / página do concurso
     formUrl: "https://forms.gle/HWWchYri1MPnhsnR7",

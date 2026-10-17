@@ -1215,10 +1215,10 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
         <h3 className="mt-3">
           <CutoutText size="mp-xl">{t(c.title, locale)}</CutoutText>
         </h3>
-        <p className="mt-3 font-mono-zine text-[10px] uppercase tracking-widest text-brand-accent">
+        <p className="opencall-deadline mt-4 inline-block w-fit -rotate-1 border-[3px] border-brand-black bg-brand-accent px-3 py-2 font-mono-zine text-[11px] font-black uppercase tracking-widest text-brand-black shadow-[4px_4px_0_0_#c41958] sm:text-xs">
           {t(c.deadline, locale)}
         </p>
-        <p className="mt-2 font-serif-display text-xs italic leading-relaxed text-brand-pink/95 sm:text-sm">
+        <p className="mt-3 font-serif-display text-xs italic leading-relaxed text-brand-pink/95 sm:text-sm">
           {c.body[locale][0]}
         </p>
         <div className="mt-auto flex flex-col items-start gap-3 pt-10">
@@ -1247,7 +1247,7 @@ function ConcursoPage({ locale, sectionId }: { locale: Locale; sectionId?: strin
                       <p key={i}>{p}</p>
                     ))}
                   </div>
-                  <p className="mt-4 border-l-4 border-brand-magenta bg-white/60 px-3 py-2 font-mono-zine text-xs uppercase tracking-widest">
+                  <p className="opencall-deadline mt-4 inline-block w-fit -rotate-1 border-[3px] border-brand-black bg-brand-accent px-3 py-2 font-mono-zine text-sm font-black uppercase tracking-widest text-brand-black shadow-[4px_4px_0_0_#c41958]">
                     {t(c.deadline, locale)}
                   </p>
                   <div className="mt-6 flex flex-wrap items-center gap-4">
