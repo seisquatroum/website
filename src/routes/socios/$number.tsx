@@ -69,18 +69,6 @@ function MemberPage() {
                 <Printer size={18} aria-hidden="true" /> Imprimir cartão
               </button>
             </div>
-            {query.data?.updatedAt && (
-              <p className="members-updated">
-                Dados publicados em{" "}
-                <time dateTime={query.data.updatedAt}>
-                  {new Intl.DateTimeFormat("pt-PT", {
-                    dateStyle: "long",
-                    timeZone: "Europe/Lisbon",
-                  }).format(new Date(query.data.updatedAt))}
-                </time>
-                .
-              </p>
-            )}
           </>
         )}
       </div>
