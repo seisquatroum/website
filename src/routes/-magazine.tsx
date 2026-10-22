@@ -202,7 +202,7 @@ type CutoutButtonProps = {
   href?: string;
   target?: string;
   rel?: string;
-  variant?: "accent" | "magenta" | "black" | "white";
+  variant?: "accent" | "magenta" | "black" | "white" | "teal";
   className?: string;
   size?: string;
 };
@@ -225,6 +225,7 @@ const CutoutButton = forwardRef<HTMLElement, CutoutButtonProps>(function CutoutB
     magenta: "bg-brand-magenta text-white",
     black: "bg-brand-black text-brand-pink",
     white: "bg-white text-brand-black",
+    teal: "bg-brand-teal text-brand-black",
   } as const;
   const shared = `group relative inline-flex items-center gap-2 paper-tex ${variants[variant]} border-[3px] border-brand-black px-5 py-3 sm:px-6 sm:py-3.5 font-serif-display italic ${size} font-black uppercase tracking-tight shadow-[6px_6px_0_0_#1a1a1a] transition-all hover:-translate-y-1 hover:translate-x-0.5 hover:shadow-[8px_10px_0_0_#6b1038] active:translate-y-0 active:translate-x-0 active:shadow-[2px_2px_0_0_#1a1a1a] rotate-[-1.5deg] cursor-pointer ${className}`;
   const inner = (
@@ -1127,17 +1128,16 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
             >
               {t(a.joinLabel, locale)}
             </CutoutButton>
-            <a
+          </div>
+          <div className="junta-action junta-action--mid">
+            <CutoutButton
               href={`${import.meta.env.BASE_URL}socios`}
-              className="mt-3 flex items-center justify-center gap-1 font-hand text-brand-pink-soft underline underline-offset-4"
-              style={{ fontSize: "calc(11 * var(--mp-u))", minHeight: "calc(22 * var(--mp-u))" }}
-              onPointerDown={(event) => event.stopPropagation()}
-              onMouseDown={(event) => event.stopPropagation()}
-              onTouchStart={(event) => event.stopPropagation()}
+              variant="teal"
+              size="mp-xs"
+              className="!gap-1 !px-2.5 !py-1.5 !shadow-[3px_3px_0_0_#1a1a1a] sm:!px-3 sm:!py-1.5 [&>span:last-child]:!text-sm"
             >
               {locale === "pt" ? "Cartões de sócio" : "Membership cards"}
-              <ExternalLink size={12} aria-hidden="true" />
-            </a>
+            </CutoutButton>
           </div>
           <div className="junta-action junta-action--right">
             <CutoutButton

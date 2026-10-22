@@ -1343,19 +1343,22 @@
   padding-bottom: calc(10 * var(--mp-u));
 }
 
-.junta-action--left {
+.junta-action {
   align-self: flex-start;
-  margin-left: calc(1 * var(--mp-u));
+  margin-left: calc(var(--junta-step, 0) * 15 * var(--mp-u));
+  max-width: calc(100% - var(--junta-step, 0) * 15 * var(--mp-u));
 }
 
-.junta-action--mid {
-  align-self: center;
-  margin-right: calc(4 * var(--mp-u));
+.junta-action:nth-child(2) {
+  --junta-step: 1;
 }
 
-.junta-action--right {
-  align-self: flex-end;
-  margin-right: calc(2 * var(--mp-u));
+.junta-action:nth-child(3) {
+  --junta-step: 2;
+}
+
+.junta-action:nth-child(4) {
+  --junta-step: 3;
   margin-bottom: calc(6 * var(--mp-u));
 }
 
