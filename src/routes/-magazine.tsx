@@ -1127,6 +1127,17 @@ function JuntaPage({ locale, sectionId }: { locale: Locale; sectionId?: string }
             >
               {t(a.joinLabel, locale)}
             </CutoutButton>
+            <a
+              href={`${import.meta.env.BASE_URL}socios`}
+              className="mt-3 flex items-center justify-center gap-1 font-hand text-brand-pink-soft underline underline-offset-4"
+              style={{ fontSize: "calc(11 * var(--mp-u))", minHeight: "calc(22 * var(--mp-u))" }}
+              onPointerDown={(event) => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+            >
+              {locale === "pt" ? "Cartões de sócio" : "Membership cards"}
+              <ExternalLink size={12} aria-hidden="true" />
+            </a>
           </div>
           <div className="junta-action junta-action--right">
             <CutoutButton

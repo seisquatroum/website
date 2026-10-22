@@ -4,6 +4,11 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "prebuild": "npm run socios:validar",
+    "prebuild:pages": "npm run socios:validar",
+    "socios:validar": "node --experimental-strip-types scripts/validate-members.mts",
+    "socios:preparar": "node --experimental-strip-types scripts/prepare-members.mts",
+    "socios:testar": "node --experimental-strip-types --test tests/members.test.mjs",
     "dev": "vite dev",
     "build": "vite build",
     "build:pages": "vite build",
@@ -67,6 +72,7 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.24.2"
   },
   "devDependencies": {

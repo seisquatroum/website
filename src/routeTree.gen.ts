@@ -10,14 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZineRouteImport } from './routes/_zine'
+import { Route as GestaoRouteImport } from './routes/gestao'
+import { Route as SocioChar123numberChar125RouteImport } from './routes/socio-{$number}'
 import { Route as ZineIndexRouteImport } from './routes/_zine/index'
 import { Route as ZineSectionRouteImport } from './routes/_zine/$section'
 import { Route as OpencallRegulamentoRouteImport } from './routes/opencall/regulamento'
+import { Route as SocioNumberRouteImport } from './routes/socio/$number'
+import { Route as SociosIndexRouteImport } from './routes/socios/index'
+import { Route as SociosNumberRouteImport } from './routes/socios/$number'
 
 const ZineRoute = ZineRouteImport.update({
   id: '/_zine',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GestaoRoute = GestaoRouteImport.update({
+  id: '/gestao',
+  path: '/gestao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocioChar123numberChar125Route =
+  SocioChar123numberChar125RouteImport.update({
+    id: '/socio-{$number}',
+    path: '/socio-{$number}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ZineIndexRoute = ZineIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -33,40 +49,96 @@ const OpencallRegulamentoRoute = OpencallRegulamentoRouteImport.update({
   path: '/opencall/regulamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocioNumberRoute = SocioNumberRouteImport.update({
+  id: '/socio/$number',
+  path: '/socio/$number',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SociosIndexRoute = SociosIndexRouteImport.update({
+  id: '/socios/',
+  path: '/socios/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SociosNumberRoute = SociosNumberRouteImport.update({
+  id: '/socios/$number',
+  path: '/socios/$number',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ZineIndexRoute
+  '/gestao': typeof GestaoRoute
+  '/socio-{$number}': typeof SocioChar123numberChar125Route
   '/$section': typeof ZineSectionRoute
   '/opencall/regulamento': typeof OpencallRegulamentoRoute
+  '/socio/$number': typeof SocioNumberRoute
+  '/socios/$number': typeof SociosNumberRoute
+  '/socios/': typeof SociosIndexRoute
 }
 export interface FileRoutesByTo {
+  '/gestao': typeof GestaoRoute
+  '/socio-{$number}': typeof SocioChar123numberChar125Route
   '/$section': typeof ZineSectionRoute
   '/opencall/regulamento': typeof OpencallRegulamentoRoute
+  '/socio/$number': typeof SocioNumberRoute
+  '/socios/$number': typeof SociosNumberRoute
   '/': typeof ZineIndexRoute
+  '/socios': typeof SociosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_zine': typeof ZineRouteWithChildren
+  '/gestao': typeof GestaoRoute
+  '/socio-{$number}': typeof SocioChar123numberChar125Route
   '/_zine/$section': typeof ZineSectionRoute
   '/opencall/regulamento': typeof OpencallRegulamentoRoute
+  '/socio/$number': typeof SocioNumberRoute
+  '/socios/$number': typeof SociosNumberRoute
   '/_zine/': typeof ZineIndexRoute
+  '/socios/': typeof SociosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$section' | '/opencall/regulamento'
+  fullPaths:
+    | '/'
+    | '/gestao'
+    | '/socio-{$number}'
+    | '/$section'
+    | '/opencall/regulamento'
+    | '/socio/$number'
+    | '/socios/$number'
+    | '/socios/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/$section' | '/opencall/regulamento' | '/'
+  to:
+    | '/gestao'
+    | '/socio-{$number}'
+    | '/$section'
+    | '/opencall/regulamento'
+    | '/socio/$number'
+    | '/socios/$number'
+    | '/'
+    | '/socios'
   id:
     | '__root__'
     | '/_zine'
+    | '/gestao'
+    | '/socio-{$number}'
     | '/_zine/$section'
     | '/opencall/regulamento'
+    | '/socio/$number'
+    | '/socios/$number'
     | '/_zine/'
+    | '/socios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ZineRoute: typeof ZineRouteWithChildren
+  GestaoRoute: typeof GestaoRoute
+  SocioChar123numberChar125Route: typeof SocioChar123numberChar125Route
   OpencallRegulamentoRoute: typeof OpencallRegulamentoRoute
+  SocioNumberRoute: typeof SocioNumberRoute
+  SociosNumberRoute: typeof SociosNumberRoute
+  SociosIndexRoute: typeof SociosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +148,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof ZineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestao': {
+      id: '/gestao'
+      path: '/gestao'
+      fullPath: '/gestao'
+      preLoaderRoute: typeof GestaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socio-{$number}': {
+      id: '/socio-{$number}'
+      path: '/socio-{$number}'
+      fullPath: '/socio-{$number}'
+      preLoaderRoute: typeof SocioChar123numberChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_zine/': {
@@ -99,6 +185,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OpencallRegulamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/socio/$number': {
+      id: '/socio/$number'
+      path: '/socio/$number'
+      fullPath: '/socio/$number'
+      preLoaderRoute: typeof SocioNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socios/': {
+      id: '/socios/'
+      path: '/socios'
+      fullPath: '/socios/'
+      preLoaderRoute: typeof SociosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socios/$number': {
+      id: '/socios/$number'
+      path: '/socios/$number'
+      fullPath: '/socios/$number'
+      preLoaderRoute: typeof SociosNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -116,7 +223,12 @@ const ZineRouteWithChildren = ZineRoute._addFileChildren(ZineRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   ZineRoute: ZineRouteWithChildren,
+  GestaoRoute: GestaoRoute,
+  SocioChar123numberChar125Route: SocioChar123numberChar125Route,
   OpencallRegulamentoRoute: OpencallRegulamentoRoute,
+  SocioNumberRoute: SocioNumberRoute,
+  SociosNumberRoute: SociosNumberRoute,
+  SociosIndexRoute: SociosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

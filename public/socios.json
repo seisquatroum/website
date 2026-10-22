@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-22T12:09:57.978Z",
+  "members": [
+    {
+      "number": 1,
+      "name": "Pedro Dias Leal",
+      "duesStatus": "paid",
+      "validUntil": "2027-01-01",
+      "passwordCheck": {
+        "algorithm": "PBKDF2-SHA256",
+        "iterations": 600000,
+        "salt": "09b224bf1723db6bace30985aeddf924",
+        "hash": "560ee32af968a30315105f8cdf1eb62d09849cfd23058cf90f454611e14dbad5"
+      }
+    },
+    {
+      "number": 2,
+      "name": "David Sorokin dos Santos",
+      "duesStatus": "paid",
+      "validUntil": "2027-01-01",
+      "passwordCheck": {
+        "algorithm": "PBKDF2-SHA256",
+        "iterations": 600000,
+        "salt": "53c421a54e0839143d3f9ad54f0e60d4",
+        "hash": "576a08c82f1ca92b46c848841c3f42aa7790fda8d7b7204b9e0d07a32c070f81"
+      }
+    }
+  ]
+}

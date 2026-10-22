@@ -37,6 +37,17 @@ $env:GITHUB_PAGES='true'; npm run build:pages
 GITHUB_PAGES=true npm run build:pages
 ```
 
+## Cartões de sócio
+
+Cada cartão está num endereço individual como `/socios/1`. A página pública `/socios` permite pesquisar por nome ou número e mostra cartões resumidos, sem quotas nem validade. A coluna `Pass` do Excel é usada para pedir uma palavra-passe antes de mostrar o cartão individual completo. Esta verificação no navegador é apenas uma barreira visual: os dados continuam legíveis em `public/socios.json`, sem base de dados ou autenticação num servidor.
+
+A ferramenta `/gestao` só está disponível no servidor local (`npm run dev`): lê o Excel, permite rever números e gera o ficheiro público. O Excel original não é publicado. Instruções de importação e publicação em [docs/socios.md](docs/socios.md).
+
+```sh
+npm run socios:testar
+npm run socios:validar
+```
+
 ## Known Issues / Debugging Notes
 
 ### Flipbook — assimetria na animação ao voltar página (seta esquerda)
